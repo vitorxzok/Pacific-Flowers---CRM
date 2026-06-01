@@ -1,0 +1,238 @@
+import { create } from 'zustand';
+import { Client, ClientStatus, Settings } from '../types';
+import { createClient } from '@/lib/supabase/client';
+
+interface CRMStore {
+  clients: Client[];
+  settings: Settings;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  setSettings: (settings: Partial<Settings>) => void;
+  fetchClients: () => Promise<void>;
+  fetchSettings: () => Promise<void>;
+  updateClientStatus: (clientId: string, newStatus: ClientStatus) => Promise<void>;
+  addClientNote: (clientId: string, note: string) => Promise<void>;
+  updateClientNotes: (clientId: string, notes: string) => Promise<void>;
+  updateClientTags: (clientId: string, tags: string[]) => Promise<void>;
+  addKanbanColumn: (columnName: string) => Promise<void>;
+  removeKanbanColumn: (columnName: string) => Promise<void>;
+  addMessage: (clientId: string, message: { text: string, sender: 'client' | 'attendant' }) => Promise<void>;
+  deleteClient: (clientId: string) => Promise<void>;
+}
+
+const supabase = createClient();
+
+export const useCRMStore = create<CRMStore>((set, get) => ({
+  clients: [],
+  searchQuery: '',
+  setSearchQuery: (q) => set({ searchQuery: q }),
+  settings: {
+    autoReplyEnabled: false,
+    minutesWithoutResponse: 5,
+    kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Reposição', 'Perdido']
+  },
+  
+  setSettings: async (newSettings) => {
+    const current = get().settings;
+    const merged = { ...current, ...newSettings };
+    set({ settings: merged });
+    
+    await supabase.from('configuracoes').upsert({
+      id: 1,
+      auto_reply_enabled: merged.autoReplyEnabled,
+      minutes_without_response: merged.minutesWithoutResponse,
+      kanban_columns: merged.kanbanColumns
+    });
+  },
+
+  fetchSettings: async () => {
+    const { data, error } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
+    if (data && !error) {
+      set({ settings: {
+        autoReplyEnabled: data.auto_reply_enabled,
+        minutesWithoutResponse: data.minutes_without_response,
+        kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Reposição', 'Perdido']
+      }});
+    }
+  },
+
+  fetchClients: async () => {
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(*)');
+      
+    if (error) {
+      console.error("Error fetching clients:", error);
+      return;
+    }
+
+    const formattedClients: Client[] = data.map((c: any) => ({
+      id: c.id,
+      name: c.name || 'Desconhecido',
+      phone: c.phone || '',
+      email: c.email || '',
+      status: c.status as ClientStatus,
+      tags: c.cliente_tags ? c.cliente_tags.map((ct: any) => ct.tags?.name).filter(Boolean) : [],
+      attendant: c.profiles?.name || '',
+      avatarUrl: undefined,
+      notes: c.notes || '',
+      messages: c.mensagens ? c.mensagens.map((m: any) => ({
+        id: m.id,
+        text: m.text,
+        sender: m.sender === 'client' ? 'client' : m.sender,
+        timestamp: m.timestamp || new Date().toISOString(),
+        read: m.read || true,
+      })) : [],
+      history: c.mensagens ? c.mensagens.map((m: any) => ({
+        id: m.id,
+        type: 'message',
+        date: m.timestamp || new Date().toISOString(),
+        description: `Mensagem: ${m.text}`
+      })) : [],
+    }));
+
+    set({ clients: formattedClients });
+  },
+
+  updateClientStatus: async (clientId, newStatus) => {
+    // Optimistic UI update
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, status: newStatus } : c
+      ),
+    }));
+    
+    const { error } = await supabase
+      .from('clientes')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', clientId);
+      
+    if (error) console.error("Error updating status:", error);
+  },
+
+  addClientNote: async (clientId, note) => {
+    const client = get().clients.find(c => c.id === clientId);
+    if (!client) return;
+    const updatedNotes = client.notes ? `${client.notes}\n${note}` : note;
+    
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, notes: updatedNotes } : c
+      ),
+    }));
+
+    const { error } = await supabase
+      .from('clientes')
+      .update({ notes: updatedNotes, updated_at: new Date().toISOString() })
+      .eq('id', clientId);
+
+    if (error) console.error("Error updating notes:", error);
+  },
+
+  updateClientNotes: async (clientId, notes) => {
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, notes } : c
+      ),
+    }));
+
+    const { error } = await supabase
+      .from('clientes')
+      .update({ notes, updated_at: new Date().toISOString() })
+      .eq('id', clientId);
+
+    if (error) console.error("Error updating notes:", error);
+  },
+
+  addMessage: async (clientId, message) => {
+    // 1. Otimisticamente adicionar na tela
+    const tempId = crypto.randomUUID();
+    const newMessage = {
+      id: tempId,
+      ...message,
+      timestamp: new Date().toISOString(),
+      read: true
+    };
+    
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, messages: [...c.messages, newMessage] } : c
+      ),
+    }));
+
+    // Se a mensagem for do atendente, enviamos para a API
+    if (message.sender === 'attendant') {
+      const client = get().clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      try {
+        const response = await fetch('/api/whatsapp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientId: clientId,
+            text: message.text,
+            phone: client.phone
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("Erro ao enviar mensagem via Evolution API:", data.error);
+          // Opcional: reverter estado otimista ou marcar mensagem com erro
+        }
+      } catch (err) {
+        console.error("Erro na requisição para enviar mensagem:", err);
+      }
+    } else {
+      // Se por algum motivo for do cliente (ex: mock/teste), mantemos o insert via client side
+      const { error } = await supabase.from('mensagens').insert({
+        client_id: clientId,
+        text: message.text,
+        sender: message.sender,
+        read: true
+      });
+      if (error) console.error("Error adding message:", error);
+    }
+  },
+
+  updateClientTags: async (clientId, tags) => {
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, tags } : c
+      ),
+    }));
+  },
+
+  addKanbanColumn: async (columnName) => {
+    const currentCols = get().settings.kanbanColumns;
+    if (currentCols.includes(columnName)) return;
+    const newCols = [...currentCols, columnName];
+    await get().setSettings({ kanbanColumns: newCols });
+  },
+
+  removeKanbanColumn: async (columnName) => {
+    const currentCols = get().settings.kanbanColumns;
+    const newCols = currentCols.filter(c => c !== columnName);
+    await get().setSettings({ kanbanColumns: newCols });
+  },
+
+  deleteClient: async (clientId) => {
+    // Optimistic UI update
+    set((state) => ({
+      clients: state.clients.filter((c) => c.id !== clientId),
+    }));
+
+    // Remover mensagens primeiro (caso o banco não tenha cascade delete configurado)
+    await supabase.from('mensagens').delete().eq('client_id', clientId);
+    
+    // Remover o cliente
+    const { error } = await supabase.from('clientes').delete().eq('id', clientId);
+
+    if (error) {
+      console.error("Error deleting client:", error);
+      // Opcional: Reverter estado em caso de erro
+      await get().fetchClients();
+    }
+  },
+}));
