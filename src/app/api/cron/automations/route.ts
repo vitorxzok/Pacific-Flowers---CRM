@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '../../../../../lib/supabase/server';
-import { generateAIResponse } from '../../../../../lib/openai';
+import { createClient } from '@/lib/supabase/server';
+import { generateAIResponse } from '@/lib/openai';
 
 // Essa rota pode ser chamada por um CRON Job (ex: cron-job.org ou Vercel Cron) a cada 1 minuto
 export async function GET(request: Request) {

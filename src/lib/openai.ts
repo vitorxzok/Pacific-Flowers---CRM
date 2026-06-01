@@ -228,7 +228,8 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
       // Adiciona a mensagem da assistente contendo as chamadas de ferramenta
       openAiMessages.push(responseMessage as any);
 
-      for (const toolCall of responseMessage.tool_calls) {
+      for (const tC of responseMessage.tool_calls) {
+        const toolCall = tC as any;
         const args = JSON.parse(toolCall.function.arguments);
         let toolResult = "Operação realizada com sucesso.";
         
