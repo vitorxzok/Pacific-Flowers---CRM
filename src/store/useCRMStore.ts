@@ -18,6 +18,8 @@ interface CRMStore {
   removeKanbanColumn: (columnName: string) => Promise<void>;
   addMessage: (clientId: string, message: { text: string, sender: 'client' | 'attendant' }) => Promise<void>;
   deleteClient: (clientId: string) => Promise<void>;
+  updateClientAIEnabled: (clientId: string, enabled: boolean) => Promise<void>;
+  fetchAdminClients: (password: string) => Promise<boolean>;
 }
 
 const supabase = createClient();
@@ -29,7 +31,8 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   settings: {
     autoReplyEnabled: false,
     minutesWithoutResponse: 5,
-    kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Reposição', 'Perdido']
+    followUpIntervalHours: 3,
+    kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Reposição', 'Perdido']
   },
   
   setSettings: async (newSettings) => {
@@ -41,6 +44,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       id: 1,
       auto_reply_enabled: merged.autoReplyEnabled,
       minutes_without_response: merged.minutesWithoutResponse,
+      followup_interval_hours: merged.followUpIntervalHours,
       kanban_columns: merged.kanbanColumns
     });
   },
@@ -51,7 +55,8 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       set({ settings: {
         autoReplyEnabled: data.auto_reply_enabled,
         minutesWithoutResponse: data.minutes_without_response,
-        kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Reposição', 'Perdido']
+        followUpIntervalHours: data.followup_interval_hours || 3,
+        kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Reposição', 'Perdido']
       }});
     }
   },
@@ -76,6 +81,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       attendant: c.profiles?.name || '',
       avatarUrl: undefined,
       notes: c.notes || '',
+      ai_enabled: c.ai_enabled !== false,
       messages: c.mensagens ? c.mensagens.map((m: any) => ({
         id: m.id,
         text: m.text,
@@ -92,6 +98,20 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     }));
 
     set({ clients: formattedClients });
+  },
+
+  fetchAdminClients: async (password: string) => {
+    try {
+      const response = await fetch(`/api/admin/clients?pwd=${password}`);
+      if (!response.ok) return false;
+      
+      const { clients } = await response.json();
+      set({ clients });
+      return true;
+    } catch (error) {
+      console.error("Erro ao buscar clientes admin:", error);
+      return false;
+    }
   },
 
   updateClientStatus: async (clientId, newStatus) => {
@@ -234,5 +254,21 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       // Opcional: Reverter estado em caso de erro
       await get().fetchClients();
     }
+  },
+
+  updateClientAIEnabled: async (clientId: string, enabled: boolean) => {
+    // Optimistic UI update
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, ai_enabled: enabled } : c
+      ),
+    }));
+
+    const { error } = await supabase
+      .from('clientes')
+      .update({ ai_enabled: enabled, updated_at: new Date().toISOString() })
+      .eq('id', clientId);
+
+    if (error) console.error("Error updating ai_enabled:", error);
   },
 }));

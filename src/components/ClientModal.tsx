@@ -72,7 +72,28 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
+            {/* Toggle IA */}
+            <div className="flex items-center space-x-2 bg-surface-hover px-3 py-1.5 rounded-lg border border-surface-border">
+              <span className="text-xs font-semibold text-gray-300">
+                IA {client.ai_enabled ? 'Ativada' : 'Desativada'}
+              </span>
+              <button
+                onClick={() => useCRMStore.getState().updateClientAIEnabled(client.id, !client.ai_enabled)}
+                className={clsx(
+                  "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                  client.ai_enabled ? 'bg-primary' : 'bg-gray-600'
+                )}
+              >
+                <span
+                  className={clsx(
+                    "inline-block h-3 w-3 transform rounded-full bg-white transition-transform",
+                    client.ai_enabled ? 'translate-x-5' : 'translate-x-1'
+                  )}
+                />
+              </button>
+            </div>
+            
             <button onClick={handleDeleteClient} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors" title="Excluir Lead">
               <Trash2 className="w-5 h-5" />
             </button>

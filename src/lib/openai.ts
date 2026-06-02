@@ -245,10 +245,10 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
         if (toolCall.function.name === 'transferToHuman') {
           console.log(`[AI TOOL] Transferindo cliente para humano. Resumo: ${args.summary}`);
           
-          // Mudar status para 'Proposta Enviada'
+          // Mudar status para 'Qualificado'
           await supabase
             .from('clientes')
-            .update({ status: 'Proposta Enviada' })
+            .update({ status: 'Qualificado' })
             .eq('id', clientId);
 
           // Inserir um evento no histórico com o resumo da IA
@@ -258,12 +258,51 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
               client_id: clientId,
               type: 'status_change',
               description: `A IA Clara encerrou o atendimento e repassou o lead. Resumo: ${args.summary}`,
-              from_status: 'Novo',
-              to_status: 'Proposta Enviada'
+              from_status: 'Em Qualificação',
+              to_status: 'Qualificado'
             });
 
+          // Recuperar os dados do cliente para pegar o telefone e o attendant_id
+          const { data: clientData } = await supabase
+            .from('clientes')
+            .select('name, phone, attendant_id')
+            .eq('id', clientId)
+            .single();
+
+          if (clientData && clientData.attendant_id) {
+            // Recuperar o número de WhatsApp do vendedor
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('whatsapp_number')
+              .eq('id', clientData.attendant_id)
+              .single();
+
+            if (profile && profile.whatsapp_number) {
+              const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+              const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+              
+              if (apiUrl && apiKey) {
+                const sellerPhone = profile.whatsapp_number.replace(/\D/g, '');
+                const instanceName = `user_${clientData.attendant_id}`;
+                const alertMessage = `⚠️ *Lead Qualificado!*\nO lead *${clientData.name || 'Sem Nome'}* (${clientData.phone}) foi qualificado pela IA e está pronto para receber o catálogo e atendimento humano.\n\n*Resumo da IA:* ${args.summary}`;
+
+                fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': apiKey,
+                  },
+                  body: JSON.stringify({
+                    number: sellerPhone,
+                    text: alertMessage
+                  }),
+                }).catch(err => console.error('[AI TOOL] Erro ao enviar alerta para o vendedor:', err));
+              }
+            }
+          }
+
           // Instruir a IA a se despedir
-          toolResult = "Transferência realizada. Você deve agora se despedir informando que o vendedor vai enviar o catálogo.";
+          toolResult = "Transferência realizada para 'Qualificado'. Você deve agora se despedir informando que o vendedor vai enviar o catálogo e não deve enviar mais perguntas.";
         }
 
         // Adiciona a resposta da ferramenta
@@ -292,5 +331,134 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
   } catch (error) {
     console.error('Erro ao gerar resposta com OpenAI:', error);
     return null;
+  }
+}
+
+/**
+ * Análise Silenciosa:
+ * Lê o histórico recente da conversa (focado nas falas do atendente humano e do cliente)
+ * e avalia em qual etapa do funil o lead se encontra. Se houver mudança clara, atualiza.
+ */
+export async function analyzeConversationAndMoveStatus(clientId: string, supabase: any) {
+  try {
+    // 1. Pegar dados atuais do cliente
+    const { data: clientData } = await supabase
+      .from('clientes')
+      .select('status, name')
+      .eq('id', clientId)
+      .single();
+
+    if (!clientData) return;
+
+    // Etapas que a IA auto-reply atua (se estiver aqui, a auto-reply cuida, então não mexemos)
+    const initialStages = ['Novo', 'Contato Feito', 'Em Qualificação'];
+    // Etapas finais
+    const finalStages = ['Finalizado', 'Perdido', 'Reposição'];
+
+    if (initialStages.includes(clientData.status) || finalStages.includes(clientData.status)) {
+      return; // Não analisa silenciosamente nestes estados
+    }
+
+    // 2. Buscar últimas 15 mensagens para contexto
+    const { data: mensagens } = await supabase
+      .from('mensagens')
+      .select('text, sender, timestamp')
+      .eq('client_id', clientId)
+      .order('timestamp', { ascending: false })
+      .limit(15);
+
+    if (!mensagens || mensagens.length === 0) return;
+
+    // Inverter para ordem cronológica
+    const contextMessages = mensagens.reverse().map((m: any) => {
+      const isSeller = m.sender === 'attendant';
+      return `${isSeller ? 'VENDEDOR' : 'CLIENTE'}: ${m.text}`;
+    }).join('\n');
+
+    const SILENT_SYSTEM_PROMPT = `Você é um supervisor silencioso de um funil de vendas.
+Sua única função é ler o histórico recente da conversa entre o VENDEDOR e o CLIENTE e determinar se o lead avançou ou retrocedeu de etapa.
+Status atual do lead: "${clientData.status}"
+Nome do lead: "${clientData.name || 'Desconhecido'}"
+
+Etapas permitidas para você mover:
+- "Apresentação": O vendedor está enviando ou apresentando o catálogo de produtos/serviços.
+- "Proposta Enviada": O vendedor enviou um orçamento, preço ou proposta clara.
+- "Negociação": O cliente está pechinchando, tirando dúvidas de preço, condições de pagamento.
+- "Fechamento": O vendedor enviou link de pagamento, fechou o pedido ou está pegando dados para entrega/pagamento.
+- "Finalizado": O pedido foi pago e finalizado.
+- "Perdido": O cliente disse que não quer mais, desistiu, ou o vendedor encerrou por falta de interesse.
+- "Reposição": É um cliente antigo comprando de novo.
+
+Regras:
+1. SÓ chame a ferramenta \`updateStatus\` se você tiver absoluta certeza de que a conversa avançou para um novo status DIFERENTE do atual.
+2. Se a conversa ainda está no status atual, NÃO FAÇA NADA. Apenas não chame a ferramenta.
+3. Não retorne nenhum texto de resposta para o cliente.`;
+
+    const openAiMessages = [
+      { role: 'system', content: SILENT_SYSTEM_PROMPT },
+      { role: 'user', content: `Histórico Recente:\n${contextMessages}` }
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: openAiMessages as any,
+      temperature: 0.1,
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'updateStatus',
+            description: 'Atualiza a etapa do funil do cliente com base no avanço da negociação.',
+            parameters: {
+              type: 'object',
+              properties: {
+                newStatus: {
+                  type: 'string',
+                  enum: ['Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Perdido', 'Reposição'],
+                  description: 'A nova etapa do funil'
+                },
+                reason: {
+                  type: 'string',
+                  description: 'O motivo para a mudança de etapa'
+                }
+              },
+              required: ['newStatus', 'reason']
+            }
+          }
+        }
+      ],
+      tool_choice: 'auto'
+    });
+
+    const responseMessage = response.choices[0].message;
+
+    if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+      const toolCall = responseMessage.tool_calls[0];
+      if (toolCall.function.name === 'updateStatus') {
+        const args = JSON.parse(toolCall.function.arguments);
+        
+        if (args.newStatus && args.newStatus !== clientData.status) {
+          console.log(`[AI Silent] Mudando status do cliente ${clientId} de ${clientData.status} para ${args.newStatus}. Motivo: ${args.reason}`);
+          
+          await supabase
+            .from('clientes')
+            .update({ status: args.newStatus })
+            .eq('id', clientId);
+
+          await supabase
+            .from('history_events')
+            .insert({
+              client_id: clientId,
+              type: 'status_change',
+              description: `IA Analisadora moveu o lead pelo contexto. Motivo: ${args.reason}`,
+              from_status: clientData.status,
+              to_status: args.newStatus
+            });
+        }
+      }
+    }
+
+  } catch (error) {
+    console.error('[AI Silent] Erro na análise silenciosa:', error);
   }
 }

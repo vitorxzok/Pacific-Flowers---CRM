@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Settings, Users, BarChart3, Bell, LogOut, Smartphone } from 'lucide-react';
+import { LayoutDashboard, Settings, Users, BarChart3, Bell, LogOut, Smartphone, Shield } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { createClient } from '@/lib/supabase/client';
@@ -53,6 +53,7 @@ export function Sidebar() {
     { name: 'WhatsApp', href: '/whatsapp', icon: Smartphone },
     { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
     { name: 'Notificações', href: '/notificacoes', icon: Bell },
+    { name: 'Administrador', href: '/admin', icon: Shield },
     { name: 'Configurações', href: '/settings', icon: Settings },
   ];
 

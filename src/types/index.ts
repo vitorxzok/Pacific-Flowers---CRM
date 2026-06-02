@@ -29,10 +29,12 @@ export interface Client {
   history: HistoryEvent[];
   messages: Message[];
   avatarUrl?: string;
+  ai_enabled?: boolean;
 }
 
 export interface Settings {
   autoReplyEnabled: boolean;
   minutesWithoutResponse: number;
+  followUpIntervalHours: number;
   kanbanColumns: string[];
 }

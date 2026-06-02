@@ -20,10 +20,8 @@ export async function POST(request: Request) {
       const key = data?.key;
       const messageObj = data?.message;
 
-      // Ignorar mensagens enviadas por nós mesmos (fromMe: true)
-      if (key?.fromMe) {
-        return NextResponse.json({ success: true, message: 'Mensagem própria ignorada.' });
-      }
+      // Identificar quem enviou a mensagem
+      const isFromMe = key?.fromMe || false;
 
       // Extrair telefone (remover @s.whatsapp.net ou @c.us)
       const remoteJid = key?.remoteJid || '';
@@ -45,19 +43,19 @@ export async function POST(request: Request) {
       const last8Digits = phone.slice(-8);
       const { data: clients, error: clientError } = await supabase
         .from('clientes')
-        .select('id, phone')
+        .select('id, phone, status, ai_enabled')
         .ilike('phone', `%${last8Digits}`)
         .limit(1);
 
       if (clientError || !clients || clients.length === 0) {
+        if (isFromMe) {
+           return NextResponse.json({ success: true, message: 'Mensagem própria para lead inexistente ignorada.' });
+        }
         console.warn(`Cliente não encontrado para o telefone: ${phone}. Criando novo lead...`);
         
         // Extrair o ID do usuário (vendedor) a partir do nome da instância
-        // Ex: "user_12345" -> "12345"
         const instanceName = body.instance || '';
         const sellerId = instanceName.replace('user_', '');
-
-        // Tentar obter o nome do contato do WhatsApp, se disponível
         const pushName = data?.pushName || `Lead WhatsApp (${phone})`;
 
         const { data: newClient, error: createError } = await supabase
@@ -66,7 +64,7 @@ export async function POST(request: Request) {
             name: pushName,
             phone: phone,
             status: 'Novo',
-            attendant_id: sellerId // Associar o lead ao vendedor dono da instância
+            attendant_id: sellerId
           })
           .select()
           .single();
@@ -81,14 +79,16 @@ export async function POST(request: Request) {
       } else {
         clientId = clients[0].id;
         
-        // Se o cliente já existir, apenas atualizar a flag `followup_sent = false`
-        const { error: updateError } = await supabase
-          .from('clientes')
-          .update({ followup_sent: false, updated_at: new Date().toISOString() })
-          .eq('id', clientId);
+        // Se a mensagem for do cliente, atualizamos followup_sent
+        if (!isFromMe) {
+          const { error: updateError } = await supabase
+            .from('clientes')
+            .update({ followup_sent: false, updated_at: new Date().toISOString() })
+            .eq('id', clientId);
 
-        if (updateError) {
-          console.error('Erro ao atualizar cliente:', updateError);
+          if (updateError) {
+            console.error('Erro ao atualizar cliente:', updateError);
+          }
         }
       }
 
@@ -98,8 +98,8 @@ export async function POST(request: Request) {
         .insert({
           client_id: clientId,
           text: text,
-          sender: 'client',
-          read: false
+          sender: isFromMe ? 'attendant' : 'client',
+          read: isFromMe
         });
 
       if (insertError) {
@@ -107,24 +107,23 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 });
       }
 
-      // -------------------------------------------------------------
-      // 3. LOGICA DE INTELIGÊNCIA ARTIFICIAL (AUTO-REPLY)
-      // -------------------------------------------------------------
+      // 3. LÓGICA DE INTELIGÊNCIA ARTIFICIAL (AUTO-REPLY E ANÁLISE SILENCIOSA)
       const { data: config } = await supabase.from('configuracoes').select('auto_reply_enabled').eq('id', 1).single();
-      const { data: clientData } = await supabase.from('clientes').select('status').eq('id', clientId).single();
+      const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled').eq('id', clientId).single();
 
-      // A IA só responde se estiver ativada nas configurações E se o lead ainda não estiver qualificado
-      // (Pode responder em 'Novo' e 'Contato Feito'. Quando a IA passar para 'Em Qualificação', ela para).
-      const allowedAIStatuses = ['Novo', 'Contato Feito'];
+      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação'];
+      const isAutoReplyStage = autoReplyStatuses.includes(clientData?.status);
+      const isAIEnabled = clientData?.ai_enabled !== false;
 
-      if (config?.auto_reply_enabled && allowedAIStatuses.includes(clientData?.status)) {
-        const { generateAIResponse } = await import('@/lib/openai');
-        
+      // Importar funções do OpenAI
+      const { generateAIResponse, analyzeConversationAndMoveStatus } = await import('@/lib/openai');
+
+      if (!isFromMe && config?.auto_reply_enabled && isAIEnabled && isAutoReplyStage) {
+        // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
         const aiReply = await generateAIResponse(clientId, supabase);
 
         if (aiReply) {
-          // Salvar a resposta da IA no banco
           await supabase.from('mensagens').insert({
             client_id: clientId,
             text: aiReply,
@@ -132,12 +131,10 @@ export async function POST(request: Request) {
             read: true
           });
 
-          // Mudar status para 'Contato Feito' se for o primeiro contato da IA
           if (clientData?.status === 'Novo') {
             await supabase.from('clientes').update({ status: 'Contato Feito' }).eq('id', clientId);
           }
 
-          // Enviar a mensagem real de volta via Evolution API
           const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL || '';
           const apiKey = process.env.EVOLUTION_API_KEY || process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || '';
           const instanceName = body.instance || '';
@@ -146,23 +143,22 @@ export async function POST(request: Request) {
             try {
               await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'apikey': apiKey
-                },
-                body: JSON.stringify({
-                  number: phone,
-                  text: aiReply
-                })
+                headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                body: JSON.stringify({ number: phone, text: aiReply })
               });
               console.log(`[AI] Resposta enviada com sucesso para ${phone}`);
             } catch (err) {
               console.error('[AI] Erro ao enviar resposta via Evolution API:', err);
             }
-          } else {
-            console.warn('[AI] Variáveis de ambiente da Evolution API não encontradas para disparo.');
           }
         }
+      } else if (!isAutoReplyStage || !isAIEnabled) {
+        // --- FLUXO 2: ANÁLISE SILENCIOSA DO FUNIL (QUANDO HUMANO ASSUMIU OU IA DESATIVADA) ---
+        // A IA apenas lerá o contexto para ver se avança o Kanban (Apresentação, Negociação, etc.)
+        // Executamos de forma assíncrona para não travar o webhook
+        analyzeConversationAndMoveStatus(clientId, supabase).catch(err => {
+          console.error('[AI Silent] Erro na análise silenciosa:', err);
+        });
       }
 
       return NextResponse.json({ success: true, message: 'Mensagem processada com sucesso!' });

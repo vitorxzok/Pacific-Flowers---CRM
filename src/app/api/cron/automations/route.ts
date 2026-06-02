@@ -91,18 +91,18 @@ export async function GET(request: Request) {
     // LÓGICA 2: FOLLOW-UP INATIVIDADE (X MINUTOS)
     // ========================================================
     if (autoReplyEnabled) {
-      // 1. Buscar clientes que estão em "Novo" ou "Contato Feito" e ainda NÃO receberam follow-up
+      // 1. Buscar clientes que estão em "Novo" ou "Contato Feito" e ainda NÃO receberam o follow-up rápido
       const { data: clientesInativos, error: inativosError } = await supabase
         .from('clientes')
         .select('id, name, phone, attendant_id, status')
         .in('status', ['Novo', 'Contato Feito'])
-        .eq('followup_sent', false);
+        .eq('followup_sent', false)
+        .eq('ai_enabled', true);
 
       if (clientesInativos && clientesInativos.length > 0) {
         for (const client of clientesInativos) {
           try {
-            // Pegar a ÚLTIMA mensagem
-            const { data: lastMessage, error: msgError } = await supabase
+            const { data: lastMessage } = await supabase
               .from('mensagens')
               .select('sender, timestamp')
               .eq('client_id', client.id)
@@ -115,39 +115,22 @@ export async function GET(request: Request) {
               const now = new Date().getTime();
               const diffMinutes = (now - messageTime) / (1000 * 60);
 
-              // Se a última mensagem foi da IA, e o tempo passou do configurado
               if (diffMinutes >= minutesWithoutResponse) {
-                // Marca logo como enviado para evitar spam se algo falhar no meio
-                await supabase
-                  .from('clientes')
-                  .update({ followup_sent: true })
-                  .eq('id', client.id);
-
-                // Chama a IA com contexto de follow-up
+                await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
                 const aiResponseText = await generateAIResponse(client.id, supabase, "FOLLOW_UP_INATIVIDADE");
 
                 if (aiResponseText) {
-                  await supabase.from('mensagens').insert({
-                    client_id: client.id,
-                    text: aiResponseText,
-                    sender: 'attendant',
-                    read: true
-                  });
+                  await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
 
-                  // Envia via Evolution
                   const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
                   const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
                   
                   if (apiUrl && apiKey && client.phone) {
                     const cleanedPhone = client.phone.replace(/\D/g, '');
                     const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
-                    
                     await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                       method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': apiKey,
-                      },
+                      headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
                       body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
                     });
                   }
@@ -156,7 +139,65 @@ export async function GET(request: Request) {
               }
             }
           } catch (err) {
-            console.error(`Erro ao processar follow-up para cliente ${client.id}:`, err);
+            console.error(`Erro ao processar follow-up rapido para cliente ${client.id}:`, err);
+          }
+        }
+      }
+
+      // ========================================================
+      // LÓGICA 3: INSISTÊNCIA DA IA (A CADA X HORAS)
+      // ========================================================
+      const followUpIntervalHours = config.followup_interval_hours || 3;
+      
+      const { data: clientesInsistencia, error: insistenciaError } = await supabase
+        .from('clientes')
+        .select('id, name, phone, attendant_id, status')
+        .in('status', ['Novo', 'Contato Feito'])
+        // Remove a restrição de followup_sent pois isso deve rodar continuamente até o cliente responder ou sair desse status
+        .eq('ai_enabled', true);
+
+      if (clientesInsistencia && clientesInsistencia.length > 0) {
+        for (const client of clientesInsistencia) {
+          try {
+            const { data: lastMessage } = await supabase
+              .from('mensagens')
+              .select('sender, timestamp')
+              .eq('client_id', client.id)
+              .order('timestamp', { ascending: false })
+              .limit(1)
+              .single();
+
+            // Só insiste se a última mensagem tiver sido da IA/vendedor
+            if (lastMessage && lastMessage.sender === 'attendant') {
+              const messageTime = new Date(lastMessage.timestamp).getTime();
+              const now = new Date().getTime();
+              const diffHours = (now - messageTime) / (1000 * 60 * 60);
+
+              if (diffHours >= followUpIntervalHours) {
+                // Chama a IA com contexto de insistência
+                const aiResponseText = await generateAIResponse(client.id, supabase, "INSISTENCIA_HORAS");
+
+                if (aiResponseText) {
+                  await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+
+                  const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+                  const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+                  
+                  if (apiUrl && apiKey && client.phone) {
+                    const cleanedPhone = client.phone.replace(/\D/g, '');
+                    const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+                    await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                      body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
+                    });
+                  }
+                  results.followUpsEnviados++;
+                }
+              }
+            }
+          } catch (err) {
+            console.error(`Erro ao processar insistencia para cliente ${client.id}:`, err);
           }
         }
       }

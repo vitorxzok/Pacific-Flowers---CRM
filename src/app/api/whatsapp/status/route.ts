@@ -36,6 +36,33 @@ export async function GET(request: Request) {
     // Evolution API typically returns { instance: { state: "open" } } or similar
     const state = data.instance?.state || data.state || 'unknown';
 
+    if (state === 'open') {
+      // Try to get the owner (phone number) from another endpoint if it's connected
+      const fetchInfo = await fetch(`${apiUrl}/instance/fetchInstances?instanceName=${instanceName}`, {
+        method: 'GET',
+        headers: {
+          'apikey': apiKey,
+        },
+      });
+      const infoData = await fetchInfo.json();
+      
+      let owner = '';
+      if (Array.isArray(infoData) && infoData.length > 0) {
+        owner = infoData[0].owner || ''; // Formato esperado: 554199999999@s.whatsapp.net
+      } else if (infoData.instance && infoData.instance.owner) {
+        owner = infoData.instance.owner;
+      }
+
+      if (owner) {
+        const phoneNumber = owner.split('@')[0];
+        // Atualiza a tabela profiles com o whatsapp_number
+        await supabase
+          .from('profiles')
+          .update({ whatsapp_number: phoneNumber })
+          .eq('id', userId);
+      }
+    }
+
     return NextResponse.json({ success: true, state });
 
   } catch (error: any) {
