@@ -11,6 +11,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [attendantFilter, setAttendantFilter] = useState<string>('all');
 
   const { clients, fetchAdminClients } = useCRMStore();
 
@@ -70,10 +71,16 @@ export default function AdminPage() {
     );
   }
 
-  // Dashboard calculations
-  const totalLeads = clients.length;
-  const inProgress = clients.filter(c => !['Finalizado', 'Perdido'].includes(c.status)).length;
-  const closed = clients.filter(c => c.status === 'Finalizado').length;
+  // Filtering
+  const uniqueAttendants = Array.from(new Set(clients.map(c => c.attendant).filter(Boolean))) as string[];
+  const filteredClients = attendantFilter === 'all' 
+    ? clients 
+    : clients.filter(c => c.attendant === attendantFilter);
+
+  // Dashboard calculations based on filtered clients
+  const totalLeads = filteredClients.length;
+  const inProgress = filteredClients.filter(c => !['Finalizado', 'Perdido'].includes(c.status)).length;
+  const closed = filteredClients.filter(c => c.status === 'Finalizado').length;
 
   return (
     <div className="flex flex-col h-full bg-background relative overflow-y-auto">
@@ -126,8 +133,19 @@ export default function AdminPage() {
 
         {/* Tabela de Leads */}
         <div className="glass-panel overflow-hidden">
-          <div className="p-6 border-b border-surface-border">
+          <div className="p-6 border-b border-surface-border flex justify-between items-center">
             <h2 className="text-lg font-bold text-white">Todos os Leads</h2>
+            
+            <select
+              value={attendantFilter}
+              onChange={(e) => setAttendantFilter(e.target.value)}
+              className="bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+            >
+              <option value="all">Todos os Vendedores</option>
+              {uniqueAttendants.map(att => (
+                <option key={att} value={att}>{att}</option>
+              ))}
+            </select>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-300">
@@ -141,7 +159,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-border">
-                {clients.map(client => (
+                {filteredClients.map(client => (
                   <tr key={client.id} className="hover:bg-surface-hover/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-medium text-white">{client.name}</div>
@@ -168,10 +186,10 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ))}
-                {clients.length === 0 && (
+                {filteredClients.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                      Nenhum lead encontrado no sistema.
+                      Nenhum lead encontrado no sistema para este filtro.
                     </td>
                   </tr>
                 )}
@@ -184,7 +202,7 @@ export default function AdminPage() {
 
       {selectedClientId && (
         <ClientModal
-          clientId={selectedClientId}
+          client={clients.find(c => c.id === selectedClientId)!}
           onClose={() => setSelectedClientId(null)}
         />
       )}
