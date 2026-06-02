@@ -434,7 +434,8 @@ Regras:
 
     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
       const toolCall = responseMessage.tool_calls[0];
-      if (toolCall.function.name === 'updateStatus') {
+      
+      if (toolCall.type === 'function' && toolCall.function.name === 'updateStatus') {
         const args = JSON.parse(toolCall.function.arguments);
         
         if (args.newStatus && args.newStatus !== clientData.status) {
