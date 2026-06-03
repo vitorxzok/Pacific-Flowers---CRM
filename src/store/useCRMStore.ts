@@ -30,8 +30,8 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   setSearchQuery: (q) => set({ searchQuery: q }),
   settings: {
     autoReplyEnabled: false,
-    minutesWithoutResponse: 5,
-    followUpIntervalHours: 3,
+    minutesWithoutResponse: 15,
+    followUpIntervalHours: 24,
     kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido']
   },
   
@@ -55,7 +55,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       set({ settings: {
         autoReplyEnabled: data.auto_reply_enabled,
         minutesWithoutResponse: data.minutes_without_response,
-        followUpIntervalHours: data.followup_interval_hours || 3,
+        followUpIntervalHours: data.followup_interval_hours || 24,
         kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido']
       }});
     }

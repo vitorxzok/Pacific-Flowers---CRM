@@ -72,7 +72,12 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     } else if (contextOverride === 'FOLLOW_UP_INATIVIDADE') {
       openAiMessages.push({
         role: 'system',
-        content: "CRÍTICO: O cliente sumiu da conversa há alguns minutos e não respondeu nossa última mensagem. Mande uma mensagem RÁPIDA, CURTA e SIMPÁTICA perguntando se ele conseguiu ver a mensagem anterior ou se ficou com alguma dúvida."
+        content: "CRÍTICO: O cliente parou de responder há alguns minutos. Mande uma mensagem RÁPIDA, CURTA e SIMPÁTICA fingindo que você esqueceu de mandar o link do nosso catálogo. Exemplo: 'Esqueci de te mandar o link direto do nosso catálogo! É só clicar aqui para ver os valores das orquídeas e outros itens: https://pacific-flowers.vercel.app. Conseguiu abrir?'"
+      });
+    } else if (contextOverride === 'INSISTENCIA_HORAS') {
+      openAiMessages.push({
+        role: 'system',
+        content: "CRÍTICO: O cliente não nos responde há muito tempo. Sua ÚNICA missão agora é tentar retomar a conversa com um tom comercial e proativo. Mande uma mensagem como: 'Olá, bom dia/tarde! Passando para ver se você conseguiu dar uma olhada no catálogo. Tem algum arranjo ou kit que você mais gostou para eu simular um orçamento para você?'"
       });
     }
 
