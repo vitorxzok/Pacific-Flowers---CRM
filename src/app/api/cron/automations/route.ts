@@ -110,7 +110,7 @@ export async function GET(request: Request) {
               .limit(1)
               .single();
 
-            if (lastMessage && lastMessage.sender === 'client') {
+            if (lastMessage && lastMessage.sender === 'attendant') {
               const messageTime = new Date(lastMessage.timestamp).getTime();
               const now = new Date().getTime();
               const diffMinutes = (now - messageTime) / (1000 * 60);
