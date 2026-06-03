@@ -62,9 +62,15 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   },
 
   fetchClients: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    
+    const userId = session.user.id;
+
     const { data, error } = await supabase
       .from('clientes')
-      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(*)');
+      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(*)')
+      .eq('attendant_id', userId);
       
     if (error) {
       console.error("Error fetching clients:", error);
