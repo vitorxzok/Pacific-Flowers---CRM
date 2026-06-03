@@ -26,7 +26,7 @@ const statusColors: Record<string, string> = {
 
 export function KanbanColumn({ status, clients, onCardClick }: KanbanColumnProps) {
   const { updateClientStatus, removeKanbanColumn } = useCRMStore();
-  const isFixed = ['Novo', 'Contato Feito', 'Em Qualificação'].includes(status);
+  const isFixed = ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'].includes(status);
 
   const getColor = (status: string) => {
     return statusColors[status] || 'bg-blue-500';

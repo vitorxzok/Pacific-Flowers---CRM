@@ -32,7 +32,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     autoReplyEnabled: false,
     minutesWithoutResponse: 5,
     followUpIntervalHours: 3,
-    kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Reposição', 'Perdido']
+    kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido']
   },
   
   setSettings: async (newSettings) => {
@@ -56,7 +56,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
         autoReplyEnabled: data.auto_reply_enabled,
         minutesWithoutResponse: data.minutes_without_response,
         followUpIntervalHours: data.followup_interval_hours || 3,
-        kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Reposição', 'Perdido']
+        kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido']
       }});
     }
   },
