@@ -91,11 +91,13 @@ export async function GET(request: Request) {
     // LÓGICA 2: FOLLOW-UP INATIVIDADE (X MINUTOS)
     // ========================================================
     if (autoReplyEnabled) {
-      // 1. Buscar clientes que estão em "Novo" ou "Contato Feito" e ainda NÃO receberam o follow-up rápido
+      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada'];
+
+      // 1. Buscar clientes que estão em status ativos e ainda NÃO receberam o follow-up rápido
       const { data: clientesInativos, error: inativosError } = await supabase
         .from('clientes')
         .select('id, name, phone, attendant_id, status')
-        .in('status', ['Novo', 'Contato Feito'])
+        .in('status', autoReplyStatuses)
         .eq('followup_sent', false)
         .eq('ai_enabled', true);
 
@@ -148,11 +150,12 @@ export async function GET(request: Request) {
       // LÓGICA 3: INSISTÊNCIA DA IA (A CADA X HORAS)
       // ========================================================
       const followUpIntervalHours = config.followup_interval_hours || 3;
+      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada'];
       
       const { data: clientesInsistencia, error: insistenciaError } = await supabase
         .from('clientes')
         .select('id, name, phone, attendant_id, status')
-        .in('status', ['Novo', 'Contato Feito'])
+        .in('status', autoReplyStatuses)
         // Remove a restrição de followup_sent pois isso deve rodar continuamente até o cliente responder ou sair desse status
         .eq('ai_enabled', true);
 
