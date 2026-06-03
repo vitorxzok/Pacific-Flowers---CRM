@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { generateAIResponse } from '@/lib/openai';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Essa rota pode ser chamada por um CRON Job (ex: cron-job.org ou Vercel Cron) a cada 1 minuto
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // 1. Buscar configurações do sistema
     const { data: config, error: configError } = await supabase
@@ -150,7 +153,6 @@ export async function GET(request: Request) {
       // LÓGICA 3: INSISTÊNCIA DA IA (A CADA X HORAS)
       // ========================================================
       const followUpIntervalHours = config.followup_interval_hours || 3;
-      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada'];
       
       const { data: clientesInsistencia, error: insistenciaError } = await supabase
         .from('clientes')
