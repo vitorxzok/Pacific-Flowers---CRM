@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       const { data: config } = await supabase.from('configuracoes').select('auto_reply_enabled').eq('id', 1).single();
       const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled').eq('id', clientId).single();
 
-      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação'];
+      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada'];
       const isAutoReplyStage = autoReplyStatuses.includes(clientData?.status);
       const isAIEnabled = clientData?.ai_enabled !== false;
 
