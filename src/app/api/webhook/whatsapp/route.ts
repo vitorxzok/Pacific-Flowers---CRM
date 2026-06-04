@@ -37,33 +37,34 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: 'Payload sem texto ou telefone.' });
       }
 
+      // Extrair o ID do usuário (vendedor) a partir do nome da instância
+      const instanceName = body.instance || '';
+      const sellerId = instanceName.replace('user_', '');
+
       let clientId;
 
-      // 1. Procurar o cliente no banco pelo telefone (usando os últimos 8 dígitos para ignorar o nono dígito)
+      // 1. Procurar o cliente no banco pelo telefone E pelo vendedor (separação total de leads)
       const last8Digits = phone.slice(-8);
       const { data: clients, error: clientError } = await supabase
         .from('clientes')
         .select('id, phone, status, ai_enabled')
         .ilike('phone', `%${last8Digits}`)
+        .eq('attendant_id', sellerId)
         .limit(1);
 
       if (clientError || !clients || clients.length === 0) {
-        if (isFromMe) {
-           return NextResponse.json({ success: true, message: 'Mensagem própria para lead inexistente ignorada.' });
-        }
-        console.warn(`Cliente não encontrado para o telefone: ${phone}. Criando novo lead...`);
+        console.warn(`Cliente não encontrado para o telefone: ${phone} (Vendedor: ${sellerId}). Criando novo lead...`);
         
-        // Extrair o ID do usuário (vendedor) a partir do nome da instância
-        const instanceName = body.instance || '';
-        const sellerId = instanceName.replace('user_', '');
         const pushName = data?.pushName || `Lead WhatsApp (${phone})`;
+        // Se a primeira mensagem foi enviada pelo vendedor, já podemos considerar Contato Feito
+        const initialStatus = isFromMe ? 'Contato Feito' : 'Novo';
 
         const { data: newClient, error: createError } = await supabase
           .from('clientes')
           .insert({
             name: pushName,
             phone: phone,
-            status: 'Novo',
+            status: initialStatus,
             attendant_id: sellerId
           })
           .select()
