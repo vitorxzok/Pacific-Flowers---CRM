@@ -108,17 +108,24 @@ export async function POST(request: Request) {
       }
 
       // 3. LÓGICA DE INTELIGÊNCIA ARTIFICIAL (AUTO-REPLY E ANÁLISE SILENCIOSA)
-      const { data: config } = await supabase.from('configuracoes').select('auto_reply_enabled').eq('id', 1).single();
-      const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled').eq('id', clientId).single();
+      const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled, attendant_id').eq('id', clientId).single();
+      
+      let autoReplyEnabled = false;
+      if (clientData?.attendant_id) {
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(clientData.attendant_id);
+        if (!userError && userData?.user) {
+           autoReplyEnabled = userData.user.user_metadata?.crm_settings?.auto_reply_enabled || false;
+        }
+      }
 
-      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada'];
+      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada'];
       const isAutoReplyStage = autoReplyStatuses.includes(clientData?.status);
       const isAIEnabled = clientData?.ai_enabled !== false;
 
       // Importar funções do OpenAI
       const { generateAIResponse, analyzeConversationAndMoveStatus } = await import('@/lib/openai');
 
-      if (!isFromMe && config?.auto_reply_enabled && isAIEnabled && isAutoReplyStage) {
+      if (!isFromMe && autoReplyEnabled && isAIEnabled && isAutoReplyStage) {
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
         const aiReply = await generateAIResponse(clientId, supabase);

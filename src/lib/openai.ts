@@ -287,18 +287,15 @@ export async function analyzeConversationAndMoveStatus(clientId: string, supabas
     }).join('\n');
 
     const SILENT_SYSTEM_PROMPT = `Você é um supervisor silencioso de um funil de vendas.
-Sua única função é ler o histórico recente da conversa entre o VENDEDOR e o CLIENTE e determinar se o lead avançou ou retrocedeu de etapa.
+Sua única função é ler o histórico recente da conversa e determinar se o lead avançou ou retrocedeu de etapa.
 Status atual do lead: "${clientData.status}"
 Nome do lead: "${clientData.name || 'Desconhecido'}"
 
 Etapas permitidas para você mover:
-- "Apresentação": O vendedor está enviando ou apresentando o catálogo de produtos/serviços.
 - "Proposta Enviada": O vendedor enviou um orçamento, preço ou proposta clara.
-- "Negociação": O cliente está pechinchando, tirando dúvidas de preço, condições de pagamento.
-- "Fechamento": O vendedor enviou link de pagamento, fechou o pedido ou está pegando dados para entrega/pagamento.
-- "Finalizado": O pedido foi pago e finalizado.
-- "Perdido": O cliente disse que não quer mais, desistiu, ou o vendedor encerrou por falta de interesse.
-- "Reposição": É um cliente antigo comprando de novo.
+- "Finalizado": O cliente comprou, pagou ou o negócio foi fechado com sucesso.
+- "Reposição": O cliente precisa voltar a comprar no futuro (recorrente) ou pediu para avisar depois.
+- "Perdido": O cliente disse não, achou caro, não tem interesse ou parou de responder definitivamente.
 
 Regras:
 1. SÓ chame a ferramenta \`updateStatus\` se você tiver absoluta certeza de que a conversa avançou para um novo status DIFERENTE do atual.
@@ -325,7 +322,7 @@ Regras:
               properties: {
                 newStatus: {
                   type: 'string',
-                  enum: ['Apresentação', 'Proposta Enviada', 'Negociação', 'Fechamento', 'Finalizado', 'Perdido', 'Reposição'],
+                  enum: ['Proposta Enviada', 'Finalizado', 'Perdido', 'Reposição'],
                   description: 'A nova etapa do funil'
                 },
                 reason: {

@@ -10,19 +10,22 @@ export async function GET(request: Request) {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 1. Buscar configurações do sistema
-    const { data: config, error: configError } = await supabase
-      .from('configuracoes')
-      .select('*')
-      .eq('id', 1)
-      .single();
-
-    if (configError || !config) {
-      return NextResponse.json({ error: 'Configuração não encontrada' }, { status: 500 });
+    // 1. Buscar usuários e suas configurações (user_metadata)
+    const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
+    
+    if (usersError || !usersData) {
+      return NextResponse.json({ error: 'Erro ao buscar configurações dos usuários' }, { status: 500 });
     }
 
-    const autoReplyEnabled = config.auto_reply_enabled;
-    const minutesWithoutResponse = config.minutes_without_response || 5;
+    // Mapa de configurações por attendant_id
+    const settingsByAttendant: Record<string, any> = {};
+    for (const u of usersData.users) {
+      settingsByAttendant[u.id] = u.user_metadata?.crm_settings || {
+        auto_reply_enabled: false,
+        minutes_without_response: 15,
+        followup_interval_hours: 24
+      };
+    }
 
     // Resultados das execuções
     const results = {
@@ -93,48 +96,58 @@ export async function GET(request: Request) {
     // ========================================================
     // LÓGICA 2: FOLLOW-UP INATIVIDADE (X MINUTOS)
     // ========================================================
-    if (autoReplyEnabled) {
-      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Qualificado', 'Apresentação', 'Proposta Enviada'];
+    const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada'];
 
-      // 1. Buscar clientes que estão em status ativos e ainda NÃO receberam o follow-up rápido
-      const { data: clientesInativos, error: inativosError } = await supabase
-        .from('clientes')
-        .select('id, name, phone, attendant_id, status')
-        .in('status', autoReplyStatuses)
-        .eq('followup_sent', false)
-        .eq('ai_enabled', true);
+    // 1. Buscar clientes que estão em status ativos e ainda NÃO receberam o follow-up rápido
+    const { data: clientesInativos, error: inativosError } = await supabase
+      .from('clientes')
+      .select('id, name, phone, attendant_id, status')
+      .in('status', autoReplyStatuses)
+      .eq('followup_sent', false)
+      .eq('ai_enabled', true);
 
-      if (clientesInativos && clientesInativos.length > 0) {
-        for (const client of clientesInativos) {
-          try {
-            const { data: lastMessage } = await supabase
-              .from('mensagens')
-              .select('sender, timestamp')
-              .eq('client_id', client.id)
-              .order('timestamp', { ascending: false })
-              .limit(1)
-              .single();
+    if (clientesInativos && clientesInativos.length > 0) {
+      for (const client of clientesInativos) {
+        try {
+          const clientSettings = settingsByAttendant[client.attendant_id] || {
+            auto_reply_enabled: false,
+            minutes_without_response: 15
+          };
+          
+          if (!clientSettings.auto_reply_enabled) {
+            continue; // Pula se a resposta rápida estiver desativada para este atendente
+          }
 
-            if (lastMessage && lastMessage.sender === 'attendant') {
-              const messageTime = new Date(lastMessage.timestamp).getTime();
-              const now = new Date().getTime();
-              const diffMinutes = (now - messageTime) / (1000 * 60);
+          const minutesWithoutResponse = clientSettings.minutes_without_response || 15;
 
-              if (diffMinutes >= minutesWithoutResponse) {
-                await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
-                const aiResponseText = await generateAIResponse(client.id, supabase, "FOLLOW_UP_INATIVIDADE");
+          const { data: lastMessage } = await supabase
+            .from('mensagens')
+            .select('sender, timestamp')
+            .eq('client_id', client.id)
+            .order('timestamp', { ascending: false })
+            .limit(1)
+            .single();
 
-                if (aiResponseText) {
-                  await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+          if (lastMessage && lastMessage.sender === 'attendant') {
+            const messageTime = new Date(lastMessage.timestamp).getTime();
+            const now = new Date().getTime();
+            const diffMinutes = (now - messageTime) / (1000 * 60);
 
-                  const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
-                  const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
-                  
-                  if (apiUrl && apiKey && client.phone) {
-                    const cleanedPhone = client.phone.replace(/\D/g, '');
-                    const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
-                    await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
-                      method: 'POST',
+            if (diffMinutes >= minutesWithoutResponse) {
+              await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
+              const aiResponseText = await generateAIResponse(client.id, supabase, "FOLLOW_UP_INATIVIDADE");
+
+              if (aiResponseText) {
+                await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+
+                const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+                const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+                
+                if (apiUrl && apiKey && client.phone) {
+                  const cleanedPhone = client.phone.replace(/\D/g, '');
+                  const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+                  await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                    method: 'POST',
                       headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
                       body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
                     });
@@ -152,8 +165,6 @@ export async function GET(request: Request) {
       // ========================================================
       // LÓGICA 3: INSISTÊNCIA DA IA (A CADA X HORAS)
       // ========================================================
-      const followUpIntervalHours = config.followup_interval_hours || 3;
-      
       const { data: clientesInsistencia, error: insistenciaError } = await supabase
         .from('clientes')
         .select('id, name, phone, attendant_id, status')
@@ -164,6 +175,17 @@ export async function GET(request: Request) {
       if (clientesInsistencia && clientesInsistencia.length > 0) {
         for (const client of clientesInsistencia) {
           try {
+            const clientSettings = settingsByAttendant[client.attendant_id] || {
+              auto_reply_enabled: false,
+              followup_interval_hours: 24
+            };
+            
+            if (!clientSettings.auto_reply_enabled) {
+              continue; // Pula se a resposta rápida/insistência estiver desativada
+            }
+
+            const followUpIntervalHours = clientSettings.followup_interval_hours || 24;
+
             const { data: lastMessage } = await supabase
               .from('mensagens')
               .select('sender, timestamp')

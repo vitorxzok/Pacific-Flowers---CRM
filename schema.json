@@ -1,0 +1,1838 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "",
+    "title": "standard public schema",
+    "version": "14.5"
+  },
+  "host": "nkvesifvkyjbicnqefco.supabase.co:443",
+  "basePath": "/",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json",
+    "application/vnd.pgrst.object+json;nulls=stripped",
+    "application/vnd.pgrst.object+json",
+    "text/csv"
+  ],
+  "produces": [
+    "application/json",
+    "application/vnd.pgrst.object+json;nulls=stripped",
+    "application/vnd.pgrst.object+json",
+    "text/csv"
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "produces": [
+          "application/openapi+json",
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "summary": "OpenAPI description (this document)",
+        "tags": [
+          "Introspection"
+        ]
+      }
+    },
+    "/cliente_tags": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.cliente_tags.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.cliente_tags.tag_id"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/cliente_tags"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "cliente_tags"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.cliente_tags"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "cliente_tags"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.cliente_tags.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.cliente_tags.tag_id"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "cliente_tags"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.cliente_tags.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.cliente_tags.tag_id"
+          },
+          {
+            "$ref": "#/parameters/body.cliente_tags"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "cliente_tags"
+        ]
+      }
+    },
+    "/profiles": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.profiles.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.role"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.whatsapp_number"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/profiles"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "profiles"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.profiles"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "profiles"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.profiles.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.role"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.whatsapp_number"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "profiles"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.profiles.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.role"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.profiles.whatsapp_number"
+          },
+          {
+            "$ref": "#/parameters/body.profiles"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "profiles"
+        ]
+      }
+    },
+    "/mensagens": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.sender"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.timestamp"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.read"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/mensagens"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "mensagens"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.mensagens"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "mensagens"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.sender"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.timestamp"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.read"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "mensagens"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.sender"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.timestamp"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.mensagens.read"
+          },
+          {
+            "$ref": "#/parameters/body.mensagens"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "mensagens"
+        ]
+      }
+    },
+    "/configuracoes": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.auto_reply_enabled"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.minutes_without_response"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.kanban_columns"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.followup_interval_hours"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/configuracoes"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "configuracoes"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.configuracoes"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "configuracoes"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.auto_reply_enabled"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.minutes_without_response"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.kanban_columns"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.followup_interval_hours"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "configuracoes"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.auto_reply_enabled"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.minutes_without_response"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.kanban_columns"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.configuracoes.followup_interval_hours"
+          },
+          {
+            "$ref": "#/parameters/body.configuracoes"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "configuracoes"
+        ]
+      }
+    },
+    "/clientes": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.clientes.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.phone"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.email"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.notes"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.attendant_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.updated_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.followup_sent"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.ai_enabled"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/clientes"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "clientes"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.clientes"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "clientes"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.clientes.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.phone"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.email"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.notes"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.attendant_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.updated_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.followup_sent"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.ai_enabled"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "clientes"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.clientes.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.phone"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.email"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.notes"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.attendant_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.updated_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.followup_sent"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.clientes.ai_enabled"
+          },
+          {
+            "$ref": "#/parameters/body.clientes"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "clientes"
+        ]
+      }
+    },
+    "/tags": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.tags.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.tags.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.tags.color"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/tags"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "tags"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.tags"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "tags"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.tags.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.tags.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.tags.color"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "tags"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.tags.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.tags.name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.tags.color"
+          },
+          {
+            "$ref": "#/parameters/body.tags"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "tags"
+        ]
+      }
+    },
+    "/eventos": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.eventos.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.description"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.from_status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.to_status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.date"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/eventos"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "eventos"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.eventos"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "eventos"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.eventos.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.description"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.from_status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.to_status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.date"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "eventos"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.eventos.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.client_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.description"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.from_status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.to_status"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.eventos.date"
+          },
+          {
+            "$ref": "#/parameters/body.eventos"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "eventos"
+        ]
+      }
+    },
+    "/rpc/process_whatsapp_webhook": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "args",
+            "required": true,
+            "schema": {
+              "properties": {
+                "p_name": {
+                  "format": "text",
+                  "type": "string"
+                },
+                "p_phone": {
+                  "format": "text",
+                  "type": "string"
+                },
+                "p_text": {
+                  "format": "text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "p_phone",
+                "p_name",
+                "p_text"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "$ref": "#/parameters/preferParams"
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/vnd.pgrst.object+json;nulls=stripped",
+          "application/vnd.pgrst.object+json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "(rpc) process_whatsapp_webhook"
+        ]
+      }
+    },
+    "/rpc/save_webhook_ai_response": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "args",
+            "required": true,
+            "schema": {
+              "properties": {
+                "p_client_id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "p_notes": {
+                  "format": "text",
+                  "type": "string"
+                },
+                "p_status": {
+                  "format": "text",
+                  "type": "string"
+                },
+                "p_text": {
+                  "format": "text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "p_client_id",
+                "p_text",
+                "p_status",
+                "p_notes"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "$ref": "#/parameters/preferParams"
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/vnd.pgrst.object+json;nulls=stripped",
+          "application/vnd.pgrst.object+json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "(rpc) save_webhook_ai_response"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "cliente_tags": {
+      "required": [
+        "client_id",
+        "tag_id"
+      ],
+      "properties": {
+        "client_id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>\nThis is a Foreign Key to `clientes.id`.<fk table='clientes' column='id'/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "tag_id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>\nThis is a Foreign Key to `tags.id`.<fk table='tags' column='id'/>",
+          "format": "uuid",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "profiles": {
+      "required": [
+        "id",
+        "name",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "name": {
+          "format": "text",
+          "type": "string"
+        },
+        "role": {
+          "default": "atendente",
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "timezone('utc'::text, now())",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "whatsapp_number": {
+          "format": "text",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "mensagens": {
+      "required": [
+        "id",
+        "client_id",
+        "sender",
+        "text",
+        "timestamp"
+      ],
+      "properties": {
+        "id": {
+          "default": "extensions.uuid_generate_v4()",
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "client_id": {
+          "description": "Note:\nThis is a Foreign Key to `clientes.id`.<fk table='clientes' column='id'/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "sender": {
+          "format": "text",
+          "type": "string"
+        },
+        "text": {
+          "format": "text",
+          "type": "string"
+        },
+        "timestamp": {
+          "default": "timezone('utc'::text, now())",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "read": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "configuracoes": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "default": 1,
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "integer",
+          "type": "integer"
+        },
+        "auto_reply_enabled": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "minutes_without_response": {
+          "default": 5,
+          "format": "integer",
+          "type": "integer"
+        },
+        "kanban_columns": {
+          "format": "jsonb"
+        },
+        "followup_interval_hours": {
+          "default": 3,
+          "format": "integer",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "clientes": {
+      "required": [
+        "id",
+        "name",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "id": {
+          "default": "extensions.uuid_generate_v4()",
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "name": {
+          "format": "text",
+          "type": "string"
+        },
+        "phone": {
+          "format": "text",
+          "type": "string"
+        },
+        "email": {
+          "format": "text",
+          "type": "string"
+        },
+        "status": {
+          "format": "text",
+          "type": "string"
+        },
+        "notes": {
+          "format": "text",
+          "type": "string"
+        },
+        "attendant_id": {
+          "description": "Note:\nThis is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "timezone('utc'::text, now())",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "updated_at": {
+          "default": "timezone('utc'::text, now())",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "followup_sent": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "ai_enabled": {
+          "default": true,
+          "format": "boolean",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "tags": {
+      "required": [
+        "id",
+        "name",
+        "color"
+      ],
+      "properties": {
+        "id": {
+          "default": "extensions.uuid_generate_v4()",
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "name": {
+          "format": "text",
+          "type": "string"
+        },
+        "color": {
+          "format": "text",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "eventos": {
+      "required": [
+        "id",
+        "client_id",
+        "type",
+        "description",
+        "date"
+      ],
+      "properties": {
+        "id": {
+          "default": "extensions.uuid_generate_v4()",
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "client_id": {
+          "description": "Note:\nThis is a Foreign Key to `clientes.id`.<fk table='clientes' column='id'/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "type": {
+          "format": "text",
+          "type": "string"
+        },
+        "description": {
+          "format": "text",
+          "type": "string"
+        },
+        "from_status": {
+          "format": "text",
+          "type": "string"
+        },
+        "to_status": {
+          "format": "text",
+          "type": "string"
+        },
+        "date": {
+          "default": "timezone('utc'::text, now())",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "parameters": {
+    "preferParams": {
+      "name": "Prefer",
+      "description": "Preference",
+      "required": false,
+      "in": "header",
+      "type": "string"
+    },
+    "preferReturn": {
+      "name": "Prefer",
+      "description": "Preference",
+      "required": false,
+      "enum": [
+        "return=representation",
+        "return=minimal",
+        "return=none"
+      ],
+      "in": "header",
+      "type": "string"
+    },
+    "preferCount": {
+      "name": "Prefer",
+      "description": "Preference",
+      "required": false,
+      "enum": [
+        "count=none"
+      ],
+      "in": "header",
+      "type": "string"
+    },
+    "preferPost": {
+      "name": "Prefer",
+      "description": "Preference",
+      "required": false,
+      "enum": [
+        "return=representation",
+        "return=minimal",
+        "return=none",
+        "resolution=ignore-duplicates",
+        "resolution=merge-duplicates"
+      ],
+      "in": "header",
+      "type": "string"
+    },
+    "select": {
+      "name": "select",
+      "description": "Filtering Columns",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "on_conflict": {
+      "name": "on_conflict",
+      "description": "On Conflict",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "order": {
+      "name": "order",
+      "description": "Ordering",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "range": {
+      "name": "Range",
+      "description": "Limiting and Pagination",
+      "required": false,
+      "in": "header",
+      "type": "string"
+    },
+    "rangeUnit": {
+      "name": "Range-Unit",
+      "description": "Limiting and Pagination",
+      "required": false,
+      "default": "items",
+      "in": "header",
+      "type": "string"
+    },
+    "offset": {
+      "name": "offset",
+      "description": "Limiting and Pagination",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "limit": {
+      "name": "limit",
+      "description": "Limiting and Pagination",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.cliente_tags": {
+      "name": "cliente_tags",
+      "description": "cliente_tags",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/cliente_tags"
+      }
+    },
+    "rowFilter.cliente_tags.client_id": {
+      "name": "client_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.cliente_tags.tag_id": {
+      "name": "tag_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.profiles": {
+      "name": "profiles",
+      "description": "profiles",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/profiles"
+      }
+    },
+    "rowFilter.profiles.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.profiles.name": {
+      "name": "name",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.profiles.role": {
+      "name": "role",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.profiles.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.profiles.whatsapp_number": {
+      "name": "whatsapp_number",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.mensagens": {
+      "name": "mensagens",
+      "description": "mensagens",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/mensagens"
+      }
+    },
+    "rowFilter.mensagens.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.mensagens.client_id": {
+      "name": "client_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.mensagens.sender": {
+      "name": "sender",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.mensagens.text": {
+      "name": "text",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.mensagens.timestamp": {
+      "name": "timestamp",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.mensagens.read": {
+      "name": "read",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.configuracoes": {
+      "name": "configuracoes",
+      "description": "configuracoes",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/configuracoes"
+      }
+    },
+    "rowFilter.configuracoes.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.configuracoes.auto_reply_enabled": {
+      "name": "auto_reply_enabled",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.configuracoes.minutes_without_response": {
+      "name": "minutes_without_response",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.configuracoes.kanban_columns": {
+      "name": "kanban_columns",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.configuracoes.followup_interval_hours": {
+      "name": "followup_interval_hours",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.clientes": {
+      "name": "clientes",
+      "description": "clientes",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/clientes"
+      }
+    },
+    "rowFilter.clientes.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.name": {
+      "name": "name",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.phone": {
+      "name": "phone",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.email": {
+      "name": "email",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.status": {
+      "name": "status",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.notes": {
+      "name": "notes",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.attendant_id": {
+      "name": "attendant_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.updated_at": {
+      "name": "updated_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.followup_sent": {
+      "name": "followup_sent",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.clientes.ai_enabled": {
+      "name": "ai_enabled",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.tags": {
+      "name": "tags",
+      "description": "tags",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/tags"
+      }
+    },
+    "rowFilter.tags.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.tags.name": {
+      "name": "name",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.tags.color": {
+      "name": "color",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.eventos": {
+      "name": "eventos",
+      "description": "eventos",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/eventos"
+      }
+    },
+    "rowFilter.eventos.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.eventos.client_id": {
+      "name": "client_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.eventos.type": {
+      "name": "type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.eventos.description": {
+      "name": "description",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.eventos.from_status": {
+      "name": "from_status",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.eventos.to_status": {
+      "name": "to_status",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.eventos.date": {
+      "name": "date",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    }
+  },
+  "externalDocs": {
+    "description": "PostgREST Documentation",
+    "url": "https://postgrest.org/en/v14/references/api.html"
+  }
+}
