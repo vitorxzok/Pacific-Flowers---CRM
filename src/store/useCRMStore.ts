@@ -32,7 +32,10 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     autoReplyEnabled: false,
     minutesWithoutResponse: 15,
     followUpIntervalHours: 24,
-    kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido']
+    kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
+    businessName: '',
+    businessContext: '',
+    productsCatalog: ''
   },
   
   setSettings: async (newSettings) => {
@@ -48,7 +51,10 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           auto_reply_enabled: merged.autoReplyEnabled,
           minutes_without_response: merged.minutesWithoutResponse,
           followup_interval_hours: merged.followUpIntervalHours,
-          kanban_columns: merged.kanbanColumns
+          kanban_columns: merged.kanbanColumns,
+          business_name: merged.businessName,
+          business_context: merged.businessContext,
+          products_catalog: merged.productsCatalog
         })
       });
     } catch (error) {
@@ -65,7 +71,10 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           autoReplyEnabled: data.auto_reply_enabled || false,
           minutesWithoutResponse: data.minutes_without_response || 15,
           followUpIntervalHours: data.followup_interval_hours || 24,
-          kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido']
+          kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
+          businessName: data.business_name || '',
+          businessContext: data.business_context || '',
+          productsCatalog: data.products_catalog || ''
         }});
       }
     } catch (error) {

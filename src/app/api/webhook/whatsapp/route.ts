@@ -41,6 +41,12 @@ export async function POST(request: Request) {
       const instanceName = body.instance || '';
       const sellerId = instanceName.replace('user_', '');
 
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(sellerId)) {
+        console.error(`Instância inválida recebida: ${instanceName}. O sellerId não é um UUID.`);
+        return NextResponse.json({ success: true, message: 'Instância não pertence a um usuário válido.' });
+      }
+
       let clientId;
 
       // 1. Procurar o cliente no banco pelo telefone E pelo vendedor (separação total de leads)
@@ -112,10 +118,12 @@ export async function POST(request: Request) {
       const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled, attendant_id').eq('id', clientId).single();
       
       let autoReplyEnabled = false;
+      let crmSettings: any = null;
       if (clientData?.attendant_id) {
         const { data: userData, error: userError } = await supabase.auth.admin.getUserById(clientData.attendant_id);
         if (!userError && userData?.user) {
-           autoReplyEnabled = userData.user.user_metadata?.crm_settings?.auto_reply_enabled || false;
+           crmSettings = userData.user.user_metadata?.crm_settings;
+           autoReplyEnabled = crmSettings?.auto_reply_enabled || false;
         }
       }
 
@@ -129,7 +137,7 @@ export async function POST(request: Request) {
       if (!isFromMe && autoReplyEnabled && isAIEnabled && isAutoReplyStage) {
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
-        const aiReply = await generateAIResponse(clientId, supabase);
+        const aiReply = await generateAIResponse(clientId, supabase, undefined, crmSettings);
 
         if (aiReply) {
           await supabase.from('mensagens').insert({

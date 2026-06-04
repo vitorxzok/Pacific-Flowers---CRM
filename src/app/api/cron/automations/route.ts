@@ -148,20 +148,19 @@ export async function GET(request: Request) {
                   const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
                   await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                     method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                      body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
-                    });
-                  }
-                  results.followUpsEnviados++;
+                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                    body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
+                  });
                 }
+                results.followUpsEnviados++;
               }
             }
-          } catch (err) {
-            console.error(`Erro ao processar follow-up rapido para cliente ${client.id}:`, err);
           }
+        } catch (err) {
+          console.error(`Erro ao processar follow-up rapido para cliente ${client.id}:`, err);
         }
       }
-
+      
       // ========================================================
       // LÓGICA 3: INSISTÊNCIA DA IA (A CADA X HORAS)
       // ========================================================

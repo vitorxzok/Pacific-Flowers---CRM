@@ -37,4 +37,7 @@ export interface Settings {
   minutesWithoutResponse: number;
   followUpIntervalHours: number;
   kanbanColumns: string[];
+  businessName?: string;
+  businessContext?: string;
+  productsCatalog?: string;
 }
