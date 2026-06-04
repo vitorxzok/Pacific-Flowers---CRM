@@ -36,28 +36,40 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   },
   
   setSettings: async (newSettings) => {
-    const current = get().settings;
-    const merged = { ...current, ...newSettings };
+    const state = get();
+    const merged = { ...state.settings, ...newSettings };
     set({ settings: merged });
     
-    await supabase.from('configuracoes').upsert({
-      id: 1,
-      auto_reply_enabled: merged.autoReplyEnabled,
-      minutes_without_response: merged.minutesWithoutResponse,
-      followup_interval_hours: merged.followUpIntervalHours,
-      kanban_columns: merged.kanbanColumns
-    });
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auto_reply_enabled: merged.autoReplyEnabled,
+          minutes_without_response: merged.minutesWithoutResponse,
+          followup_interval_hours: merged.followUpIntervalHours,
+          kanban_columns: merged.kanbanColumns
+        })
+      });
+    } catch (error) {
+      console.error("Erro ao salvar configuracoes:", error);
+    }
   },
 
   fetchSettings: async () => {
-    const { data, error } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
-    if (data && !error) {
-      set({ settings: {
-        autoReplyEnabled: data.auto_reply_enabled,
-        minutesWithoutResponse: data.minutes_without_response,
-        followUpIntervalHours: data.followup_interval_hours || 24,
-        kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido']
-      }});
+    try {
+      const response = await fetch('/api/settings');
+      if (response.ok) {
+        const data = await response.json();
+        set({ settings: {
+          autoReplyEnabled: data.auto_reply_enabled || false,
+          minutesWithoutResponse: data.minutes_without_response || 15,
+          followUpIntervalHours: data.followup_interval_hours || 24,
+          kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido']
+        }});
+      }
+    } catch (error) {
+      console.error("Erro ao buscar configuracoes:", error);
     }
   },
 

@@ -138,8 +138,8 @@ export default function SettingsPage() {
                 type="number" 
                 min="1"
                 max="1440"
-                value={localSettings.minutesWithoutResponse}
-                onChange={(e) => setLocalSettings({ ...localSettings, minutesWithoutResponse: parseInt(e.target.value) || 15 })}
+                value={localSettings.minutesWithoutResponse || ''}
+                onChange={(e) => setLocalSettings({ ...localSettings, minutesWithoutResponse: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                 className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <span className="ml-3 text-gray-400 text-sm">min</span>
@@ -159,8 +159,8 @@ export default function SettingsPage() {
                 type="number" 
                 min="1"
                 max="72"
-                value={localSettings.followUpIntervalHours}
-                onChange={(e) => setLocalSettings({ ...localSettings, followUpIntervalHours: parseInt(e.target.value) || 3 })}
+                value={localSettings.followUpIntervalHours || ''}
+                onChange={(e) => setLocalSettings({ ...localSettings, followUpIntervalHours: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                 className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <span className="ml-3 text-gray-400 text-sm">horas</span>
