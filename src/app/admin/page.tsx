@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useCRMStore } from '@/store/useCRMStore';
-import { Lock, Users, MessageCircle, DollarSign, LogOut } from 'lucide-react';
+import { Lock, Users, MessageCircle, DollarSign, LogOut, BrainCircuit, Activity } from 'lucide-react';
 import { ClientModal } from '@/components/ClientModal';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,6 +13,10 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [attendantFilter, setAttendantFilter] = useState<string>('all');
+  
+  // Diretor IA states
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [directorResponse, setDirectorResponse] = useState<string | null>(null);
 
   const { clients, fetchAdminClients } = useCRMStore();
 
@@ -82,6 +87,46 @@ export default function AdminPage() {
   const inProgress = filteredClients.filter(c => !['Finalizado', 'Perdido'].includes(c.status)).length;
   const closed = filteredClients.filter(c => c.status === 'Finalizado').length;
 
+  const handleDirectorAnalysis = async () => {
+    setIsAnalyzing(true);
+    setDirectorResponse(null);
+    try {
+      // Build a summary to send to the IA
+      const performanceData = {
+        totalLeads,
+        inProgress,
+        closed,
+        conversionRate: totalLeads > 0 ? ((closed / totalLeads) * 100).toFixed(1) + '%' : '0%',
+        byAttendant: uniqueAttendants.map(att => {
+          const attClients = clients.filter(c => c.attendant === att);
+          const attClosed = attClients.filter(c => c.status === 'Finalizado').length;
+          return {
+            name: att,
+            leads: attClients.length,
+            closed: attClosed,
+            conversion: attClients.length > 0 ? ((attClosed / attClients.length) * 100).toFixed(1) + '%' : '0%'
+          };
+        })
+      };
+
+      const response = await fetch('/api/admin/director', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ performanceData })
+      });
+
+      if (!response.ok) throw new Error('Erro ao consultar Diretor IA');
+
+      const data = await response.json();
+      setDirectorResponse(data.reply);
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao processar análise do Diretor IA');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-background relative overflow-y-auto">
       <header className="px-8 py-6 border-b border-surface-border bg-surface/50 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center">
@@ -129,6 +174,36 @@ export default function AdminPage() {
               <h3 className="text-2xl font-bold text-white">{closed}</h3>
             </div>
           </div>
+        </div>
+
+        {/* Diretor Comercial IA */}
+        <div className="glass-panel p-6 border border-purple-500/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3"></div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 relative z-10 gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <BrainCircuit className="w-8 h-8 text-purple-400" />
+                <h2 className="text-xl font-bold text-white">Diretor Comercial IA</h2>
+              </div>
+              <p className="text-sm text-gray-400 mt-1">Análise estratégica baseada em dados reais da sua equipe.</p>
+            </div>
+            
+            <button
+              onClick={handleDirectorAnalysis}
+              disabled={isAnalyzing}
+              className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Activity className={`w-5 h-5 ${isAnalyzing ? 'animate-pulse' : ''}`} />
+              {isAnalyzing ? 'Analisando Dados...' : 'Consultar Diretor IA'}
+            </button>
+          </div>
+
+          {directorResponse && (
+            <div className="mt-6 p-6 bg-surface border border-surface-border rounded-xl prose prose-invert max-w-none prose-p:leading-relaxed prose-headings:text-purple-300 prose-a:text-purple-400">
+              <ReactMarkdown>{directorResponse}</ReactMarkdown>
+            </div>
+          )}
         </div>
 
         {/* Tabela de Leads */}
