@@ -86,11 +86,11 @@ export async function POST(request: Request) {
       } else {
         clientId = clients[0].id;
         
-        // Se a mensagem for do cliente, atualizamos followup_sent
+        // Se a mensagem for do cliente, atualizamos followup_sent e resetamos a insistencia
         if (!isFromMe) {
           const { error: updateError } = await supabase
             .from('clientes')
-            .update({ followup_sent: false, updated_at: new Date().toISOString() })
+            .update({ followup_sent: false, insistencia_count: 0, updated_at: new Date().toISOString() })
             .eq('id', clientId);
 
           if (updateError) {

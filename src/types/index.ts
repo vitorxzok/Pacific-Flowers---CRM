@@ -33,6 +33,7 @@ export interface Client {
   storeName?: string;
   purchaseValue?: number;
   purchaseDate?: string;
+  insistencia_count?: number;
 }
 
 export interface Attachment {
@@ -47,6 +48,8 @@ export interface Settings {
   autoReplyEnabled: boolean;
   minutesWithoutResponse: number;
   followUpIntervalHours: number;
+  insistenciaMaxRepetitions?: number;
+  insistenciaDaysInterval?: number;
   kanbanColumns: string[];
   businessName?: string;
   businessContext?: string;

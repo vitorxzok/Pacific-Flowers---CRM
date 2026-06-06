@@ -238,6 +238,48 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Limite de Repetições (Insistência) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
+            <div className="mb-4 sm:mb-0 pr-4">
+              <h3 className="text-lg font-semibold text-white">Limite de Repetições (Insistência)</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                Quantidade máxima de vezes que a IA tentará retomar o contato em "horas" antes de mudar para o espaçamento por "dias".
+              </p>
+            </div>
+            <div className="flex items-center flex-shrink-0">
+              <input 
+                type="number" 
+                min="1"
+                max="10"
+                value={localSettings.insistenciaMaxRepetitions || ''}
+                onChange={(e) => setLocalSettings({ ...localSettings, insistenciaMaxRepetitions: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <span className="ml-3 text-gray-400 text-sm">tentativas</span>
+            </div>
+          </div>
+
+          {/* Insistência por Dias */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
+            <div className="mb-4 sm:mb-0 pr-4">
+              <h3 className="text-lg font-semibold text-white">Insistência por Dias (Após limite)</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                Após atingir o limite de repetições acima, a IA passará a tentar contato apenas a cada X dias.
+              </p>
+            </div>
+            <div className="flex items-center flex-shrink-0">
+              <input 
+                type="number" 
+                min="1"
+                max="30"
+                value={localSettings.insistenciaDaysInterval || ''}
+                onChange={(e) => setLocalSettings({ ...localSettings, insistenciaDaysInterval: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <span className="ml-3 text-gray-400 text-sm">dias</span>
+            </div>
+          </div>
+
           {/* Inteligência Artificial - Contexto do Vendedor */}
           <div className="flex flex-col border-b border-surface-border pb-8">
             <div className="mb-6">

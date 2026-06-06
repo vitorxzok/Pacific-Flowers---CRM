@@ -162,68 +162,99 @@ export async function GET(request: Request) {
       }
       
       // ========================================================
-      // LÓGICA 3: INSISTÊNCIA DA IA (A CADA X HORAS)
+      // LÓGICA 3: INSISTÊNCIA DA IA (HORÁRIO COMERCIAL E LIMITES)
       // ========================================================
-      const { data: clientesInsistencia, error: insistenciaError } = await supabase
-        .from('clientes')
-        .select('id, name, phone, attendant_id, status')
-        .in('status', autoReplyStatuses)
-        // Remove a restrição de followup_sent pois isso deve rodar continuamente até o cliente responder ou sair desse status
-        .eq('ai_enabled', true);
+      
+      // Checar se estamos no horário comercial de Brasília (08:00 às 17:00)
+      const brtDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+      const currentHour = brtDate.getHours();
+      const isBusinessHours = currentHour >= 8 && currentHour < 17;
 
-      if (clientesInsistencia && clientesInsistencia.length > 0) {
-        for (const client of clientesInsistencia) {
-          try {
-            const clientSettings = settingsByAttendant[client.attendant_id] || {
-              auto_reply_enabled: false,
-              followup_interval_hours: 24
-            };
-            
-            if (!clientSettings.auto_reply_enabled) {
-              continue; // Pula se a resposta rápida/insistência estiver desativada
-            }
+      if (isBusinessHours) {
+        const { data: clientesInsistencia, error: insistenciaError } = await supabase
+          .from('clientes')
+          .select('id, name, phone, attendant_id, status, insistencia_count')
+          .in('status', autoReplyStatuses)
+          .eq('ai_enabled', true);
 
-            const followUpIntervalHours = clientSettings.followup_interval_hours || 24;
+        if (clientesInsistencia && clientesInsistencia.length > 0) {
+          for (const client of clientesInsistencia) {
+            try {
+              const clientSettings = settingsByAttendant[client.attendant_id] || {
+                auto_reply_enabled: false,
+                followup_interval_hours: 24,
+                insistencia_max_repetitions: 3,
+                insistencia_days_interval: 2
+              };
+              
+              if (!clientSettings.auto_reply_enabled) {
+                continue; // Pula se a resposta rápida/insistência estiver desativada
+              }
 
-            const { data: lastMessage } = await supabase
-              .from('mensagens')
-              .select('sender, timestamp')
-              .eq('client_id', client.id)
-              .order('timestamp', { ascending: false })
-              .limit(1)
-              .single();
+              const followUpIntervalHours = clientSettings.followup_interval_hours || 24;
+              const maxRepetitions = clientSettings.insistencia_max_repetitions || 3;
+              const daysInterval = clientSettings.insistencia_days_interval || 2;
+              
+              const currentInsistenciaCount = client.insistencia_count || 0;
 
-            // Só insiste se a última mensagem tiver sido da IA/vendedor
-            if (lastMessage && lastMessage.sender === 'attendant') {
-              const messageTime = new Date(lastMessage.timestamp).getTime();
-              const now = new Date().getTime();
-              const diffHours = (now - messageTime) / (1000 * 60 * 60);
+              const { data: lastMessage } = await supabase
+                .from('mensagens')
+                .select('sender, timestamp')
+                .eq('client_id', client.id)
+                .order('timestamp', { ascending: false })
+                .limit(1)
+                .single();
 
-              if (diffHours >= followUpIntervalHours) {
-                // Chama a IA com contexto de insistência
-                const aiResponseText = await generateAIResponse(client.id, supabase, "INSISTENCIA_HORAS");
+              // Só insiste se a última mensagem tiver sido da IA/vendedor
+              if (lastMessage && lastMessage.sender === 'attendant') {
+                const messageTime = new Date(lastMessage.timestamp).getTime();
+                const now = new Date().getTime();
+                const diffHours = (now - messageTime) / (1000 * 60 * 60);
+                const diffDays = diffHours / 24;
 
-                if (aiResponseText) {
-                  await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+                let shouldInsist = false;
 
-                  const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
-                  const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
-                  
-                  if (apiUrl && apiKey && client.phone) {
-                    const cleanedPhone = client.phone.replace(/\D/g, '');
-                    const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
-                    await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                      body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
-                    });
+                if (currentInsistenciaCount < maxRepetitions) {
+                  // Usa o intervalo em horas
+                  if (diffHours >= followUpIntervalHours) {
+                    shouldInsist = true;
                   }
-                  results.followUpsEnviados++;
+                } else {
+                  // Limite atingido: usa o intervalo em dias
+                  if (diffDays >= daysInterval) {
+                    shouldInsist = true;
+                  }
+                }
+
+                if (shouldInsist) {
+                  // Chama a IA com contexto de insistência
+                  const aiResponseText = await generateAIResponse(client.id, supabase, "INSISTENCIA_HORAS");
+
+                  if (aiResponseText) {
+                    await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+
+                    // Incrementa o contador de insistência
+                    await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount + 1, updated_at: new Date().toISOString() }).eq('id', client.id);
+
+                    const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+                    const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+                    
+                    if (apiUrl && apiKey && client.phone) {
+                      const cleanedPhone = client.phone.replace(/\D/g, '');
+                      const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+                      await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                        body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
+                      });
+                    }
+                    results.followUpsEnviados++;
+                  }
                 }
               }
+            } catch (err) {
+              console.error(`Erro ao processar insistencia para cliente ${client.id}:`, err);
             }
-          } catch (err) {
-            console.error(`Erro ao processar insistencia para cliente ${client.id}:`, err);
           }
         }
       }
