@@ -302,6 +302,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
                     body: JSON.stringify(mediaPayload)
                   });
                   toolResult = `Anexo '${args.triggerName}' enviado com sucesso para o cliente.`;
+                  finalContent = (finalContent || '') + `\n\n[ANEXO ENVIADO: ${args.triggerName}]`;
                 } catch (err) {
                   console.error('[AI TOOL] Erro ao enviar anexo:', err);
                   toolResult = `Erro ao tentar enviar o anexo: ${args.triggerName}`;

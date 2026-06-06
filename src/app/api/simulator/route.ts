@@ -76,8 +76,8 @@ export async function POST(request: Request) {
 
     if (!finalContent && attachmentTrigger && !attachment) {
       finalContent = `[A IA tentou enviar um anexo com o gatilho "${attachmentTrigger}", mas nenhum arquivo com esse gatilho exato foi encontrado nas Configurações]`;
-    } else if (!finalContent && attachmentTrigger && attachment) {
-      // Deixa vazio para só renderizar o anexo visualmente, ou põe um aviso de sistema se quiser
+    } else if (attachmentTrigger && attachment) {
+      finalContent = (finalContent || '') + `\n\n[Sistema: O anexo do gatilho "${attachmentTrigger}" foi enviado ao cliente com sucesso.]`;
     } else if (!finalContent && !attachmentTrigger) {
       finalContent = '[A IA não gerou nenhuma resposta ou anexo. Isso pode ocorrer se ela já tiver encerrado o fluxo.]';
     }
