@@ -178,7 +178,7 @@ export default function SettingsPage() {
 
       const { data: clientes, error } = await supabase
         .from('clientes')
-        .select('store_name, name, phone, status, purchase_value, purchase_date')
+        .select('store_name, name, phone, status, purchase_value, purchase_date, profiles(name)')
         .eq('attendant_id', userId)
         .order('created_at', { ascending: false });
 
@@ -191,7 +191,8 @@ export default function SettingsPage() {
       }
 
       // Format data
-      const formattedData = clientes.map(c => ({
+      const formattedData = clientes.map((c: any) => ({
+        'Nome do Vendedor': c.profiles?.name || 'Vendedor',
         'Nome da Loja': c.store_name || '',
         'Nome do Cliente': c.name || '',
         'Telefone': c.phone || '',
@@ -200,8 +201,8 @@ export default function SettingsPage() {
         'Data da Compra': c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''
       }));
 
-      // Generate CSV (using semicolon delimiter for better Excel compatibility in Brazil)
-      const csv = Papa.unparse(formattedData, { delimiter: ';' });
+      // Generate CSV (using tab delimiter for Excel TSV compatibility)
+      const csv = Papa.unparse(formattedData, { delimiter: '\t' });
       
       // Download
       const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
