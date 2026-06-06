@@ -200,8 +200,8 @@ export default function SettingsPage() {
         'Data da Compra': c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''
       }));
 
-      // Generate CSV
-      const csv = Papa.unparse(formattedData);
+      // Generate CSV (using semicolon delimiter for better Excel compatibility in Brazil)
+      const csv = Papa.unparse(formattedData, { delimiter: ';' });
       
       // Download
       const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
