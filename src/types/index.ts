@@ -32,6 +32,14 @@ export interface Client {
   ai_enabled?: boolean;
 }
 
+export interface Attachment {
+  id: string;
+  trigger: string;
+  url: string;
+  name: string;
+  type: string; // 'document', 'image', etc.
+}
+
 export interface Settings {
   autoReplyEnabled: boolean;
   minutesWithoutResponse: number;
@@ -40,4 +48,5 @@ export interface Settings {
   businessName?: string;
   businessContext?: string;
   productsCatalog?: string;
+  attachments?: Attachment[];
 }

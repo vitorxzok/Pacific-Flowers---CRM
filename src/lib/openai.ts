@@ -139,6 +139,9 @@ REGRAS IMPORTANTES
 
 --------------------------------------------------------------------------------
 MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
+- Quando você precisar enviar o catálogo ou o link para o cliente lojista, chame a função 'sendAttachment' com o gatilho 'CATALOGO' e não escreva o link no texto, diga apenas que enviou o catálogo.
+- Quando sugerir um kit, chame a função 'sendAttachment' com o gatilho exato (ex: 'KIT_350', 'KIT_850').
+MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
 - Quando o cliente disser o nome dele, chame OBRIGATORIAMENTE a função 'updateClientName' para salvar o nome dele no sistema.
 - Quando a condição de ENCAMINHAMENTO HUMANO for atendida, chame OBRIGATORIAMENTE a função 'transferToHuman' e faça um resumo da conversa na propriedade 'summary'. Isso passará o atendimento definitivamente ao vendedor humano.`;
 };
@@ -196,6 +199,23 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
         {
           type: 'function',
           function: {
+            name: 'sendAttachment',
+            description: 'Envia um anexo (mídia, catálogo, foto de kit) para o cliente pelo WhatsApp com base em um gatilho configurado.',
+            parameters: {
+              type: 'object',
+              properties: {
+                triggerName: {
+                  type: 'string',
+                  description: 'O nome exato do gatilho configurado pelo vendedor. Ex: "CATALOGO", "KIT_350", "KIT_850"'
+                }
+              },
+              required: ['triggerName']
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
             name: 'updateClientName',
             description: 'Atualiza o nome do cliente no sistema de CRM (Banco de Dados) após ele se apresentar.',
             parameters: {
@@ -243,7 +263,56 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
         const args = JSON.parse(toolCall.function.arguments);
         let toolResult = "Operação realizada com sucesso.";
         
-        if (toolCall.function.name === 'updateClientName') {
+        if (toolCall.function.name === 'sendAttachment') {
+          console.log(`[AI TOOL] Solicitado envio do anexo com gatilho: ${args.triggerName}`);
+          
+          const attachments = settings?.attachments || [];
+          const attachment = attachments.find((a: any) => a.trigger === args.triggerName);
+          
+          if (attachment && attachment.url) {
+            // Obter phone e instanceName do cliente
+            const { data: clientInfo } = await supabase.from('clientes').select('phone, attendant_id').eq('id', clientId).single();
+            if (clientInfo && clientInfo.phone && clientInfo.attendant_id) {
+              const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL || '';
+              const apiKey = process.env.EVOLUTION_API_KEY || process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || '';
+              const instanceName = `user_${clientInfo.attendant_id}`;
+              const phone = clientInfo.phone;
+              
+              if (apiUrl && apiKey && instanceName) {
+                try {
+                  console.log(`[AI TOOL] Enviando mídias para ${phone} via Evolution API`);
+                  
+                  // Evolution API endpoint: /message/sendMedia/:instance
+                  const mediaPayload = {
+                    number: phone,
+                    mediatype: "document", // can be document or image depending on evolution api mapping, usually document handles pdfs well
+                    mimetype: attachment.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+                    caption: `Aqui está o que você pediu! (${args.triggerName})`,
+                    media: attachment.url,
+                    fileName: attachment.name || 'arquivo.pdf'
+                  };
+                  
+                  await fetch(`${apiUrl}/message/sendMedia/${instanceName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                    body: JSON.stringify(mediaPayload)
+                  });
+                  toolResult = `Anexo '${args.triggerName}' enviado com sucesso para o cliente.`;
+                } catch (err) {
+                  console.error('[AI TOOL] Erro ao enviar anexo:', err);
+                  toolResult = `Erro ao tentar enviar o anexo: ${args.triggerName}`;
+                }
+              } else {
+                toolResult = `Faltam configurações de API para enviar o anexo.`;
+              }
+            } else {
+              toolResult = `Não foi possível identificar o telefone ou instância do cliente.`;
+            }
+          } else {
+            console.log(`[AI TOOL] Gatilho '${args.triggerName}' não encontrado nas configurações do vendedor.`);
+            toolResult = `O gatilho '${args.triggerName}' não está configurado. Diga ao cliente que houve um erro ao buscar o arquivo.`;
+          }
+        } else if (toolCall.function.name === 'updateClientName') {
           console.log(`[AI TOOL] Atualizando nome do cliente para: ${args.name}`);
           await supabase
             .from('clientes')
