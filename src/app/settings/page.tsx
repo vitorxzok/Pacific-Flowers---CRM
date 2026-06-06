@@ -190,22 +190,25 @@ export default function SettingsPage() {
         return;
       }
 
-      // Format data
-      const formattedData = clientes.map((c: any) => ({
-        'Nome do Vendedor': c.profiles?.name || 'Vendedor',
-        'Nome da Loja': c.store_name || '',
-        'Nome do Cliente': c.name || '',
-        'Telefone': c.phone || '',
-        'Status Atual': c.status || '',
-        'Valor da Compra': c.purchase_value ? `R$ ${Number(c.purchase_value).toFixed(2).replace('.', ',')}` : '',
-        'Data da Compra': c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''
-      }));
-
-      // Generate TSV (Tab-Separated Values)
-      const tsv = Papa.unparse(formattedData, { delimiter: '\t' });
+      // HTML Table structure forces Excel to parse columns perfectly and native strings
+      let table = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8" /></head><body><table border="1">';
+      table += '<tr><th>Nome do Vendedor</th><th>Nome da Loja</th><th>Nome do Cliente</th><th>Telefone</th><th>Status Atual</th><th>Valor da Compra</th><th>Data da Compra</th></tr>';
       
-      // Download as .xls to force Excel to automatically separate columns by Tab
-      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), tsv], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+      clientes.forEach((c: any) => {
+        table += '<tr>';
+        table += `<td>${c.profiles?.name || 'Vendedor'}</td>`;
+        table += `<td>${c.store_name || ''}</td>`;
+        table += `<td>${c.name || ''}</td>`;
+        table += `<td style="mso-number-format:'\\@'">${c.phone || ''}</td>`; // Prevent scientific notation
+        table += `<td>${c.status || ''}</td>`;
+        table += `<td>${c.purchase_value ? `R$ ${Number(c.purchase_value).toFixed(2).replace('.', ',')}` : ''}</td>`;
+        table += `<td>${c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''}</td>`;
+        table += '</tr>';
+      });
+      table += '</table></body></html>';
+
+      // Download as .xls 
+      const blob = new Blob([table], { type: 'application/vnd.ms-excel' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
