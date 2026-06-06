@@ -35,6 +35,7 @@ export interface Client {
   purchaseDate?: string;
   insistencia_count?: number;
   needs_human?: boolean;
+  custom_reposicao_date?: string;
 }
 
 export interface Attachment {
@@ -51,6 +52,7 @@ export interface Settings {
   followUpIntervalHours: number;
   insistenciaMaxRepetitions?: number;
   insistenciaDaysInterval?: number;
+  reposicao_days_global?: number;
   kanbanColumns: string[];
   businessName?: string;
   businessContext?: string;

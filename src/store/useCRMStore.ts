@@ -19,6 +19,7 @@ interface CRMStore {
   addMessage: (clientId: string, message: { text: string, sender: 'client' | 'attendant' }) => Promise<void>;
   deleteClient: (clientId: string) => Promise<void>;
   updateClientAIEnabled: (clientId: string, enabled: boolean) => Promise<void>;
+  updateClientReposicaoDate: (clientId: string, date: string | null) => Promise<void>;
   fetchAdminClients: (password: string) => Promise<boolean>;
 }
 
@@ -34,6 +35,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     followUpIntervalHours: 24,
     insistenciaMaxRepetitions: 3,
     insistenciaDaysInterval: 2,
+    reposicao_days_global: 30,
     kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
     businessName: '',
     businessContext: '',
@@ -55,6 +57,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           followup_interval_hours: merged.followUpIntervalHours,
           insistencia_max_repetitions: merged.insistenciaMaxRepetitions,
           insistencia_days_interval: merged.insistenciaDaysInterval,
+          reposicao_days_global: merged.reposicao_days_global,
           kanban_columns: merged.kanbanColumns,
           business_name: merged.businessName,
           business_context: merged.businessContext,
@@ -77,6 +80,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           followUpIntervalHours: data.followup_interval_hours || 24,
           insistenciaMaxRepetitions: data.insistencia_max_repetitions || 3,
           insistenciaDaysInterval: data.insistencia_days_interval || 2,
+          reposicao_days_global: data.reposicao_days_global || 30,
           kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
           businessName: data.business_name || '',
           businessContext: data.business_context || '',
@@ -86,6 +90,21 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     } catch (error) {
       console.error("Erro ao buscar configuracoes:", error);
     }
+  },
+
+  updateClientReposicaoDate: async (clientId, date) => {
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, custom_reposicao_date: date || undefined } : c
+      ),
+    }));
+
+    const { error } = await supabase
+      .from('clientes')
+      .update({ custom_reposicao_date: date, updated_at: new Date().toISOString() })
+      .eq('id', clientId);
+
+    if (error) console.error("Error updating reposicao date:", error);
   },
 
   fetchClients: async () => {

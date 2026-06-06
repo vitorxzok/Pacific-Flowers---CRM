@@ -217,6 +217,25 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                       placeholder="Insira as anotações sobre o cliente aqui..."
                     />
                   </div>
+                  
+                  {(client.status.toLowerCase().includes('finalizado') || client.status.toLowerCase().includes('reposição')) && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Data Programada para Reposição</label>
+                      <input
+                        type="date"
+                        value={client.custom_reposicao_date ? client.custom_reposicao_date.split('T')[0] : ''}
+                        onChange={(e) => {
+                          const date = e.target.value;
+                          useCRMStore.getState().updateClientReposicaoDate(client.id, date ? new Date(date).toISOString() : null);
+                        }}
+                        className="w-full bg-surface border border-surface-border rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Se deixado em branco, usará a regra global configurada (Data da Compra + Dias padrão).
+                      </p>
+                    </div>
+                  )}
+
                   <div className="pt-4 flex justify-end">
                     <button onClick={handleSaveData} className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover transition-colors shadow-lg">
                       Salvar Dados

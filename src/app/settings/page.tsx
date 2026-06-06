@@ -302,6 +302,27 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Dias Padrão para Reposição */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
+            <div className="mb-4 sm:mb-0 pr-4">
+              <h3 className="text-lg font-semibold text-white">Dias Padrão para Reposição (Pós-Venda)</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                Quantidade de dias após a compra para mover o cliente automaticamente para a coluna "Reposição" e enviar o Pós-Venda.
+              </p>
+            </div>
+            <div className="flex items-center flex-shrink-0">
+              <input 
+                type="number" 
+                min="1"
+                max="365"
+                value={localSettings.reposicao_days_global || ''}
+                onChange={(e) => setLocalSettings({ ...localSettings, reposicao_days_global: e.target.value === '' ? 30 : parseInt(e.target.value) })}
+                className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <span className="ml-3 text-gray-400 text-sm">dias</span>
+            </div>
+          </div>
+
           {/* Limite de Repetições (Insistência) */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
             <div className="mb-4 sm:mb-0 pr-4">

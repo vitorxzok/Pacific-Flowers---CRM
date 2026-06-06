@@ -258,6 +258,105 @@ export async function GET(request: Request) {
           }
         }
       }
+
+      // ========================================================
+      // LÓGICA 4: PÓS-VENDA / REPOSIÇÃO
+      // ========================================================
+      const { data: clientesFinalizados, error: reposicaoError } = await supabase
+        .from('clientes')
+        .select('id, name, phone, attendant_id, status, purchase_date, custom_reposicao_date, ai_enabled')
+        .in('status', ['Finalizado', 'Reposição'])
+        .eq('ai_enabled', true);
+
+      if (clientesFinalizados && clientesFinalizados.length > 0) {
+        for (const client of clientesFinalizados) {
+          try {
+            const clientSettings = settingsByAttendant[client.attendant_id] || { reposicao_days_global: 30 };
+            const reposicaoDays = clientSettings.reposicao_days_global || 30;
+            
+            let shouldRepor = false;
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Ignore time for days calculation
+            
+            if (client.custom_reposicao_date) {
+              const customDate = new Date(client.custom_reposicao_date);
+              customDate.setHours(0, 0, 0, 0);
+              if (now.getTime() >= customDate.getTime()) {
+                shouldRepor = true;
+              }
+            } else if (client.purchase_date) {
+              const purchaseDate = new Date(client.purchase_date);
+              purchaseDate.setDate(purchaseDate.getDate() + reposicaoDays);
+              purchaseDate.setHours(0, 0, 0, 0);
+              
+              if (now.getTime() >= purchaseDate.getTime()) {
+                shouldRepor = true;
+              }
+            }
+
+            if (shouldRepor) {
+              // Verifica se já mandou mensagem de reposição nos últimos 3 dias para não floodar
+              const { data: recentMsgs } = await supabase
+                .from('mensagens')
+                .select('timestamp')
+                .eq('client_id', client.id)
+                .eq('sender', 'attendant')
+                .order('timestamp', { ascending: false })
+                .limit(1)
+                .single();
+
+              let sentRecently = false;
+              if (recentMsgs) {
+                const msgDate = new Date(recentMsgs.timestamp);
+                const diffDays = (new Date().getTime() - msgDate.getTime()) / (1000 * 60 * 60 * 24);
+                if (diffDays < 3) {
+                  sentRecently = true;
+                }
+              }
+
+              if (!sentRecently && isBusinessHours) {
+                // Move para Reposição se estiver Finalizado
+                if (client.status === 'Finalizado') {
+                  await supabase.from('clientes').update({ status: 'Reposição' }).eq('id', client.id);
+                  await supabase.from('history').insert({
+                    client_id: client.id,
+                    type: 'status_change',
+                    description: `Status alterado de Finalizado para Reposição automaticamente.`,
+                    from_status: 'Finalizado',
+                    to_status: 'Reposição'
+                  });
+                }
+
+                // Injeta contexto pra IA e manda mensagem de reposição
+                const aiResponseText = await generateAIResponse(client.id, supabase, "REPOSICAO");
+
+                if (aiResponseText) {
+                  await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+
+                  // Limpa a data de custom_reposicao_date para não disparar todo dia (o vendedor precisa remarcar se quiser)
+                  await supabase.from('clientes').update({ custom_reposicao_date: null, updated_at: new Date().toISOString() }).eq('id', client.id);
+
+                  const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+                  const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+                  
+                  if (apiUrl && apiKey && client.phone) {
+                    const cleanedPhone = client.phone.replace(/\D/g, '');
+                    const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+                    await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                      body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
+                    });
+                  }
+                  results.followUpsEnviados++;
+                }
+              }
+            }
+          } catch (err) {
+            console.error(`Erro ao processar reposição para cliente ${client.id}:`, err);
+          }
+        }
+      }
     }
 
     return NextResponse.json({ success: true, results });
