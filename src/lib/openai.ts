@@ -5,7 +5,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const getSystemPrompt = (settings?: any) => {
+export const getSystemPrompt = (settings?: any) => {
   return `Você é a atendente virtual da Pacific Flowers.
 
 Seu objetivo é atender, entender o cliente e  conduzir para o pedido de forma rápida, simples e comercial.
