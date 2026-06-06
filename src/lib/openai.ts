@@ -6,6 +6,10 @@ const openai = new OpenAI({
 });
 
 export const getSystemPrompt = (settings?: any) => {
+  if (settings && settings.systemPrompt && settings.systemPrompt.trim() !== '') {
+    return settings.systemPrompt;
+  }
+
   return `Você é a atendente virtual da Pacific Flowers.
 
 Seu objetivo é atender, entender o cliente e  conduzir para o pedido de forma rápida, simples e comercial.
