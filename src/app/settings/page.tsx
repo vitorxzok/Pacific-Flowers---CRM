@@ -50,22 +50,30 @@ export default function SettingsPage() {
       const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
       const filePath = `anexos/${fileName}`;
       
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('filePath', filePath);
-
-      const response = await fetch('/api/upload', {
+      // 1. Obter token de upload assinado da nossa API (com Service Role Key para burlar RLS)
+      const tokenResponse = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filePath }),
       });
 
-      const data = await response.json();
+      const tokenData = await tokenResponse.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Erro desconhecido ao fazer upload');
+      if (!tokenResponse.ok || !tokenData.success) {
+        throw new Error(tokenData.error || 'Erro ao obter permissão de upload');
       }
       
-      handleUpdateAttachment(id, 'url', data.url);
+      // 2. Fazer upload direto para o Supabase usando o token
+      const supabase = createClient();
+      const { data, error } = await supabase.storage
+        .from('media')
+        .uploadToSignedUrl(filePath, tokenData.token, file);
+        
+      if (error) {
+        throw error;
+      }
+      
+      handleUpdateAttachment(id, 'url', tokenData.publicUrl);
       handleUpdateAttachment(id, 'name', file.name);
       
       toast.success('Upload concluído!', { id: toastId });
