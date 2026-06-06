@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const [localSettings, setLocalSettings] = useState(settings);
   const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
 
@@ -160,6 +161,65 @@ export default function SettingsPage() {
         setIsImporting(false);
       }
     });
+  };
+
+  const handleExportLeads = async () => {
+    setIsExporting(true);
+    const toastId = toast.loading('Exportando leads...');
+
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
+      if (!userId) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: clientes, error } = await supabase
+        .from('clientes')
+        .select('store_name, name, phone, status, purchase_value, purchase_date')
+        .eq('attendant_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!clientes || clientes.length === 0) {
+        toast.error('Nenhum lead encontrado para exportar.', { id: toastId });
+        setIsExporting(false);
+        return;
+      }
+
+      // Format data
+      const formattedData = clientes.map(c => ({
+        'Nome da Loja': c.store_name || '',
+        'Nome do Cliente': c.name || '',
+        'Telefone': c.phone || '',
+        'Status Atual': c.status || '',
+        'Valor da Compra': c.purchase_value ? `R$ ${Number(c.purchase_value).toFixed(2).replace('.', ',')}` : '',
+        'Data da Compra': c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''
+      }));
+
+      // Generate CSV
+      const csv = Papa.unparse(formattedData);
+      
+      // Download
+      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`${clientes.length} leads exportados com sucesso!`, { id: toastId });
+    } catch (error: any) {
+      console.error('Erro ao exportar leads:', error);
+      toast.error('Erro ao exportar leads', { id: toastId });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (!mounted) return <div className="p-8 text-gray-500">Carregando...</div>;
@@ -431,6 +491,25 @@ export default function SettingsPage() {
               >
                 {isImporting ? 'Importando...' : 'Escolher Arquivo'}
               </label>
+            </div>
+          </div>
+
+          {/* Exportar Leads */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
+            <div className="mb-4 sm:mb-0 pr-4">
+              <h3 className="text-lg font-semibold text-white">Exportar Leads (CSV)</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                Baixe uma planilha CSV com todos os seus leads: Nome da loja, Cliente, Telefone, Status e Compras.
+              </p>
+            </div>
+            <div className="flex items-center flex-shrink-0 relative">
+              <button 
+                onClick={handleExportLeads}
+                disabled={isExporting}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer ${isExporting ? 'bg-surface-border text-gray-400' : 'bg-surface-hover border border-surface-border text-white hover:bg-surface-border'}`}
+              >
+                {isExporting ? 'Exportando...' : 'Exportar Leads'}
+              </button>
             </div>
           </div>
 
