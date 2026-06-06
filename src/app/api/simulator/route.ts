@@ -110,21 +110,29 @@ Sua resposta deve ser curta, persuasiva e direta. NUNCA envie mensagens longas o
     const aiMessage = response.choices[0].message;
     let finalContent = aiMessage.content;
     let attachmentTrigger = null;
+    let attachment = null;
 
     if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
       for (const toolCall of aiMessage.tool_calls as any[]) {
         if (toolCall.function.name === 'sendAttachment') {
           const args = JSON.parse(toolCall.function.arguments);
           attachmentTrigger = args.trigger;
-          finalContent = (finalContent ? finalContent + '\n\n' : '') + `[Ação da IA: Enviar anexo - Gatilho: ${attachmentTrigger}]`;
+          
+          if (settings && settings.attachments) {
+            const matchedAttachment = settings.attachments.find((a: any) => a.trigger === attachmentTrigger);
+            if (matchedAttachment) {
+              attachment = matchedAttachment;
+            }
+          }
         }
       }
     }
 
     return NextResponse.json({ 
       success: true, 
-      text: finalContent || 'Sem resposta de texto.',
-      attachmentTrigger
+      text: finalContent || '',
+      attachmentTrigger,
+      attachment
     });
 
   } catch (err: any) {

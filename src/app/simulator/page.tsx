@@ -9,6 +9,11 @@ interface Message {
   sender: 'client' | 'agent';
   text: string;
   timestamp: Date;
+  attachment?: {
+    name: string;
+    url: string;
+    type: string;
+  };
 }
 
 export default function SimulatorPage() {
@@ -67,6 +72,7 @@ export default function SimulatorPage() {
           sender: 'agent',
           text: data.text,
           timestamp: new Date(),
+          attachment: data.attachment,
         };
         setMessages((prev) => [...prev, aiMessage]);
       } else {
@@ -125,6 +131,20 @@ export default function SimulatorPage() {
                 </div>
                 <div className={`flex flex-col ${isClient ? 'items-end' : 'items-start'}`}>
                   <div className={`px-4 py-3 rounded-2xl ${isClient ? 'bg-primary text-white rounded-tr-none' : 'bg-surface-hover text-gray-200 rounded-tl-none border border-surface-border'}`}>
+                    {msg.attachment && (
+                      <div className="mb-3 rounded-lg overflow-hidden bg-black/20 border border-white/10">
+                        {msg.attachment.type?.startsWith('image/') || msg.attachment.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                          <img src={msg.attachment.url} alt={msg.attachment.name} className="w-full max-w-sm max-h-60 object-cover" />
+                        ) : (
+                          <a href={msg.attachment.url} target="_blank" rel="noopener noreferrer" className="flex items-center p-3 hover:bg-black/30 transition-colors">
+                            <div className="bg-primary/20 p-2 rounded mr-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            </div>
+                            <span className="truncate font-medium underline text-sm">{msg.attachment.name}</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
                     <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
                   </div>
                   <span className="text-xs text-gray-500 mt-2 px-1">
