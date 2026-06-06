@@ -201,15 +201,15 @@ export default function SettingsPage() {
         'Data da Compra': c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''
       }));
 
-      // Generate CSV (using tab delimiter for Excel TSV compatibility)
-      const csv = Papa.unparse(formattedData, { delimiter: '\t' });
+      // Generate TSV (Tab-Separated Values)
+      const tsv = Papa.unparse(formattedData, { delimiter: '\t' });
       
-      // Download
-      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
+      // Download as .xls to force Excel to automatically separate columns by Tab
+      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), tsv], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `leads_export_${new Date().toISOString().split('T')[0]}.xls`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
