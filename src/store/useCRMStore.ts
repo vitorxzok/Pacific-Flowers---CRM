@@ -119,6 +119,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       avatarUrl: undefined,
       notes: c.notes || '',
       ai_enabled: c.ai_enabled !== false,
+      needs_human: c.needs_human,
       messages: c.mensagens ? c.mensagens.map((m: any) => ({
         id: m.id,
         text: m.text,

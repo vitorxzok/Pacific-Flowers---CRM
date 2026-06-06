@@ -34,6 +34,7 @@ export interface Client {
   purchaseValue?: number;
   purchaseDate?: string;
   insistencia_count?: number;
+  needs_human?: boolean;
 }
 
 export interface Attachment {

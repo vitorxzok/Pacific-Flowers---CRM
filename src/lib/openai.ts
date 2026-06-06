@@ -250,6 +250,23 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
               required: ['summary']
             }
           }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'changeClientStatus',
+            description: 'Altera a etapa do funil do cliente com base no andamento do atendimento (Ex: Contato Feito, Em Qualificação, Proposta Enviada, Reposição). Use quando o cliente avançar naturalmente na conversa.',
+            parameters: {
+              type: 'object',
+              properties: {
+                status: {
+                  type: 'string',
+                  description: 'O novo status do cliente no Kanban. Opções válidas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado", "Reposição"'
+                }
+              },
+              required: ['status']
+            }
+          }
         }
       ],
       tool_choice: 'auto'
@@ -324,15 +341,31 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
             .update({ name: args.name })
             .eq('id', clientId);
           toolResult = `Nome atualizado com sucesso para ${args.name}.`;
+        } else if (toolCall.function.name === 'changeClientStatus') {
+          console.log(`[AI TOOL] Alterando status do cliente para: ${args.status}`);
+          await supabase
+            .from('clientes')
+            .update({ status: args.status })
+            .eq('id', clientId);
+          
+          await supabase
+            .from('history_events')
+            .insert({
+              client_id: clientId,
+              type: 'status_change',
+              description: `A IA Clara alterou o status para ${args.status}.`,
+            });
+            
+          toolResult = `Status atualizado com sucesso para ${args.status}.`;
         }
 
         if (toolCall.function.name === 'transferToHuman') {
           console.log(`[AI TOOL] Transferindo cliente para humano. Resumo: ${args.summary}`);
           
-          // Mudar status para 'Qualificado'
+          // Mudar status para 'Qualificado' e setar needs_human
           await supabase
             .from('clientes')
-            .update({ status: 'Qualificado' })
+            .update({ status: 'Qualificado', needs_human: true })
             .eq('id', clientId);
 
           // Inserir um evento no histórico com o resumo da IA

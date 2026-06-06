@@ -50,20 +50,33 @@ export function KanbanCard({ client, onClick }: KanbanCardProps) {
     return format(d, 'dd/MM/yyyy');
   };
 
+  const isAIActive = settings.autoReplyEnabled && client.ai_enabled !== false && !client.needs_human;
+  
+  let cardBorderClass = "";
+  if (client.needs_human) {
+    cardBorderClass = "border border-green-500 shadow-[0_0_12px_rgba(34,197,94,0.4)] animate-pulse";
+  } else if (isAIActive) {
+    cardBorderClass = "border border-yellow-500 shadow-[0_0_12px_rgba(234,179,8,0.2)]";
+  }
+
   return (
     <div 
-      className="glass-card p-3 relative group transition-all hover:border-primary/50 cursor-pointer flex flex-col gap-2"
+      className={`glass-card p-3 relative group transition-all hover:border-primary/50 cursor-pointer flex flex-col gap-2 ${cardBorderClass}`}
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={onClick}
     >
-      {/* Automations Badge */}
-      {settings.autoReplyEnabled && client.ai_enabled !== false && (
-        <div className="absolute -top-2 -right-2 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg border border-primary-hover opacity-0 group-hover:opacity-100 transition-opacity z-10">
-          Auto
+      {/* Automations Badge (Human Needed or AI Active) */}
+      {client.needs_human ? (
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap animate-pulse border border-green-400">
+          ATENDIMENTO HUMANO
         </div>
-      )}
+      ) : isAIActive ? (
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap border border-yellow-400">
+          IA ATENDENDO
+        </div>
+      ) : null}
       
       {/* Unread indicator */}
       {hasUnreadMessages && (

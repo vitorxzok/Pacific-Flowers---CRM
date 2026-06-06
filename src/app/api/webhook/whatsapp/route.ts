@@ -96,6 +96,12 @@ export async function POST(request: Request) {
           if (updateError) {
             console.error('Erro ao atualizar cliente:', updateError);
           }
+        } else {
+          // Se for do vendedor, significa que o humano assumiu o controle ou respondeu, então tiramos o alerta de needs_human
+          await supabase
+            .from('clientes')
+            .update({ needs_human: false, updated_at: new Date().toISOString() })
+            .eq('id', clientId);
         }
       }
 
