@@ -60,9 +60,9 @@ export async function POST(request: Request) {
       for (const toolCall of aiMessage.tool_calls as any[]) {
         if (toolCall.function.name === 'sendAttachment') {
           const args = JSON.parse(toolCall.function.arguments);
-          attachmentTrigger = args.trigger;
+          attachmentTrigger = args.triggerName; // O parâmetro correto definido na tool é triggerName
           
-          if (settings && settings.attachments) {
+          if (settings && settings.attachments && attachmentTrigger) {
             const matchedAttachment = settings.attachments.find(
               (a: any) => a.trigger?.toUpperCase() === attachmentTrigger?.toUpperCase()
             );

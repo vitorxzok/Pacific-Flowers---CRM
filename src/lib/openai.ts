@@ -267,7 +267,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
           console.log(`[AI TOOL] Solicitado envio do anexo com gatilho: ${args.triggerName}`);
           
           const attachments = settings?.attachments || [];
-          const attachment = attachments.find((a: any) => a.trigger === args.triggerName);
+          const attachment = attachments.find((a: any) => a.trigger?.toUpperCase() === args.triggerName?.toUpperCase());
           
           if (attachment && attachment.url) {
             // Obter phone e instanceName do cliente
