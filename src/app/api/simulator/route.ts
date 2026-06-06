@@ -34,16 +34,16 @@ export async function POST(request: Request) {
           type: 'function',
           function: {
             name: 'sendAttachment',
-            description: 'Envia um anexo (PDF, Imagem, Áudio) para o cliente',
+            description: 'Envia um anexo (mídia, catálogo, foto de kit) para o cliente com base em um gatilho',
             parameters: {
               type: 'object',
               properties: {
-                trigger: {
+                triggerName: {
                   type: 'string',
-                  description: 'O gatilho do anexo (ex: CATALOGO)',
+                  description: 'O nome exato do gatilho configurado. Ex: "CATALOGO"',
                 },
               },
-              required: ['trigger'],
+              required: ['triggerName'],
             },
           },
         },
