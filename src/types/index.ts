@@ -30,6 +30,9 @@ export interface Client {
   messages: Message[];
   avatarUrl?: string;
   ai_enabled?: boolean;
+  storeName?: string;
+  purchaseValue?: number;
+  purchaseDate?: string;
 }
 
 export interface Attachment {

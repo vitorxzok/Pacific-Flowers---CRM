@@ -63,7 +63,7 @@ export function KanbanBoard() {
         })}
         <button 
           onClick={handleAddColumn}
-          className="flex-shrink-0 w-[320px] h-[60px] flex items-center justify-center space-x-2 border-2 border-dashed border-surface-border rounded-xl text-gray-400 hover:text-primary hover:border-primary/50 transition-colors bg-surface/30"
+          className="flex-shrink-0 w-[280px] h-[60px] flex items-center justify-center space-x-2 border-2 border-dashed border-surface-border rounded-xl text-gray-400 hover:text-primary hover:border-primary/50 transition-colors bg-surface/30"
         >
           <Plus size={20} />
           <span className="font-medium">Adicionar Coluna</span>
