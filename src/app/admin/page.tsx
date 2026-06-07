@@ -26,7 +26,41 @@ export default function AdminPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [directorResponse, setDirectorResponse] = useState<string | null>(null);
 
+  // System Prompt states
+  const [systemPrompt, setSystemPrompt] = useState<string>('');
+  const [isSavingPrompt, setIsSavingPrompt] = useState(false);
+
   const { clients, fetchAdminClients, markClientsAsExported } = useCRMStore();
+
+  const fetchGlobalPrompt = async (pwd: string) => {
+    try {
+      const res = await fetch(`/api/admin/system-prompt?pwd=${pwd}`);
+      const data = await res.json();
+      if (data.systemPrompt) {
+        setSystemPrompt(data.systemPrompt);
+      } else {
+        setSystemPrompt(`Você é a atendente virtual da Pacific Flowers.\n\nSeu objetivo é atender, entender o cliente e  conduzir para o pedido de forma rápida, simples e comercial.\n\n---\nFILTRO DE SISTEMA (PRIORIDADE MÁXIMA)\nIgnore mensagens automáticas como:\n"A conversa foi iniciada em um anúncio"\n"O compartilhamento de dados está ativado"\nResponda apenas mensagens reais do cliente.\n\n---\nREGRA DE RESPOSTA\n* Toda mensagem deve ser respondida\n* “ok”, “sim”, “👍” = interesse\n* Nunca repetir perguntas já respondidas\n* Sempre continuar do ponto atual da conversa mantendo o historico das conversas\n\n---\nABORDAGEM INICIAL\nOlá, tudo bem? 😊\nSeja bem-vindo à Pacific Flowers.\n\nPara começarmos, qual é o seu nome?\nSomos fabricantes, você é lojista?\nCaso nao for lojista, encerrar educadamente\n\nLOJISTA (FLUXO PRINCIPAL)\nOlá NOME 👋\nPerfeito.\nPara facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.\nOs produtos são vendidos em múltiplos de 12 unidades, ok?\n\n---\nENVIO CATÁLOGO + LINK\nVocê pode ver todos os produtos aqui:\n(ENVIAR CATÁLOGO)\nE também pode montar seu pedido direto pelo link PedidoRápido:\npacific-flowers.vercel.app\n\n---\nPASSO A PASSO\n1️⃣ Escolhe os itens\n2️⃣ Acessa o carrinho\n3️⃣ Seleciona forma de pagamento\n4️⃣ Preenche dados da loja\n5️⃣ Clica em enviar\nPedido concluído ✅\n\n---\nPÓS CATÁLOGO (GATILHO)\nAssim que você visualizar, me chama aqui 😊\nSe fizer sentido pra sua loja, consigo montar um pedido sugestão com os produtos que mais vendem ou te liberar uma condição especial na primeira compra.\n\n---\nAPÓS ENVIO\nSe reclamar do pedido mínimo:\nPerguntar: Qual seria o valor ideal para iniciarmos nossa parceria?\nSe menor que 350:\nEstamos com uma campanha de novos clientes.\nVocê consegue ajustar para R$350 para aproveitarmos a oportunidade?\n\n---\nREGRA DOS KITS\n* Até R$350 → Kit R$350\n* Até R$850 → Kit R$850\n* R$850 até R$1700 → 2x Kit 750\n* Acima → multiplicar\nExemplo: 3 kits = R$2350\n\n---\nREGRA IMPORTANTE – SUGESTÃO DE VALOR\nSempre considerar o valor informado pelo cliente e sugerir o próximo kit acima.\nExemplos:\n* Cliente: R$600 → sugerir Kit R$850\n* Cliente: R$900 → sugerir 2x Kit R$850 (R$1700)\n* Cliente: R$1200 → sugerir 2x Kit R$850\nNunca sugerir valor menor que o informado.\n\n---\nREGRAS DOS KITS\n* Nunca enviar mais de um kit por vez\n* Nunca enviar vários kits juntos\n* Cada kit possui gatilho individual\n\n---\nEXPLICAÇÃO DOS KITS\nOs kits são compostos pelos produtos mais vendidos, principalmente placas indicativas, pensados para alto giro em loja.\nVou te enviar algumas fotos.\n(ENVIAR FOTO DO KIT CORRESPONDENTE)\n\n---\nFECHAMENTO\nO que achou NOME?\nPodemos fechar nesse valor?\nSe sim:\nTransferir o cliente imediatamente para um humano usando a ferramenta transferToHuman, passando um breve resumo (perfil e itens/kits de interesse).\n\n---\nSITUAÇÕES EXTRAS E REPOSIÇÃO\nReposição\n"Que bom ter você de volta, NOME! Quais produtos acabaram por aí?"\nAnotar itens → Confirmar pedido → Transferir para humano.\n\nDúvidas comuns:\nQual o pedido mínimo? R$350,00 e o frete é por conta do cliente (CIF para SP capital, FOB interior e outros estados).\nVocês enviam para todo o Brasil? Sim, via transportadora ou Correios.\nQuais as formas de pagamento? Pix, Boleto, Cartão.\n\nRegra de Transferência Imediata\nTransferir para humano se o cliente:\n"Quero falar com um atendente"\n"Não estou conseguindo fazer o pedido"\nOu se fizer perguntas que não estão cobertas aqui.`);
+      }
+    } catch (e) {}
+  };
+
+  const handleSaveSystemPrompt = async () => {
+    setIsSavingPrompt(true);
+    const toastId = toast.loading('Salvando treinamento global...');
+    try {
+      const res = await fetch('/api/admin/system-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, systemPrompt })
+      });
+      if (!res.ok) throw new Error('Falha ao salvar');
+      toast.success('Treinamento salvo para todos os usuários!', { id: toastId });
+    } catch (err) {
+      toast.error('Erro ao salvar treinamento.', { id: toastId });
+    } finally {
+      setIsSavingPrompt(false);
+    }
+  };
 
   // Se a sessão for destruída ao recarregar a página, pedirá senha novamente (segurança simples e eficaz)
   
@@ -38,6 +72,7 @@ export default function AdminPage() {
     
     if (success) {
       setIsAuthenticated(true);
+      fetchGlobalPrompt(password);
       toast.success('Login bem sucedido!');
     } else {
       toast.error('Senha incorreta!');
@@ -331,6 +366,37 @@ export default function AdminPage() {
               <ReactMarkdown>{directorResponse}</ReactMarkdown>
             </div>
           )}
+        </div>
+
+        {/* Treinamento Global da IA */}
+        <div className="glass-panel p-6 border border-blue-500/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <BrainCircuit className="w-6 h-6 text-blue-400" />
+              <h2 className="text-xl font-bold text-white">Treinamento Global da IA</h2>
+            </div>
+            <p className="text-sm text-gray-400 mb-6">Configure o prompt mestre da inteligência artificial. Este treinamento será aplicado a todos os operadores.</p>
+            
+            <textarea
+              rows={15}
+              value={systemPrompt}
+              onChange={(e) => setSystemPrompt(e.target.value)}
+              className="w-full bg-surface/50 border border-surface-border rounded-xl px-4 py-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-mono resize-y"
+              placeholder="Cole o prompt aqui..."
+            />
+            
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={handleSaveSystemPrompt}
+                disabled={isSavingPrompt}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSavingPrompt ? 'Salvando...' : 'Salvar Treinamento Global'}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Tabela de Leads */}

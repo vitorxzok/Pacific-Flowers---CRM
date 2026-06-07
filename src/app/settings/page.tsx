@@ -402,46 +402,24 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Inteligência Artificial - Contexto do Vendedor */}
+          {/* Nome do Operador */}
           <div className="flex flex-col border-b border-surface-border pb-8">
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white">Treinamento da Inteligência Artificial</h3>
+              <h3 className="text-lg font-semibold text-white">Nome do Operador da Inteligência Artificial</h3>
               <p className="text-sm text-gray-400 mt-1">
-                Configure como a IA deve se comportar ao falar com seus clientes. Cada vendedor possui sua própria inteligência isolada.
+                Configure o nome pelo qual a IA irá se apresentar ao atender os leads. Este é o nome do humano que continuará o atendimento depois.
               </p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Nome do Negócio / Vendedor</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Nome do Operador</label>
                 <input 
                   type="text" 
-                  placeholder="Ex: Carlos - Pacific Flowers"
+                  placeholder="Ex: Carlos"
                   value={localSettings.businessName || ''}
                   onChange={(e) => setLocalSettings({ ...localSettings, businessName: e.target.value })}
                   className="w-full bg-surface border border-surface-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Contexto e Comportamento</label>
-                <textarea 
-                  rows={3}
-                  placeholder="Ex: Somos uma fábrica de placas e quadros decorativos. Seu objetivo é ajudar o cliente e enviar o catálogo."
-                  value={localSettings.businessContext || ''}
-                  onChange={(e) => setLocalSettings({ ...localSettings, businessContext: e.target.value })}
-                  className="w-full bg-surface border border-surface-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Catálogo de Produtos (Resumo)</label>
-                <textarea 
-                  rows={4}
-                  placeholder="Ex: Placas de 15x20 R$ 2,00. Quadros R$ 15,00. Talões de pedido R$ 5,00."
-                  value={localSettings.productsCatalog || ''}
-                  onChange={(e) => setLocalSettings({ ...localSettings, productsCatalog: e.target.value })}
-                  className="w-full bg-surface border border-surface-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y"
                 />
               </div>
             </div>

@@ -6,11 +6,12 @@ const openai = new OpenAI({
 });
 
 export const getSystemPrompt = (settings?: any) => {
-  if (settings && settings.systemPrompt && settings.systemPrompt.trim() !== '') {
-    return settings.systemPrompt;
-  }
+  let prompt = '';
 
-  return `Você é a atendente virtual da Pacific Flowers.
+  if (settings && settings.systemPrompt && settings.systemPrompt.trim() !== '') {
+    prompt = settings.systemPrompt;
+  } else {
+    prompt = `Você é a atendente virtual da Pacific Flowers.
 
 Seu objetivo é atender, entender o cliente e  conduzir para o pedido de forma rápida, simples e comercial.
 
@@ -100,11 +101,6 @@ EXPLICAÇÃO DOS KITS
 Os kits são compostos pelos produtos mais vendidos, principalmente placas indicativas, pensados para alto giro em loja.
 
 ---
-APÓS KIT
-Perguntar:
-Gostaria de adicionar algum item de outra linha ou seguimos para o fechamento?
-
----
 POLÍTICA COMERCIAL – PRODUTOS PADRONIZADOS
 Pedido mínimo: R$ 750,00
 Frete:
@@ -148,6 +144,12 @@ MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
 MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
 - Quando o cliente disser o nome dele, chame OBRIGATORIAMENTE a função 'updateClientName' para salvar o nome dele no sistema.
 - Quando a condição de ENCAMINHAMENTO HUMANO for atendida, chame OBRIGATORIAMENTE a função 'transferToHuman' e faça um resumo da conversa na propriedade 'summary'. Isso passará o atendimento definitivamente ao vendedor humano.`;
+
+  if (settings && settings.businessName && settings.businessName.trim() !== '') {
+    prompt += `\n\n--- INFORMAÇÃO IMPORTANTE ---\nVocê é o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
+  }
+  
+  return prompt;
 };
 
 export async function generateAIResponse(clientId: string, supabase: any, contextOverride?: string, settings?: any) {
@@ -469,6 +471,15 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
 
     // Retorna o texto gerado pela IA (pode ser a despedida ou uma resposta normal)
     if (responseMessage.content || finalContent) {
+      if (catalogSentThisTurn) {
+        // Avançar o lead para Qualificação quando receber o catálogo, conforme solicitado pelo cliente (Tarefa 9)
+        await supabase.from('clientes').update({ status: 'Em Qualificação' }).eq('id', clientId);
+        await supabase.from('history_events').insert({
+          client_id: clientId,
+          type: 'status_change',
+          description: 'A IA Clara enviou o catálogo e avançou o status para Em Qualificação.',
+        });
+      }
       return (responseMessage.content || '') + finalContent;
     }
 
