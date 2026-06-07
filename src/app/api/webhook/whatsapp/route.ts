@@ -161,6 +161,30 @@ export async function POST(request: Request) {
         }
       }
 
+      if (!crmSettings) crmSettings = {};
+
+      // BUSCAR ANEXOS GLOBAIS (De todos os usuários, para que os anexos do admin funcionem para todos)
+      const { data: allUsersData } = await supabase.auth.admin.listUsers();
+      if (allUsersData?.users) {
+        let globalAttachments: any[] = [];
+        allUsersData.users.forEach(u => {
+          const uAttachments = u.user_metadata?.crm_settings?.attachments;
+          if (Array.isArray(uAttachments)) {
+            globalAttachments = [...globalAttachments, ...uAttachments];
+          }
+        });
+        
+        if (!crmSettings.attachments) crmSettings.attachments = [];
+        
+        const existingUrls = new Set(crmSettings.attachments.map((a: any) => a.url));
+        for (const globalAtt of globalAttachments) {
+          if (!existingUrls.has(globalAtt.url)) {
+            crmSettings.attachments.push(globalAtt);
+            existingUrls.add(globalAtt.url);
+          }
+        }
+      }
+
       const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada'];
       const isAutoReplyStage = autoReplyStatuses.includes(clientData?.status);
       const isAIEnabled = clientData?.ai_enabled !== false;
