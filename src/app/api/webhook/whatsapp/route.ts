@@ -166,7 +166,7 @@ export async function POST(request: Request) {
               await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                body: JSON.stringify({ number: phone, text: aiReply })
+                body: JSON.stringify({ number: phone, text: aiReply, delay: 3000 })
               });
               console.log(`[AI] Resposta enviada com sucesso para ${phone}`);
             } catch (err) {
