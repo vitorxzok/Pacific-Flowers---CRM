@@ -273,6 +273,8 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     });
 
     let responseMessage = response.choices[0].message;
+    let finalContent = '';
+    let catalogSentThisTurn = false;
 
     // Processar Chamadas de Ferramenta (Tool Calls)
     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
@@ -319,7 +321,10 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
                     body: JSON.stringify(mediaPayload)
                   });
                   toolResult = `Anexo '${args.triggerName}' enviado com sucesso para o cliente.`;
-                  finalContent = (finalContent || '') + `\n\n[ANEXO ENVIADO: ${args.triggerName}]`;
+                  finalContent = finalContent + `\n\n[ANEXO ENVIADO: ${args.triggerName}]`;
+                  if (args.triggerName?.toUpperCase() === 'CATALOGO') {
+                    catalogSentThisTurn = true;
+                  }
                 } catch (err) {
                   console.error('[AI TOOL] Erro ao enviar anexo:', err);
                   toolResult = `Erro ao tentar enviar o anexo: ${args.triggerName}`;
@@ -343,6 +348,28 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
           toolResult = `Nome atualizado com sucesso para ${args.name}.`;
         } else if (toolCall.function.name === 'changeClientStatus') {
           console.log(`[AI TOOL] Alterando status do cliente para: ${args.status}`);
+          
+          if (args.status === 'Em Qualificação' || args.status === 'Qualificado') {
+            const { data: msgs } = await supabase
+              .from('mensagens')
+              .select('text')
+              .eq('client_id', clientId)
+              .ilike('text', '%[ANEXO ENVIADO: CATALOGO]%');
+              
+            const alreadySent = msgs && msgs.length > 0;
+            
+            if (!alreadySent && !catalogSentThisTurn) {
+              toolResult = "ERRO DE SEGURANÇA: O catálogo ainda não foi enviado. Você é OBRIGADO a enviar o catálogo para o cliente (usando a ferramenta sendAttachment com trigger 'CATALOGO') ANTES de alterar o status para 'Em Qualificação'. Explique isso ao cliente ou envie o catálogo agora.";
+              openAiMessages.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                content: toolResult
+              } as any);
+              console.log("[AI TOOL] Bloqueada mudança de status: Catálogo não enviado.");
+              continue; // Interrompe a alteração no BD e no histórico
+            }
+          }
+          
           await supabase
             .from('clientes')
             .update({ status: args.status })
@@ -441,8 +468,8 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     }
 
     // Retorna o texto gerado pela IA (pode ser a despedida ou uma resposta normal)
-    if (responseMessage.content) {
-      return responseMessage.content;
+    if (responseMessage.content || finalContent) {
+      return (responseMessage.content || '') + finalContent;
     }
 
   } catch (error) {
