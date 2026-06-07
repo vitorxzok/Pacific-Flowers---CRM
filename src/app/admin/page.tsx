@@ -25,7 +25,7 @@ export default function AdminPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [directorResponse, setDirectorResponse] = useState<string | null>(null);
 
-  const { clients, fetchAdminClients } = useCRMStore();
+  const { clients, fetchAdminClients, markClientsAsExported } = useCRMStore();
 
   // Se a sessão for destruída ao recarregar a página, pedirá senha novamente (segurança simples e eficaz)
   
@@ -85,9 +85,16 @@ export default function AdminPage() {
 
   // Filtering
   const uniqueAttendants = Array.from(new Set(clients.map(c => c.attendant).filter(Boolean))) as string[];
-  const filteredClients = attendantFilter === 'all' 
-    ? clients 
-    : clients.filter(c => c.attendant === attendantFilter);
+  
+  const [exportFilter, setExportFilter] = useState<'all' | 'exported' | 'not_exported'>('all');
+  
+  const filteredClients = clients.filter(c => {
+    const matchAttendant = attendantFilter === 'all' || c.attendant === attendantFilter;
+    const matchExport = exportFilter === 'all' || 
+                        (exportFilter === 'exported' && c.is_exported) || 
+                        (exportFilter === 'not_exported' && !c.is_exported);
+    return matchAttendant && matchExport;
+  });
 
   // Dashboard calculations based on filtered clients
   const totalLeads = filteredClients.length;
@@ -235,6 +242,10 @@ export default function AdminPage() {
       link.click();
       document.body.removeChild(link);
 
+      // Marcar clientes como exportados no banco
+      const exportedIds = filteredClients.map(c => c.id);
+      await markClientsAsExported(exportedIds);
+
       toast.success(`${filteredClients.length} leads exportados com sucesso!`, { id: toastId });
     } catch (error: any) {
       console.error('Erro ao exportar leads:', error);
@@ -355,6 +366,16 @@ export default function AdminPage() {
               </button>
 
               <select
+                value={exportFilter}
+                onChange={(e) => setExportFilter(e.target.value as any)}
+                className="bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+              >
+                <option value="all">Exportação (Todos)</option>
+                <option value="not_exported">Apenas Não Exportados</option>
+                <option value="exported">Já Exportados</option>
+              </select>
+
+              <select
                 value={attendantFilter}
                 onChange={(e) => setAttendantFilter(e.target.value)}
                 className="bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
@@ -379,9 +400,16 @@ export default function AdminPage() {
               </thead>
               <tbody className="divide-y divide-surface-border">
                 {filteredClients.map(client => (
-                  <tr key={client.id} className="hover:bg-surface-hover/50 transition-colors">
+                  <tr key={client.id} className={`transition-colors ${client.is_exported ? 'bg-surface/30 hover:bg-surface/50' : 'hover:bg-surface-hover/50'}`}>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-white">{client.name}</div>
+                      <div className="font-medium text-white flex items-center gap-2">
+                        {client.name}
+                        {client.is_exported && (
+                          <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] rounded uppercase font-bold tracking-wider">
+                            Exportado
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">{client.email || 'Sem email'}</div>
                     </td>
                     <td className="px-6 py-4">{client.phone}</td>

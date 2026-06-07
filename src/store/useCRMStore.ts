@@ -21,6 +21,7 @@ interface CRMStore {
   updateClientAIEnabled: (clientId: string, enabled: boolean) => Promise<void>;
   updateClientReposicaoDate: (clientId: string, date: string | null) => Promise<void>;
   fetchAdminClients: (password: string) => Promise<boolean>;
+  markClientsAsExported: (clientIds: string[]) => Promise<void>;
 }
 
 const supabase = createClient();
@@ -139,6 +140,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       notes: c.notes || '',
       ai_enabled: c.ai_enabled !== false,
       needs_human: c.needs_human,
+      is_exported: c.is_exported || false,
       messages: c.mensagens ? c.mensagens.map((m: any) => ({
         id: m.id,
         text: m.text,
@@ -155,6 +157,22 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     }));
 
     set({ clients: formattedClients });
+  },
+
+  markClientsAsExported: async (clientIds: string[]) => {
+    // Atualiza otimisticamente
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        clientIds.includes(c.id) ? { ...c, is_exported: true } : c
+      ),
+    }));
+
+    const { error } = await supabase
+      .from('clientes')
+      .update({ is_exported: true })
+      .in('id', clientIds);
+
+    if (error) console.error("Error marking clients as exported:", error);
   },
 
   fetchAdminClients: async (password: string) => {

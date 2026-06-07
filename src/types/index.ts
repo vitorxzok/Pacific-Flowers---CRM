@@ -36,6 +36,7 @@ export interface Client {
   insistencia_count?: number;
   needs_human?: boolean;
   custom_reposicao_date?: string;
+  is_exported?: boolean;
 }
 
 export interface Attachment {

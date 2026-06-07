@@ -217,6 +217,12 @@ export default function SettingsPage() {
       link.click();
       document.body.removeChild(link);
 
+      // Marcar como exportados
+      const exportedIds = clientes.map((c: any) => c.id);
+      if (exportedIds.length > 0) {
+        await supabase.from('clientes').update({ is_exported: true }).in('id', exportedIds);
+      }
+
       toast.success(`${clientes.length} leads exportados com sucesso!`, { id: toastId });
     } catch (error: any) {
       console.error('Erro ao exportar leads:', error);
