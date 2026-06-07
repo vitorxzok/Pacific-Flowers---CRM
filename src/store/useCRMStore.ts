@@ -41,7 +41,8 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     kanbanColumnNames: {},
     businessName: '',
     businessContext: '',
-    productsCatalog: ''
+    productsCatalog: '',
+    attachments: []
   },
   
   setSettings: async (newSettings) => {
@@ -64,7 +65,8 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           kanban_column_names: merged.kanbanColumnNames,
           business_name: merged.businessName,
           business_context: merged.businessContext,
-          products_catalog: merged.productsCatalog
+          products_catalog: merged.productsCatalog,
+          attachments: merged.attachments
         })
       });
     } catch (error) {
@@ -88,7 +90,8 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           kanbanColumnNames: data.kanban_column_names || {},
           businessName: data.business_name || '',
           businessContext: data.business_context || '',
-          productsCatalog: data.products_catalog || ''
+          productsCatalog: data.products_catalog || '',
+          attachments: data.attachments || []
         }});
       }
     } catch (error) {
