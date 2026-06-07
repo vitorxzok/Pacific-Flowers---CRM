@@ -49,12 +49,12 @@ export async function POST(request: Request) {
 
       // Extrair o ID do usuário (vendedor) a partir do nome da instância
       const instanceName = body.instance || '';
-      const sellerId = instanceName.replace('user_', '');
+      let sellerId: string | null = instanceName.replace('user_', '');
 
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(sellerId)) {
-        console.error(`Instância inválida recebida: ${instanceName}. O sellerId não é um UUID.`);
-        return NextResponse.json({ success: true, message: 'Instância não pertence a um usuário válido.' });
+        console.warn(`Instância não utiliza formato UUID: ${instanceName}. O attendant_id será nulo.`);
+        sellerId = null;
       }
 
       let clientId;
@@ -99,8 +99,8 @@ export async function POST(request: Request) {
         if (!isFromMe) {
           const updateData: any = { followup_sent: false, insistencia_count: 0, updated_at: new Date().toISOString() };
           
-          // Se o lead antigo não tiver vendedor associado, atribui ao atual
-          if (!clients[0].attendant_id) {
+          // Se o lead antigo não tiver vendedor associado, atribui ao atual (apenas se for válido)
+          if (!clients[0].attendant_id && sellerId) {
             updateData.attendant_id = sellerId;
           }
 
