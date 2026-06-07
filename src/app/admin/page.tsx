@@ -218,9 +218,9 @@ export default function AdminPage() {
         table += `<td>${c.attendant || ''}</td>`;
         table += `<td>${c.store_name || ''}</td>`;
         table += `<td>${c.name || ''}</td>`;
-        table += `<td style="mso-number-format:\'\\@\'">${c.phone || ''}</td>`;
+        table += `<td style="mso-number-format:'\\@'">${c.phone || ''}</td>`;
         table += `<td>${c.status || ''}</td>`;
-        table += `<td>${c.purchase_value ? \`R$ \${Number(c.purchase_value).toFixed(2).replace('.', ',')}\` : ''}</td>`;
+        table += `<td>${c.purchase_value ? `R$ ${Number(c.purchase_value).toFixed(2).replace('.', ',')}` : ''}</td>`;
         table += `<td>${c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''}</td>`;
         table += '</tr>';
       });
