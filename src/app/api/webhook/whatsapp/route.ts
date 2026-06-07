@@ -12,6 +12,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('Webhook WhatsApp recebido:', JSON.stringify(body, null, 2));
 
+    // -- INÍCIO DO LOG --
+    // Salva o payload completo no banco de dados para inspeção
+    try {
+      await supabase.from('webhook_logs').insert({ payload: body });
+    } catch (e) {
+      console.error('Erro ao salvar log do webhook', e);
+    }
+    // -- FIM DO LOG --
+
     // Apenas nos importamos com upsert de mensagens (novas mensagens recebidas)
     if (body.event === 'messages-upsert' || body.event === 'messages.upsert') {
       const data = body.data;
