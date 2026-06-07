@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCRMStore } from '@/store/useCRMStore';
-import { Lock, Users, MessageCircle, DollarSign, LogOut, BrainCircuit, Activity } from 'lucide-react';
+import { Lock, Users, MessageCircle, DollarSign, LogOut, BrainCircuit, Activity, Upload, Download } from 'lucide-react';
 import { ClientModal } from '@/components/ClientModal';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import Papa from 'papaparse';
+import { createClient } from '@/lib/supabase/client';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,6 +16,11 @@ export default function AdminPage() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [attendantFilter, setAttendantFilter] = useState<string>('all');
   
+  // Import/Export states
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Diretor IA states
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [directorResponse, setDirectorResponse] = useState<string | null>(null);
@@ -127,6 +134,116 @@ export default function AdminPage() {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    const toastId = toast.loading('Importando leads...');
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const supabase = createClient();
+          const rows: any[] = results.data;
+          let count = 0;
+
+          for (const row of rows) {
+            const phone = row.telefone || row.phone || row.Telefone || row.Phone || row.numero || row.Numero;
+            const name = row.nome || row.name || row.Nome || row.Name || 'Lead Importado';
+            const email = row.email || row.Email || '';
+            const storeName = row.store_name || row['Nome da Loja'] || '';
+
+            if (!phone) continue;
+            
+            const cleanPhone = String(phone).replace(/\D/g, '');
+            if (cleanPhone.length < 8) continue;
+            
+            const last8 = cleanPhone.slice(-8);
+
+            const { data: existing } = await supabase
+              .from('clientes')
+              .select('id')
+              .ilike('phone', `%${last8}`)
+              .limit(1);
+
+            if (!existing || existing.length === 0) {
+              await supabase.from('clientes').insert({
+                name: name,
+                phone: cleanPhone,
+                email: email,
+                store_name: storeName,
+                status: 'Novo',
+                attendant_id: null
+              });
+              count++;
+            }
+          }
+
+          toast.success(`${count} leads importados com sucesso!`, { id: toastId });
+          fetchAdminClients(password);
+        } catch (error: any) {
+          console.error(error);
+          toast.error('Erro ao processar importação', { id: toastId });
+        } finally {
+          setIsImporting(false);
+          event.target.value = '';
+        }
+      },
+      error: (error) => {
+        toast.error(`Erro ao ler arquivo: ${error.message}`, { id: toastId });
+        setIsImporting(false);
+      }
+    });
+  };
+
+  const handleExportLeads = async () => {
+    setIsExporting(true);
+    const toastId = toast.loading('Exportando leads...');
+
+    try {
+      if (!filteredClients || filteredClients.length === 0) {
+        toast.error('Nenhum lead encontrado para exportar.', { id: toastId });
+        setIsExporting(false);
+        return;
+      }
+
+      let table = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8" /></head><body><table border="1">';
+      table += '<tr><th>Nome do Vendedor</th><th>Nome da Loja</th><th>Nome do Cliente</th><th>Telefone</th><th>Status Atual</th><th>Valor da Compra</th><th>Data da Compra</th></tr>';
+      
+      filteredClients.forEach((c: any) => {
+        table += '<tr>';
+        table += `<td>${c.attendant || ''}</td>`;
+        table += `<td>${c.store_name || ''}</td>`;
+        table += `<td>${c.name || ''}</td>`;
+        table += `<td style="mso-number-format:\'\\@\'">${c.phone || ''}</td>`;
+        table += `<td>${c.status || ''}</td>`;
+        table += `<td>${c.purchase_value ? \`R$ \${Number(c.purchase_value).toFixed(2).replace('.', ',')}\` : ''}</td>`;
+        table += `<td>${c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''}</td>`;
+        table += '</tr>';
+      });
+      table += '</table></body></html>';
+
+      const blob = new Blob([table], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `leads_admin_export_${new Date().toISOString().split('T')[0]}.xls`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`${filteredClients.length} leads exportados com sucesso!`, { id: toastId });
+    } catch (error: any) {
+      console.error('Erro ao exportar leads:', error);
+      toast.error('Erro ao exportar leads', { id: toastId });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-background relative overflow-y-auto">
       <header className="px-8 py-6 border-b border-surface-border bg-surface/50 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center">
@@ -208,19 +325,46 @@ export default function AdminPage() {
 
         {/* Tabela de Leads */}
         <div className="glass-panel overflow-hidden">
-          <div className="p-6 border-b border-surface-border flex justify-between items-center">
+          <div className="p-6 border-b border-surface-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-lg font-bold text-white">Todos os Leads</h2>
             
-            <select
-              value={attendantFilter}
-              onChange={(e) => setAttendantFilter(e.target.value)}
-              className="bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
-            >
-              <option value="all">Todos os Vendedores</option>
-              {uniqueAttendants.map(att => (
-                <option key={att} value={att}>{att}</option>
-              ))}
-            </select>
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isImporting}
+                className="flex items-center space-x-2 px-3 py-2 bg-surface hover:bg-surface-hover border border-surface-border text-gray-300 rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                <Upload className="w-4 h-4" />
+                <span>{isImporting ? 'Importando...' : 'Importar CSV'}</span>
+              </button>
+              
+              <button
+                onClick={handleExportLeads}
+                disabled={isExporting}
+                className="flex items-center space-x-2 px-3 py-2 bg-surface hover:bg-surface-hover border border-surface-border text-gray-300 rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                <Download className="w-4 h-4" />
+                <span>{isExporting ? 'Exportando...' : 'Exportar Tudo'}</span>
+              </button>
+
+              <select
+                value={attendantFilter}
+                onChange={(e) => setAttendantFilter(e.target.value)}
+                className="bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+              >
+                <option value="all">Todos os Vendedores</option>
+                {uniqueAttendants.map(att => (
+                  <option key={att} value={att}>{att}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-300">
