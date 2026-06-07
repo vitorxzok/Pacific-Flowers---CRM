@@ -227,8 +227,8 @@ export async function GET(request: Request) {
                 }
 
                 if (shouldInsist) {
-                  // Chama a IA com contexto de insistência
-                  const aiResponseText = await generateAIResponse(client.id, supabase, "INSISTENCIA_HORAS");
+                  // Chama a IA com contexto de insistência e passa as configurações do cliente para usar o prompt global correto
+                  const aiResponseText = await generateAIResponse(client.id, supabase, "INSISTENCIA_HORAS", clientSettings);
 
                   if (aiResponseText) {
                     await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });

@@ -163,6 +163,14 @@ export async function POST(request: Request) {
 
           if (apiUrl && apiKey && instanceName) {
             try {
+              // 1. Envia a presença "digitando" (composing) e informa para manter por 3 segundos
+              await fetch(`${apiUrl}/chat/sendPresence/${instanceName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                body: JSON.stringify({ number: phone, delay: 3000, presence: 'composing' })
+              });
+
+              // 2. Envia a mensagem com atraso embutido (3000ms = 3 segundos)
               await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': apiKey },

@@ -1,9 +1,6 @@
 'use client';
 
-import { useCRMStore } from '@/store/useCRMStore';
-import { Settings as SettingsIcon, Save, MessageSquare, Paperclip, Trash2, Plus, UploadCloud } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
-import { Attachment } from '@/types';
+import { Settings as SettingsIcon, UploadCloud } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -11,90 +8,13 @@ import { createClient } from '@/lib/supabase/client';
 import Papa from 'papaparse';
 
 export default function SettingsPage() {
-  const { settings, setSettings } = useCRMStore();
   const [mounted, setMounted] = useState(false);
-  const [localSettings, setLocalSettings] = useState(settings);
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleAddAttachment = () => {
-    const newAttachment: Attachment = { id: uuidv4(), trigger: '', url: '', name: '', type: 'document' };
-    setLocalSettings({
-      ...localSettings,
-      attachments: [...(localSettings.attachments || []), newAttachment]
-    });
-  };
-
-  const handleUpdateAttachment = (id: string, field: keyof Attachment, value: string) => {
-    const updated = (localSettings.attachments || []).map(a => 
-      a.id === id ? { ...a, [field]: value } : a
-    );
-    setLocalSettings({ ...localSettings, attachments: updated });
-  };
-
-  const handleRemoveAttachment = (id: string) => {
-    const updated = (localSettings.attachments || []).filter(a => a.id !== id);
-    setLocalSettings({ ...localSettings, attachments: updated });
-  };
-
-  const handleUploadAttachment = async (event: React.ChangeEvent<HTMLInputElement>, id: string) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    const toastId = toast.loading('Fazendo upload...');
-    
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `anexos/${fileName}`;
-      
-      // 1. Obter token de upload assinado da nossa API (com Service Role Key para burlar RLS)
-      const tokenResponse = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath }),
-      });
-
-      const tokenData = await tokenResponse.json();
-
-      if (!tokenResponse.ok || !tokenData.success) {
-        throw new Error(tokenData.error || 'Erro ao obter permissão de upload');
-      }
-      
-      // 2. Fazer upload direto para o Supabase usando o token
-      const supabase = createClient();
-      const { data, error } = await supabase.storage
-        .from('media')
-        .uploadToSignedUrl(filePath, tokenData.token, file);
-        
-      if (error) {
-        throw error;
-      }
-      
-      handleUpdateAttachment(id, 'url', tokenData.publicUrl);
-      handleUpdateAttachment(id, 'name', file.name);
-      
-      toast.success('Upload concluído!', { id: toastId });
-    } catch (error: any) {
-      console.error(error);
-      toast.error('Erro no upload: ' + error.message, { id: toastId });
-    } finally {
-      setIsUploading(false);
-    }
-  };;
-
   useEffect(() => {
     setMounted(true);
-    setLocalSettings(settings);
-  }, [settings]);
-
-  const handleSave = () => {
-    setSettings(localSettings);
-    toast.success('Configurações salvas com sucesso!');
-  };
+  }, []);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -116,16 +36,14 @@ export default function SettingsPage() {
           let count = 0;
 
           for (const row of rows) {
-            // Se as colunas estiverem com nomes diferentes, ajuste conforme necessário
             const phone = row.telefone || row.phone || row.Telefone || row.Phone || row.numero || row.Numero;
             const name = row.nome || row.name || row.Nome || row.Name || 'Lead Importado';
             const email = row.email || row.Email || '';
 
             if (!phone) continue;
             
-            // Limpar o telefone para manter apenas números
             const cleanPhone = String(phone).replace(/\D/g, '');
-            if (cleanPhone.length < 8) continue; // Número inválido
+            if (cleanPhone.length < 8) continue; 
             
             const last8 = cleanPhone.slice(-8);
 
@@ -153,7 +71,7 @@ export default function SettingsPage() {
           toast.error('Erro ao processar importação', { id: toastId });
         } finally {
           setIsImporting(false);
-          event.target.value = ''; // Limpa o input
+          event.target.value = ''; 
         }
       },
       error: (error) => {
@@ -190,7 +108,6 @@ export default function SettingsPage() {
         return;
       }
 
-      // HTML Table structure forces Excel to parse columns perfectly and native strings
       let table = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8" /></head><body><table border="1">';
       table += '<tr><th>Nome do Vendedor</th><th>Nome da Loja</th><th>Nome do Cliente</th><th>Telefone</th><th>Status Atual</th><th>Valor da Compra</th><th>Data da Compra</th></tr>';
       
@@ -199,7 +116,7 @@ export default function SettingsPage() {
         table += `<td>${c.profiles?.name || 'Vendedor'}</td>`;
         table += `<td>${c.store_name || ''}</td>`;
         table += `<td>${c.name || ''}</td>`;
-        table += `<td style="mso-number-format:'\\@'">${c.phone || ''}</td>`; // Prevent scientific notation
+        table += `<td style="mso-number-format:'\\@'">${c.phone || ''}</td>`; 
         table += `<td>${c.status || ''}</td>`;
         table += `<td>${c.purchase_value ? `R$ ${Number(c.purchase_value).toFixed(2).replace('.', ',')}` : ''}</td>`;
         table += `<td>${c.purchase_date ? new Date(c.purchase_date).toLocaleDateString('pt-BR') : ''}</td>`;
@@ -207,7 +124,6 @@ export default function SettingsPage() {
       });
       table += '</table></body></html>';
 
-      // Download as .xls 
       const blob = new Blob([table], { type: 'application/vnd.ms-excel' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -217,7 +133,6 @@ export default function SettingsPage() {
       link.click();
       document.body.removeChild(link);
 
-      // Marcar como exportados
       const exportedIds = clientes.map((c: any) => c.id);
       if (exportedIds.length > 0) {
         await supabase.from('clientes').update({ is_exported: true }).in('id', exportedIds);
@@ -241,273 +156,12 @@ export default function SettingsPage() {
           <SettingsIcon className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold text-white">Configurações</h1>
         </div>
-        <p className="text-sm text-gray-400 mt-1">Gerencie as preferências e automações do CRM</p>
+        <p className="text-sm text-gray-400 mt-1">Gerencie e exporte seus leads</p>
       </header>
 
       <div className="p-8 max-w-3xl">
         <div className="glass-panel p-8 space-y-8">
           
-          {/* Automação */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
-            <div className="mb-4 sm:mb-0 pr-4">
-              <h3 className="text-lg font-semibold text-white">Atendimento Automático</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Ativa o envio automático de mensagens para novos leads e marca os cartões com um badge de "Automação Ativa".
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
-                checked={localSettings.autoReplyEnabled}
-                onChange={(e) => setLocalSettings({ ...localSettings, autoReplyEnabled: e.target.checked })}
-              />
-              <div className="w-14 h-7 bg-surface-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
-            </label>
-          </div>
-
-          {/* Tempo sem resposta */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
-            <div className="mb-4 sm:mb-0 pr-4">
-              <h3 className="text-lg font-semibold text-white">Tempo de Retorno Rápido</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Minutos sem resposta do cliente antes de alertar ou mudar status automaticamente.
-              </p>
-            </div>
-            <div className="flex items-center flex-shrink-0">
-              <input 
-                type="number" 
-                min="1"
-                max="1440"
-                value={localSettings.minutesWithoutResponse || ''}
-                onChange={(e) => setLocalSettings({ ...localSettings, minutesWithoutResponse: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <span className="ml-3 text-gray-400 text-sm">min</span>
-            </div>
-          </div>
-
-          {/* Insistência da IA */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
-            <div className="mb-4 sm:mb-0 pr-4">
-              <h3 className="text-lg font-semibold text-white">Insistência da IA</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Tempo em horas para a IA enviar automaticamente uma nova mensagem tentando retomar contato caso o lead não responda.
-              </p>
-            </div>
-            <div className="flex items-center flex-shrink-0">
-              <input 
-                type="number" 
-                min="1"
-                max="72"
-                value={localSettings.followUpIntervalHours || ''}
-                onChange={(e) => setLocalSettings({ ...localSettings, followUpIntervalHours: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <span className="ml-3 text-gray-400 text-sm">horas</span>
-            </div>
-          </div>
-
-          {/* Dias Padrão para Reposição */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
-            <div className="mb-4 sm:mb-0 pr-4">
-              <h3 className="text-lg font-semibold text-white">Dias Padrão para Reposição (Pós-Venda)</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Quantidade de dias após a compra para mover o cliente automaticamente para a coluna "Reposição" e enviar o Pós-Venda.
-              </p>
-            </div>
-            <div className="flex items-center flex-shrink-0">
-              <input 
-                type="number" 
-                min="1"
-                max="365"
-                value={localSettings.reposicao_days_global || ''}
-                onChange={(e) => setLocalSettings({ ...localSettings, reposicao_days_global: e.target.value === '' ? 30 : parseInt(e.target.value) })}
-                className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <span className="ml-3 text-gray-400 text-sm">dias</span>
-            </div>
-          </div>
-
-          {/* Limite de Repetições (Insistência) */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
-            <div className="mb-4 sm:mb-0 pr-4">
-              <h3 className="text-lg font-semibold text-white">Limite de Repetições (Insistência)</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Quantidade máxima de vezes que a IA tentará retomar o contato em "horas" antes de mudar para o espaçamento por "dias".
-              </p>
-            </div>
-            <div className="flex items-center flex-shrink-0">
-              <input 
-                type="number" 
-                min="1"
-                max="10"
-                value={localSettings.insistenciaMaxRepetitions || ''}
-                onChange={(e) => setLocalSettings({ ...localSettings, insistenciaMaxRepetitions: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <span className="ml-3 text-gray-400 text-sm">tentativas</span>
-            </div>
-          </div>
-
-          {/* Insistência por Dias */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
-            <div className="mb-4 sm:mb-0 pr-4">
-              <h3 className="text-lg font-semibold text-white">Insistência por Dias (Após limite)</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Após atingir o limite de repetições acima, a IA passará a tentar contato apenas a cada X dias.
-              </p>
-            </div>
-            <div className="flex items-center flex-shrink-0">
-              <input 
-                type="number" 
-                min="1"
-                max="30"
-                value={localSettings.insistenciaDaysInterval || ''}
-                onChange={(e) => setLocalSettings({ ...localSettings, insistenciaDaysInterval: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <span className="ml-3 text-gray-400 text-sm">dias</span>
-            </div>
-          </div>
-
-          {/* Nomes das Colunas do Kanban */}
-          <div className="flex flex-col border-b border-surface-border pb-8">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white">Nomes das Colunas do Kanban</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Personalize os nomes de exibição dos estágios de atendimento do Kanban.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'].map((status) => (
-                <div key={status}>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">{status} (Padrão)</label>
-                  <input 
-                    type="text" 
-                    placeholder={status}
-                    value={localSettings.kanbanColumnNames?.[status] || ''}
-                    onChange={(e) => setLocalSettings({ 
-                      ...localSettings, 
-                      kanbanColumnNames: { 
-                        ...(localSettings.kanbanColumnNames || {}), 
-                        [status]: e.target.value 
-                      } 
-                    })}
-                    className="w-full bg-surface border border-surface-border rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Nome do Operador */}
-          <div className="flex flex-col border-b border-surface-border pb-8">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white">Nome do Operador da Inteligência Artificial</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Configure o nome pelo qual a IA irá se apresentar ao atender os leads. Este é o nome do humano que continuará o atendimento depois.
-              </p>
-            </div>
-            
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Nome do Operador</label>
-                <input 
-                  type="text" 
-                  placeholder="Ex: Carlos"
-                  value={localSettings.businessName || ''}
-                  onChange={(e) => setLocalSettings({ ...localSettings, businessName: e.target.value })}
-                  className="w-full bg-surface border border-surface-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Anexos e Gatilhos da IA */}
-          <div className="flex flex-col border-b border-surface-border pb-8 mb-8">
-            <div className="mb-6 flex justify-between items-start sm:items-center">
-              <div>
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Paperclip className="w-5 h-5 text-primary" /> Anexos e Gatilhos da IA
-                </h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  Faça o upload de catálogos e fotos de kits e defina um "Gatilho" para a IA enviar automaticamente. Ex: "CATALOGO", "KIT_350".
-                </p>
-              </div>
-              <button
-                onClick={handleAddAttachment}
-                className="flex items-center gap-2 px-3 py-2 bg-surface-hover hover:bg-surface-border text-white text-sm font-medium rounded-lg transition-colors border border-surface-border"
-              >
-                <Plus className="w-4 h-4" /> Adicionar
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {(localSettings.attachments || []).length === 0 ? (
-                <div className="text-center py-6 bg-surface rounded-lg border border-surface-border border-dashed">
-                  <p className="text-gray-400 text-sm">Nenhum anexo configurado.</p>
-                </div>
-              ) : (
-                (localSettings.attachments || []).map((attachment) => (
-                  <div key={attachment.id} className="flex flex-col sm:flex-row gap-4 p-4 bg-surface rounded-lg border border-surface-border">
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-gray-400 mb-1">Nome do Gatilho (Ex: CATALOGO)</label>
-                      <input 
-                        type="text" 
-                        value={attachment.trigger}
-                        onChange={(e) => handleUpdateAttachment(attachment.id, 'trigger', e.target.value.toUpperCase())}
-                        placeholder="CATALOGO_PRINCIPAL"
-                        className="w-full bg-background border border-surface-border rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      />
-                    </div>
-                    <div className="flex-[2]">
-                      <label className="block text-xs font-medium text-gray-400 mb-1">Arquivo (Upload ou Link)</label>
-                      <div className="flex items-center gap-2">
-                        <input 
-                          type="text" 
-                          value={attachment.url}
-                          onChange={(e) => handleUpdateAttachment(attachment.id, 'url', e.target.value)}
-                          placeholder="https://..."
-                          className="flex-1 bg-background border border-surface-border rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
-                        />
-                        <div className="relative flex-shrink-0">
-                          <input 
-                            type="file"
-                            onChange={(e) => handleUploadAttachment(e, attachment.id)}
-                            className="hidden"
-                            id={`upload-${attachment.id}`}
-                            disabled={isUploading}
-                          />
-                          <label 
-                            htmlFor={`upload-${attachment.id}`}
-                            className="flex items-center justify-center w-10 h-10 bg-surface-hover hover:bg-surface-border border border-surface-border rounded-md cursor-pointer transition-colors"
-                            title="Fazer Upload"
-                          >
-                            <UploadCloud className="w-4 h-4 text-gray-300" />
-                          </label>
-                        </div>
-                      </div>
-                      {attachment.name && (
-                        <p className="text-xs text-primary mt-1 truncate">Arquivo: {attachment.name}</p>
-                      )}
-                    </div>
-                    <div className="flex items-end pb-[2px]">
-                      <button
-                        onClick={() => handleRemoveAttachment(attachment.id)}
-                        className="flex items-center justify-center w-10 h-10 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors"
-                        title="Remover"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
           {/* Importar Leads */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
             <div className="mb-4 sm:mb-0 pr-4">
@@ -535,7 +189,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Exportar Leads */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-border pb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4">
             <div className="mb-4 sm:mb-0 pr-4">
               <h3 className="text-lg font-semibold text-white">Exportar Leads (CSV)</h3>
               <p className="text-sm text-gray-400 mt-1">
@@ -553,18 +207,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end">
-            <button 
-              onClick={handleSave}
-              className="flex items-center space-x-2 px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover transition-colors shadow-lg"
-            >
-              <Save className="w-4 h-4" />
-              <span>Salvar Alterações</span>
-            </button>
-          </div>
-
         </div>
-
       </div>
     </div>
   );

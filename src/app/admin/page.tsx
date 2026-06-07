@@ -30,7 +30,7 @@ export default function AdminPage() {
   const [systemPrompt, setSystemPrompt] = useState<string>('');
   const [isSavingPrompt, setIsSavingPrompt] = useState(false);
 
-  const { clients, fetchAdminClients, markClientsAsExported } = useCRMStore();
+  const { clients, fetchAdminClients, markClientsAsExported, settings, setSettings, fetchSettings } = useCRMStore();
 
   const fetchGlobalPrompt = async (pwd: string) => {
     try {
@@ -39,7 +39,7 @@ export default function AdminPage() {
       if (data.systemPrompt) {
         setSystemPrompt(data.systemPrompt);
       } else {
-        setSystemPrompt(`Você é a atendente virtual da Pacific Flowers.\n\nSeu objetivo é atender, entender o cliente e  conduzir para o pedido de forma rápida, simples e comercial.\n\n---\nFILTRO DE SISTEMA (PRIORIDADE MÁXIMA)\nIgnore mensagens automáticas como:\n"A conversa foi iniciada em um anúncio"\n"O compartilhamento de dados está ativado"\nResponda apenas mensagens reais do cliente.\n\n---\nREGRA DE RESPOSTA\n* Toda mensagem deve ser respondida\n* “ok”, “sim”, “👍” = interesse\n* Nunca repetir perguntas já respondidas\n* Sempre continuar do ponto atual da conversa mantendo o historico das conversas\n\n---\nABORDAGEM INICIAL\nOlá, tudo bem? 😊\nSeja bem-vindo à Pacific Flowers.\n\nPara começarmos, qual é o seu nome?\nSomos fabricantes, você é lojista?\nCaso nao for lojista, encerrar educadamente\n\nLOJISTA (FLUXO PRINCIPAL)\nOlá NOME 👋\nPerfeito.\nPara facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.\nOs produtos são vendidos em múltiplos de 12 unidades, ok?\n\n---\nENVIO CATÁLOGO + LINK\nVocê pode ver todos os produtos aqui:\n(ENVIAR CATÁLOGO)\nE também pode montar seu pedido direto pelo link PedidoRápido:\npacific-flowers.vercel.app\n\n---\nPASSO A PASSO\n1️⃣ Escolhe os itens\n2️⃣ Acessa o carrinho\n3️⃣ Seleciona forma de pagamento\n4️⃣ Preenche dados da loja\n5️⃣ Clica em enviar\nPedido concluído ✅\n\n---\nPÓS CATÁLOGO (GATILHO)\nAssim que você visualizar, me chama aqui 😊\nSe fizer sentido pra sua loja, consigo montar um pedido sugestão com os produtos que mais vendem ou te liberar uma condição especial na primeira compra.\n\n---\nAPÓS ENVIO\nSe reclamar do pedido mínimo:\nPerguntar: Qual seria o valor ideal para iniciarmos nossa parceria?\nSe menor que 350:\nEstamos com uma campanha de novos clientes.\nVocê consegue ajustar para R$350 para aproveitarmos a oportunidade?\n\n---\nREGRA DOS KITS\n* Até R$350 → Kit R$350\n* Até R$850 → Kit R$850\n* R$850 até R$1700 → 2x Kit 750\n* Acima → multiplicar\nExemplo: 3 kits = R$2350\n\n---\nREGRA IMPORTANTE – SUGESTÃO DE VALOR\nSempre considerar o valor informado pelo cliente e sugerir o próximo kit acima.\nExemplos:\n* Cliente: R$600 → sugerir Kit R$850\n* Cliente: R$900 → sugerir 2x Kit R$850 (R$1700)\n* Cliente: R$1200 → sugerir 2x Kit R$850\nNunca sugerir valor menor que o informado.\n\n---\nREGRAS DOS KITS\n* Nunca enviar mais de um kit por vez\n* Nunca enviar vários kits juntos\n* Cada kit possui gatilho individual\n\n---\nEXPLICAÇÃO DOS KITS\nOs kits são compostos pelos produtos mais vendidos, principalmente placas indicativas, pensados para alto giro em loja.\nVou te enviar algumas fotos.\n(ENVIAR FOTO DO KIT CORRESPONDENTE)\n\n---\nFECHAMENTO\nO que achou NOME?\nPodemos fechar nesse valor?\nSe sim:\nTransferir o cliente imediatamente para um humano usando a ferramenta transferToHuman, passando um breve resumo (perfil e itens/kits de interesse).\n\n---\nSITUAÇÕES EXTRAS E REPOSIÇÃO\nReposição\n"Que bom ter você de volta, NOME! Quais produtos acabaram por aí?"\nAnotar itens → Confirmar pedido → Transferir para humano.\n\nDúvidas comuns:\nQual o pedido mínimo? R$350,00 e o frete é por conta do cliente (CIF para SP capital, FOB interior e outros estados).\nVocês enviam para todo o Brasil? Sim, via transportadora ou Correios.\nQuais as formas de pagamento? Pix, Boleto, Cartão.\n\nRegra de Transferência Imediata\nTransferir para humano se o cliente:\n"Quero falar com um atendente"\n"Não estou conseguindo fazer o pedido"\nOu se fizer perguntas que não estão cobertas aqui.`);
+        setSystemPrompt(`Você é a atendente virtual da Pacific Flowers.\n\nSeu objetivo é atender, entender o cliente e  conduzir para o pedido de forma rápida, simples e comercial.\n\n---\nFILTRO DE SISTEMA (PRIORIDADE MÁXIMA)\nIgnore mensagens automáticas como:\n"A conversa foi iniciada em um anúncio"\n"O compartilhamento de dados está ativado"\nResponda apenas mensagens reais do cliente.\n\n---\nREGRA DE RESPOSTA\n* Toda mensagem deve ser respondida\n* “ok”, “sim”, “👍” = interesse\n* Nunca repetir perguntas já respondidas\n* Sempre continuar do ponto atual da conversa mantendo o historico das conversas\n\n---\nABORDAGEM INICIAL\nOlá, tudo bem? 😊\nSeja bem-vindo à Pacific Flowers.\n\nPara começarmos, qual é o seu nome?\nSomos fabricantes, você é lojista?\nCaso nao for lojista, encerrar educadamente\n\nLOJISTA (FLUXO PRINCIPAL)\nOlá NOME 👋\nPerfeito.\nPara facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.\nOs produtos são vendidos em múltiplos de 12 unidades, ok?\n\n---\nENVIO CATÁLOGO + LINK\nVocê pode ver todos os produtos aqui:\n(ENVIAR CATÁLOGO)\nE também pode montar seu pedido direto pelo link PedidoRápido:\npacific-flowers.vercel.app\n\n---\nPASSO A PASSO\n1️⃣ Escolhe os itens\n2️⃣ Acessa o carrinho\n3️⃣ Seleciona forma de pagamento\n4️⃣ Preenche dados da loja\n5️⃣ Clica em enviar\nPedido concluído ✅\n\n---\nPÓS CATÁLOGO (GATILHO)\nAssim que você visualizar, me chama aqui 😊\nSe fizer sentido pra sua loja, consigo montar um pedido sugestão com os produtos que mais vendem ou te liberar uma condição especial na primeira compra.\n\n---\nAPÓS ENVIO\nSe reclamar do pedido mínimo:\nPerguntar: Qual seria o valor ideal para iniciarmos nossa parceria?\nSe menor que 350:\nEstamos com uma campanha de novos clientes.\nVocê consegue ajustar para R$350 para aproveitarmos a oportunidade?\n\n---\nREGRA DOS KITS\n* Até R$350 → Kit R$350\n* Até R$850 → Kit R$850\n* R$850 até R$1700 → 2x Kit 750\n* Acima → multiplicar\nExemplo: 3 kits = R$2350\n\n---\nREGRA IMPORTANTE – SUGESTÃO DE VALOR\nSempre considerar o valor informado pelo cliente e sugerir o próximo kit acima.\nExemplos:\n* Cliente: R$600 → sugerir Kit R$850\n* Cliente: R$900 → sugerir 2x Kit R$850 (R$1700)\n* Cliente: R$1200 → sugerir 2x Kit R$850\nNunca sugerir valor menor que o informado.\n\n---\nREGRAS DOS KITS\n* Nunca enviar mais de um kit por vez\n* Nunca enviar vários kits juntos\n* Cada kit possui gatilho individual\n\n---\nEXPLICAÇÃO DOS KITS\nOs kits são compostos pelos produtos mais vendidos, principalmente placas indicativas, pensados para alto giro em loja.\nVou te enviar algumas fotos.\n(ENVIAR FOTO DO KIT CORRESPONDENTE)\n\n---\nFECHAMENTO\nO que achou NOME?\nPodemos fechar nesse valor?\nSe sim:\nTransferir o cliente imediatamente para um humano usando a ferramenta transferToHuman, passando um breve resumo (perfil e itens/kits de interesse).\n\n---\nSITUAÇÕES EXTRAS E REPOSIÇÃO\nReposição\n"Que bom ter você de volta, NOME! Quais produtos acabaram por aí?"\nAnotar itens → Confirmar pedido → Transferir para humano.\n\nDúvidas comuns:\nQual o pedido mínimo? R$350,00 e o frete é por conta do cliente (CIF para SP capital, FOB interior e outros estados).\nVocês enviam para todo o Brasil? Sim, via transportadora ou Correios.\nQuais as formas de pagamento? Pix, Boleto, Cartão.\n\nRegra de Transferência Imediata\nTransferir para humano se o cliente:\n"Quero falar com um atendente"\n"Não estou conseguindo fazer o pedido"\n\nA IA deve estar apta a responder a todas as demais perguntas dos clientes em qualquer hora do dia de forma simpática, prestativa e objetiva.`);
       }
     } catch (e) {}
   };
@@ -73,6 +73,7 @@ export default function AdminPage() {
     if (success) {
       setIsAuthenticated(true);
       fetchGlobalPrompt(password);
+      fetchSettings();
       toast.success('Login bem sucedido!');
     } else {
       toast.error('Senha incorreta!');
@@ -395,6 +396,132 @@ export default function AdminPage() {
               >
                 {isSavingPrompt ? 'Salvando...' : 'Salvar Treinamento Global'}
               </button>
+            </div>
+          </div>
+        </div>
+
+        
+        {/* Configurações do CRM */}
+        <div className="glass-panel p-6 border border-surface-border relative overflow-hidden">
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-6">
+              <Activity className="w-6 h-6 text-primary" />
+              <h2 className="text-xl font-bold text-white">Configurações de Automação e CRM</h2>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Tempo sem resposta */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
+                <div className="mb-2 sm:mb-0 pr-4">
+                  <h3 className="text-base font-semibold text-white">Tempo de Retorno Rápido</h3>
+                  <p className="text-sm text-gray-400">Minutos sem resposta do cliente antes de alertar ou mudar status automaticamente.</p>
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  <input 
+                    type="number" min="1" max="1440"
+                    value={settings.minutesWithoutResponse || ''}
+                    onChange={(e) => setSettings({ minutesWithoutResponse: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <span className="ml-3 text-gray-400 text-sm">min</span>
+                </div>
+              </div>
+
+              {/* Insistência da IA */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
+                <div className="mb-2 sm:mb-0 pr-4">
+                  <h3 className="text-base font-semibold text-white">Insistência da IA</h3>
+                  <p className="text-sm text-gray-400">Tempo em horas para a IA enviar automaticamente nova mensagem.</p>
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  <input 
+                    type="number" min="1" max="72"
+                    value={settings.followUpIntervalHours || ''}
+                    onChange={(e) => setSettings({ followUpIntervalHours: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <span className="ml-3 text-gray-400 text-sm">horas</span>
+                </div>
+              </div>
+
+              {/* Dias Padrão para Reposição */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
+                <div className="mb-2 sm:mb-0 pr-4">
+                  <h3 className="text-base font-semibold text-white">Dias Padrão para Reposição</h3>
+                  <p className="text-sm text-gray-400">Dias após a compra para mover cliente para "Reposição".</p>
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  <input 
+                    type="number" min="1" max="365"
+                    value={settings.reposicao_days_global || ''}
+                    onChange={(e) => setSettings({ reposicao_days_global: e.target.value === '' ? 30 : parseInt(e.target.value) })}
+                    className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <span className="ml-3 text-gray-400 text-sm">dias</span>
+                </div>
+              </div>
+
+              {/* Limite de Repetições */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
+                <div className="mb-2 sm:mb-0 pr-4">
+                  <h3 className="text-base font-semibold text-white">Limite de Repetições (Insistência)</h3>
+                  <p className="text-sm text-gray-400">Quantidade máxima de vezes para retomar contato em horas.</p>
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  <input 
+                    type="number" min="1" max="10"
+                    value={settings.insistenciaMaxRepetitions || ''}
+                    onChange={(e) => setSettings({ insistenciaMaxRepetitions: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <span className="ml-3 text-gray-400 text-sm">tentativas</span>
+                </div>
+              </div>
+
+              {/* Insistência por Dias */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
+                <div className="mb-2 sm:mb-0 pr-4">
+                  <h3 className="text-base font-semibold text-white">Insistência por Dias (Após limite)</h3>
+                  <p className="text-sm text-gray-400">Após atingir limite de repetições, IA tentará contato a cada X dias.</p>
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  <input 
+                    type="number" min="1" max="30"
+                    value={settings.insistenciaDaysInterval || ''}
+                    onChange={(e) => setSettings({ insistenciaDaysInterval: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <span className="ml-3 text-gray-400 text-sm">dias</span>
+                </div>
+              </div>
+
+              {/* Nomes das Colunas do Kanban */}
+              <div className="flex flex-col pb-4">
+                <div className="mb-4">
+                  <h3 className="text-base font-semibold text-white">Nomes das Colunas do Kanban</h3>
+                  <p className="text-sm text-gray-400">Personalize os nomes de exibição dos estágios.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'].map((status) => (
+                    <div key={status}>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">{status}</label>
+                      <input 
+                        type="text" 
+                        placeholder={status}
+                        value={settings.kanbanColumnNames?.[status] || ''}
+                        onChange={(e) => setSettings({ 
+                          kanbanColumnNames: { 
+                            ...(settings.kanbanColumnNames || {}), 
+                            [status]: e.target.value 
+                          } 
+                        })}
+                        className="w-full bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

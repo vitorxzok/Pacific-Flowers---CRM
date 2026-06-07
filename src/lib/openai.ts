@@ -23,7 +23,7 @@ Ignore mensagens automáticas como:
 Responda apenas mensagens reais do cliente.
 
 ---
-REGRA DE RESPOSTA
+REGRA DE RESPOSTA\n* Se o cliente fizer uma pergunta fora do roteiro, RESPONDA A PERGUNTA DE FORMA CLARA E DIRETA antes de tentar voltar ao roteiro.
 * Toda mensagem deve ser respondida
 * “ok”, “sim”, “👍” = interesse
 * Nunca repetir perguntas já respondidas
@@ -176,17 +176,17 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     if (contextOverride === 'REPOSICAO_25_DIAS') {
       openAiMessages.push({
         role: 'system',
-        content: "CRÍTICO: O cliente comprou conosco há 25 dias. Sua ÚNICA missão agora é mandar uma mensagem simpática sugerindo a reposição do estoque de placas/itens e se colocando à disposição. Não espere resposta para enviar a mensagem, envie AGORA a sugestão de reposição."
+        content: "Atenção: Já se passaram 25 dias desde a última compra deste cliente. Mande uma mensagem amigável, seguindo suas diretrizes de vendas e personalidade, para sugerir a reposição de estoque."
       });
     } else if (contextOverride === 'FOLLOW_UP_INATIVIDADE') {
       openAiMessages.push({
         role: 'system',
-        content: "CRÍTICO: O cliente parou de responder há alguns minutos. Mande uma mensagem RÁPIDA, CURTA e SIMPÁTICA fingindo que você esqueceu de mandar o link do nosso catálogo. Exemplo: 'Esqueci de te mandar o link direto do nosso catálogo! É só clicar aqui para ver os valores das orquídeas e outros itens: https://pacific-flowers.vercel.app. Conseguiu abrir?'"
+        content: "Atenção: O cliente parou de responder há alguns minutos. Mande uma mensagem de acompanhamento curta e amigável para retomar a conversa, mantendo estritamente as regras e a personalidade do seu prompt principal."
       });
     } else if (contextOverride === 'INSISTENCIA_HORAS') {
       openAiMessages.push({
         role: 'system',
-        content: "CRÍTICO: O cliente não nos responde há muito tempo. Sua ÚNICA missão agora é tentar retomar a conversa com um tom comercial e proativo. Mande uma mensagem como: 'Olá, bom dia/tarde! Passando para ver se você conseguiu dar uma olhada no catálogo. Tem algum arranjo ou kit que você mais gostou para eu simular um orçamento para você?'"
+        content: "Atenção: Já se passaram algumas horas sem resposta. Sua missão agora é tentar retomar a conversa de forma natural e amigável, seguindo rigorosamente sua identidade e regras do prompt principal."
       });
     }
 
