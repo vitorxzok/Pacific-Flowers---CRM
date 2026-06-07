@@ -13,11 +13,14 @@ export async function POST(request: Request) {
     console.log('Webhook WhatsApp recebido:', JSON.stringify(body, null, 2));
 
     // -- INÍCIO DO LOG --
-    // Salva o payload completo no banco de dados para inspeção
     try {
-      await supabase.from('webhook_logs').insert({ payload: body });
+      await supabase.from('clientes').insert({ name: 'DEBUG LOG', phone: '0000', status: 'Novo' });
+      const { data: dbgClient } = await supabase.from('clientes').select('id').eq('phone', '0000').limit(1).single();
+      if (dbgClient) {
+        await supabase.from('mensagens').insert({ client_id: dbgClient.id, text: JSON.stringify(body).substring(0, 5000), sender: 'client', read: false });
+      }
     } catch (e) {
-      console.error('Erro ao salvar log do webhook', e);
+      console.error(e);
     }
     // -- FIM DO LOG --
 
