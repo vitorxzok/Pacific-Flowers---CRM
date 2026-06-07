@@ -28,10 +28,20 @@ export async function POST(request: Request) {
       const phone = remoteJid.split('@')[0];
 
       // Extrair o texto da mensagem
-      const text = 
+      let text = 
         messageObj?.conversation || 
         messageObj?.extendedTextMessage?.text || 
         '';
+
+      if (!text) {
+        if (messageObj?.imageMessage) text = messageObj.imageMessage.caption || '[Imagem]';
+        else if (messageObj?.audioMessage) text = '[Áudio]';
+        else if (messageObj?.videoMessage) text = messageObj.videoMessage.caption || '[Vídeo]';
+        else if (messageObj?.documentMessage) text = messageObj.documentMessage.fileName || '[Documento]';
+        else if (messageObj?.stickerMessage) text = '[Figurinha]';
+        else if (messageObj?.contactMessage) text = '[Contato]';
+        else if (messageObj?.locationMessage) text = '[Localização]';
+      }
 
       if (!phone || !text) {
         return NextResponse.json({ success: true, message: 'Payload sem texto ou telefone.' });
