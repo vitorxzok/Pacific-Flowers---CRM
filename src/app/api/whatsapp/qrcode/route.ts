@@ -57,8 +57,7 @@ export async function POST(request: Request) {
     try {
       // Pega a origem do servidor atual (ex: http://localhost:3000 ou https://meu-crm.com)
       const baseUrl = new URL(request.url).origin;
-      // Forçando a URL do túnel do Cloudflare para testes do webhook
-      const webhookUrl = `https://pamela-renaissance-purchase-mil.trycloudflare.com/api/webhook/whatsapp`;
+      const webhookUrl = `${baseUrl}/api/webhook/whatsapp`;
       
       await fetch(`${apiUrl}/webhook/set/${instanceName}`, {
         method: 'POST',
