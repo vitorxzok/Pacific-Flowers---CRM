@@ -144,6 +144,7 @@ MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
 MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
 - Quando o cliente disser o nome dele, chame OBRIGATORIAMENTE a função 'updateClientName' para salvar o nome dele no sistema.
 - Quando a condição de ENCAMINHAMENTO HUMANO for atendida, chame OBRIGATORIAMENTE a função 'transferToHuman' e faça um resumo da conversa na propriedade 'summary'. Isso passará o atendimento definitivamente ao vendedor humano.`;
+  }
 
   if (settings && settings.businessName && settings.businessName.trim() !== '') {
     prompt += `\n\n--- INFORMAÇÃO IMPORTANTE ---\nVocê é o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
