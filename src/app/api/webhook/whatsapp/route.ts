@@ -163,18 +163,28 @@ export async function POST(request: Request) {
 
           if (apiUrl && apiKey && instanceName) {
             try {
-              // 1. Envia a presença "digitando" (composing) e informa para manter por 3 segundos
+              // 1. Envia a presença "digitando" (composing)
               await fetch(`${apiUrl}/chat/sendPresence/${instanceName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
                 body: JSON.stringify({ number: phone, delay: 3000, presence: 'composing' })
               });
 
-              // 2. Envia a mensagem com atraso embutido (3000ms = 3 segundos)
+              // 2. Aguarda 3 segundos reais na thread do servidor
+              await new Promise(r => setTimeout(r, 3000));
+
+              // 3. Envia a mensagem com estrutura padrão
               await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                body: JSON.stringify({ number: phone, text: aiReply, delay: 3000 })
+                body: JSON.stringify({ 
+                  number: phone, 
+                  text: aiReply,
+                  options: {
+                    delay: 100,
+                    presence: 'composing'
+                  }
+                })
               });
               console.log(`[AI] Resposta enviada com sucesso para ${phone}`);
             } catch (err) {
