@@ -59,13 +59,12 @@ export async function POST(request: Request) {
 
       let clientId;
 
-      // 1. Procurar o cliente no banco pelo telefone E pelo vendedor (separação total de leads)
+      // 1. Procurar o cliente no banco pelo telefone (ignorando vendedor para evitar UNIQUE constraint error no insert)
       const last8Digits = phone.slice(-8);
       const { data: clients, error: clientError } = await supabase
         .from('clientes')
-        .select('id, phone, status, ai_enabled')
+        .select('id, phone, status, ai_enabled, attendant_id')
         .ilike('phone', `%${last8Digits}`)
-        .eq('attendant_id', sellerId)
         .limit(1);
 
       if (clientError || !clients || clients.length === 0) {
@@ -98,9 +97,16 @@ export async function POST(request: Request) {
         
         // Se a mensagem for do cliente, atualizamos followup_sent e resetamos a insistencia
         if (!isFromMe) {
+          const updateData: any = { followup_sent: false, insistencia_count: 0, updated_at: new Date().toISOString() };
+          
+          // Se o lead antigo não tiver vendedor associado, atribui ao atual
+          if (!clients[0].attendant_id) {
+            updateData.attendant_id = sellerId;
+          }
+
           const { error: updateError } = await supabase
             .from('clientes')
-            .update({ followup_sent: false, insistencia_count: 0, updated_at: new Date().toISOString() })
+            .update(updateData)
             .eq('id', clientId);
 
           if (updateError) {
