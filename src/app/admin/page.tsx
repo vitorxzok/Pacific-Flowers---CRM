@@ -19,6 +19,7 @@ export default function AdminPage() {
   // Import/Export states
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportFilter, setExportFilter] = useState<'all' | 'exported' | 'not_exported'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Diretor IA states
@@ -85,8 +86,6 @@ export default function AdminPage() {
 
   // Filtering
   const uniqueAttendants = Array.from(new Set(clients.map(c => c.attendant).filter(Boolean))) as string[];
-  
-  const [exportFilter, setExportFilter] = useState<'all' | 'exported' | 'not_exported'>('all');
   
   const filteredClients = clients.filter(c => {
     const matchAttendant = attendantFilter === 'all' || c.attendant === attendantFilter;
