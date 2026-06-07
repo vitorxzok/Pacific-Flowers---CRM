@@ -38,6 +38,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     insistenciaDaysInterval: 2,
     reposicao_days_global: 30,
     kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
+    kanbanColumnNames: {},
     businessName: '',
     businessContext: '',
     productsCatalog: ''
@@ -60,6 +61,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           insistencia_days_interval: merged.insistenciaDaysInterval,
           reposicao_days_global: merged.reposicao_days_global,
           kanban_columns: merged.kanbanColumns,
+          kanban_column_names: merged.kanbanColumnNames,
           business_name: merged.businessName,
           business_context: merged.businessContext,
           products_catalog: merged.productsCatalog
@@ -83,6 +85,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           insistenciaDaysInterval: data.insistencia_days_interval || 2,
           reposicao_days_global: data.reposicao_days_global || 30,
           kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
+          kanbanColumnNames: data.kanban_column_names || {},
           businessName: data.business_name || '',
           businessContext: data.business_context || '',
           productsCatalog: data.products_catalog || ''

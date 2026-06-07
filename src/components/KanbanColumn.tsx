@@ -25,10 +25,12 @@ const statusColors: Record<string, string> = {
 };
 
 export function KanbanColumn({ status, clients, onCardClick }: KanbanColumnProps) {
-  const { updateClientStatus, removeKanbanColumn } = useCRMStore();
+  const { settings, updateClientStatus, removeKanbanColumn } = useCRMStore();
   const normalizedStatus = status.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const fixedColumns = ['novo', 'contato feito', 'em qualificacao', 'proposta enviada', 'finalizado', 'reposicao', 'perdido'];
   const isFixed = fixedColumns.includes(normalizedStatus);
+
+  const displayStatus = settings.kanbanColumnNames?.[status] || status;
 
   const getColor = (status: string) => {
     return statusColors[status] || 'bg-blue-500';
@@ -39,7 +41,7 @@ export function KanbanColumn({ status, clients, onCardClick }: KanbanColumnProps
       toast.error('Mova os clientes antes de excluir a coluna.');
       return;
     }
-    if (window.confirm(`Tem certeza que deseja excluir a coluna "${status}"?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir a coluna "${displayStatus}"?`)) {
       removeKanbanColumn(status);
     }
   };
@@ -58,7 +60,7 @@ export function KanbanColumn({ status, clients, onCardClick }: KanbanColumnProps
       const client = useCRMStore.getState().clients.find(c => c.id === clientId);
       if (client) {
         toast.success(`Cartão movido!`, {
-          description: `${client.name} movido para ${status}.`
+          description: `${client.name} movido para ${displayStatus}.`
         });
       }
     }
@@ -66,23 +68,23 @@ export function KanbanColumn({ status, clients, onCardClick }: KanbanColumnProps
 
   return (
     <div 
-      className="flex-shrink-0 w-[280px] flex flex-col h-full bg-surface/30 backdrop-blur-sm rounded-xl border border-surface-border/50"
+      className="flex flex-col w-[320px] flex-shrink-0 bg-surface/50 border border-surface-border rounded-xl h-full backdrop-blur-md overflow-hidden transition-all duration-300"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-4 border-b border-surface-border/50 flex items-center justify-between group">
-        <div className="flex items-center space-x-2">
-          <div className={twMerge(clsx("w-3 h-3 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)]", getColor(status)))} />
-          <h3 className="font-semibold text-white/90">{status}</h3>
-        </div>
+      <div className="p-4 border-b border-surface-border/50 flex items-center justify-between bg-surface-hover/30">
         <div className="flex items-center space-x-3">
-          <span className="bg-surface px-2 py-0.5 rounded-full text-xs font-medium text-gray-400 border border-surface-border">
+          <div className={clsx("w-3 h-3 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)]", getColor(status))} />
+          <h2 className="font-semibold text-white/90 text-sm uppercase tracking-wider">{displayStatus}</h2>
+          <span className="bg-surface border border-surface-border text-gray-400 text-xs px-2 py-0.5 rounded-full font-medium">
             {clients.length}
           </span>
+        </div>
+        <div className="flex items-center space-x-3">
           {!isFixed && (
             <button 
               onClick={handleDelete}
-              className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="text-gray-500 hover:text-red-400 transition-colors"
               title="Excluir Coluna"
             >
               <Trash2 size={16} />

@@ -371,6 +371,37 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Nomes das Colunas do Kanban */}
+          <div className="flex flex-col border-b border-surface-border pb-8">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white">Nomes das Colunas do Kanban</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                Personalize os nomes de exibição dos estágios de atendimento do Kanban.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'].map((status) => (
+                <div key={status}>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">{status} (Padrão)</label>
+                  <input 
+                    type="text" 
+                    placeholder={status}
+                    value={localSettings.kanbanColumnNames?.[status] || ''}
+                    onChange={(e) => setLocalSettings({ 
+                      ...localSettings, 
+                      kanbanColumnNames: { 
+                        ...(localSettings.kanbanColumnNames || {}), 
+                        [status]: e.target.value 
+                      } 
+                    })}
+                    className="w-full bg-surface border border-surface-border rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Inteligência Artificial - Contexto do Vendedor */}
           <div className="flex flex-col border-b border-surface-border pb-8">
             <div className="mb-6">

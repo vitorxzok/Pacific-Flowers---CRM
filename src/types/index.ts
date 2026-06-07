@@ -55,6 +55,7 @@ export interface Settings {
   insistenciaDaysInterval?: number;
   reposicao_days_global?: number;
   kanbanColumns: string[];
+  kanbanColumnNames?: Record<string, string>;
   businessName?: string;
   businessContext?: string;
   productsCatalog?: string;
