@@ -32,6 +32,29 @@ export default function AdminPage() {
 
   const { clients, fetchAdminClients, markClientsAsExported, settings, setSettings, fetchSettings } = useCRMStore();
 
+  const [localSettings, setLocalSettings] = useState<any>(null);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  useEffect(() => {
+    if (settings && Object.keys(settings).length > 0 && !localSettings) {
+      setLocalSettings(settings);
+    }
+  }, [settings, localSettings]);
+
+  const handleSaveSettings = async () => {
+    if (!localSettings) return;
+    setIsSavingSettings(true);
+    const toastId = toast.loading('Salvando configurações...');
+    try {
+      await setSettings(localSettings);
+      toast.success('Configurações salvas com sucesso!', { id: toastId });
+    } catch (err) {
+      toast.error('Erro ao salvar.', { id: toastId });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   const fetchGlobalPrompt = async (pwd: string) => {
     try {
       const res = await fetch(`/api/admin/system-prompt?pwd=${pwd}`);
@@ -419,8 +442,8 @@ export default function AdminPage() {
                 <div className="flex items-center flex-shrink-0">
                   <input 
                     type="number" min="1" max="1440"
-                    value={settings.minutesWithoutResponse || ''}
-                    onChange={(e) => setSettings({ minutesWithoutResponse: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    value={localSettings?.minutesWithoutResponse || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, minutesWithoutResponse: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                     className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                   <span className="ml-3 text-gray-400 text-sm">min</span>
@@ -436,8 +459,8 @@ export default function AdminPage() {
                 <div className="flex items-center flex-shrink-0">
                   <input 
                     type="number" min="1" max="72"
-                    value={settings.followUpIntervalHours || ''}
-                    onChange={(e) => setSettings({ followUpIntervalHours: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    value={localSettings?.followUpIntervalHours || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, followUpIntervalHours: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                     className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                   <span className="ml-3 text-gray-400 text-sm">horas</span>
@@ -453,8 +476,8 @@ export default function AdminPage() {
                 <div className="flex items-center flex-shrink-0">
                   <input 
                     type="number" min="1" max="365"
-                    value={settings.reposicao_days_global || ''}
-                    onChange={(e) => setSettings({ reposicao_days_global: e.target.value === '' ? 30 : parseInt(e.target.value) })}
+                    value={localSettings?.reposicao_days_global || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, reposicao_days_global: e.target.value === '' ? 30 : parseInt(e.target.value) })}
                     className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                   <span className="ml-3 text-gray-400 text-sm">dias</span>
@@ -470,8 +493,8 @@ export default function AdminPage() {
                 <div className="flex items-center flex-shrink-0">
                   <input 
                     type="number" min="1" max="10"
-                    value={settings.insistenciaMaxRepetitions || ''}
-                    onChange={(e) => setSettings({ insistenciaMaxRepetitions: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    value={localSettings?.insistenciaMaxRepetitions || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, insistenciaMaxRepetitions: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                     className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                   <span className="ml-3 text-gray-400 text-sm">tentativas</span>
@@ -487,8 +510,8 @@ export default function AdminPage() {
                 <div className="flex items-center flex-shrink-0">
                   <input 
                     type="number" min="1" max="30"
-                    value={settings.insistenciaDaysInterval || ''}
-                    onChange={(e) => setSettings({ insistenciaDaysInterval: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                    value={localSettings?.insistenciaDaysInterval || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, insistenciaDaysInterval: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                     className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                   <span className="ml-3 text-gray-400 text-sm">dias</span>
@@ -508,13 +531,8 @@ export default function AdminPage() {
                       <input 
                         type="text" 
                         placeholder={status}
-                        value={settings.kanbanColumnNames?.[status] || ''}
-                        onChange={(e) => setSettings({ 
-                          kanbanColumnNames: { 
-                            ...(settings.kanbanColumnNames || {}), 
-                            [status]: e.target.value 
-                          } 
-                        })}
+                        value={localSettings?.kanbanColumnNames?.[status] || ''}
+                        onChange={(e) => setLocalSettings({ ...localSettings, kanbanColumnNames: { ...(localSettings?.kanbanColumnNames || {}), [status]: e.target.value } })}
                         className="w-full bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
                       />
                     </div>
@@ -522,6 +540,15 @@ export default function AdminPage() {
                 </div>
               </div>
 
+                          <div className="mt-8 flex justify-end border-t border-surface-border/50 pt-4">
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={isSavingSettings}
+                  className="px-6 py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {isSavingSettings ? 'Salvando...' : 'Salvar Configurações'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
