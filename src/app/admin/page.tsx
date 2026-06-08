@@ -81,8 +81,12 @@ export default function AdminPage() {
       
       const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
       
-      handleUpdateAttachment(id, 'url', publicUrl);
-      handleUpdateAttachment(id, 'name', file.name);
+      setLocalSettings((prev: any) => {
+        const updated = (prev?.attachments || []).map((a: Attachment) => 
+          a.id === id ? { ...a, url: publicUrl, name: file.name } : a
+        );
+        return { ...prev, attachments: updated };
+      });
       
       toast.success('Upload concluído!', { id: toastId });
     } catch (error: any) {
