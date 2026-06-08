@@ -312,17 +312,24 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
                   const mediaPayload = {
                     number: phone,
                     mediatype: "document", // can be document or image depending on evolution api mapping, usually document handles pdfs well
-                    mimetype: attachment.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+                    mimetype: attachment.name?.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
                     caption: `Aqui está o que você pediu! (${args.triggerName})`,
                     media: attachment.url,
                     fileName: attachment.name || 'arquivo.pdf'
                   };
                   
-                  await fetch(`${apiUrl}/message/sendMedia/${instanceName}`, {
+                  const evoRes = await fetch(`${apiUrl}/message/sendMedia/${instanceName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
                     body: JSON.stringify(mediaPayload)
                   });
+                  
+                  if (!evoRes.ok) {
+                    const evoErr = await evoRes.text();
+                    console.error(`[AI TOOL] Erro do Evolution API: Status ${evoRes.status} - ${evoErr}`);
+                    throw new Error(`Evolution API error: ${evoRes.status} ${evoErr}`);
+                  }
+                  
                   toolResult = `Anexo '${args.triggerName}' enviado com sucesso para o cliente.`;
                   finalContent = finalContent + `\n\n[ANEXO ENVIADO: ${args.triggerName}]`;
                   if (args.triggerName?.toUpperCase() === 'CATALOGO') {
