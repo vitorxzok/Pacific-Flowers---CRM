@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       let sellerId: string | null = instanceName.replace('user_', '');
 
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(sellerId)) {
+      if (!sellerId || !uuidRegex.test(sellerId)) {
         console.warn(`Instância não utiliza formato UUID: ${instanceName}. O attendant_id será nulo.`);
         sellerId = null;
       }
@@ -195,7 +195,9 @@ export async function POST(request: Request) {
       if (!isFromMe && autoReplyEnabled && isAIEnabled && isAutoReplyStage) {
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
-        const aiReply = await generateAIResponse(clientId, supabase, undefined, crmSettings);
+        const aiResponse = await generateAIResponse(clientId, supabase, undefined, crmSettings);
+        const aiReply = aiResponse?.text;
+        const mediaToSend = aiResponse?.mediaToSend || [];
 
         if (aiReply) {
           await supabase.from('mensagens').insert({
@@ -239,6 +241,25 @@ export async function POST(request: Request) {
                 })
               });
               console.log(`[AI] Resposta enviada com sucesso para ${phone}`);
+              
+              // 4. Envia os anexos (ex: catálogo) com delay de 3 segundos
+              if (mediaToSend && mediaToSend.length > 0) {
+                for (const media of mediaToSend) {
+                  await new Promise(r => setTimeout(r, 3000));
+                  console.log(`[AI] Enviando anexo para ${phone}...`);
+                  const evoRes = await fetch(`${apiUrl}/message/sendMedia/${instanceName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                    body: JSON.stringify(media)
+                  });
+                  if (!evoRes.ok) {
+                    const evoErr = await evoRes.text();
+                    console.error(`[AI] Erro do Evolution API ao enviar mídia: Status ${evoRes.status} - ${evoErr}`);
+                  } else {
+                    console.log(`[AI] Anexo enviado com sucesso para ${phone}`);
+                  }
+                }
+              }
             } catch (err) {
               console.error('[AI] Erro ao enviar resposta via Evolution API:', err);
             }

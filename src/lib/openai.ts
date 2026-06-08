@@ -154,6 +154,7 @@ MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
 };
 
 export async function generateAIResponse(clientId: string, supabase: any, contextOverride?: string, settings?: any) {
+  let mediaToSend: any[] = [];
   try {
     // 1. Obter o histórico de mensagens
     const { data: messages, error: messagesError } = await supabase
@@ -318,17 +319,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
                     fileName: attachment.name || 'arquivo.pdf'
                   };
                   
-                  const evoRes = await fetch(`${apiUrl}/message/sendMedia/${instanceName}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                    body: JSON.stringify(mediaPayload)
-                  });
-                  
-                  if (!evoRes.ok) {
-                    const evoErr = await evoRes.text();
-                    console.error(`[AI TOOL] Erro do Evolution API: Status ${evoRes.status} - ${evoErr}`);
-                    throw new Error(`Evolution API error: ${evoRes.status} ${evoErr}`);
-                  }
+                  mediaToSend.push(mediaPayload);
                   
                   toolResult = `Anexo '${args.triggerName}' enviado com sucesso para o cliente.`;
                   finalContent = finalContent + `\n\n[ANEXO ENVIADO: ${args.triggerName}]`;
@@ -488,12 +479,12 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
           description: 'A IA Clara enviou o catálogo e avançou o status para Em Qualificação.',
         });
       }
-      return (responseMessage.content || '') + finalContent;
+      return { text: (responseMessage.content || '') + finalContent, mediaToSend };
     }
 
   } catch (error) {
     console.error('Erro ao gerar resposta com OpenAI:', error);
-    return null;
+    return { text: null, mediaToSend: [] };
   }
 }
 
