@@ -12,17 +12,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('Webhook WhatsApp recebido:', JSON.stringify(body, null, 2));
 
-    // -- INÍCIO DO LOG --
-    try {
-      await supabase.from('clientes').insert({ name: 'DEBUG LOG', phone: '0000', status: 'Novo' });
-      const { data: dbgClient } = await supabase.from('clientes').select('id').eq('phone', '0000').limit(1).single();
-      if (dbgClient) {
-        await supabase.from('mensagens').insert({ client_id: dbgClient.id, text: JSON.stringify(body).substring(0, 5000), sender: 'client', read: false });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    // -- FIM DO LOG --
 
     // Apenas nos importamos com upsert de mensagens (novas mensagens recebidas)
     if (body.event === 'messages-upsert' || body.event === 'messages.upsert') {
