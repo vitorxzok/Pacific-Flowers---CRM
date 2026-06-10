@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Client } from '@/types';
 import { X, MessageCircle, Clock, FileText, Send, User, Phone, Trash2 } from 'lucide-react';
 import { useCRMStore } from '@/store/useCRMStore';
@@ -27,6 +27,17 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
   const [notes, setNotes] = useState(client.notes || '');
   const [tagsStr, setTagsStr] = useState((client.tags || []).join(', '));
   const { addMessage, updateClientNotes, updateClientTags, deleteClient } = useCRMStore();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      scrollToBottom();
+    }
+  }, [client.messages, activeTab]);
 
   const handleDeleteClient = async () => {
     if (confirm('Tem certeza que deseja excluir este lead e todas as suas mensagens? Esta ação não pode ser desfeita.')) {
@@ -134,7 +145,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
           {/* Aba Chat */}
           {activeTab === 'chat' && (
             <div className="absolute inset-0 flex flex-col" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg")', backgroundSize: 'cover', backgroundBlendMode: 'overlay', backgroundColor: 'rgba(11, 20, 26, 0.9)' }}>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
                 {client.messages.map((msg) => {
                   const isAttendant = msg.sender === 'attendant';
                   return (
@@ -151,6 +162,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
               <div className="p-4 bg-[#202c33] border-t border-white/10 flex items-center space-x-3">
                 <input
@@ -170,7 +182,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
 
           {/* Aba Histórico */}
           {activeTab === 'history' && (
-            <div className="absolute inset-0 overflow-y-auto p-8 bg-background scrollbar-hide">
+            <div className="absolute inset-0 overflow-y-auto p-8 bg-background custom-scrollbar">
               <div className="max-w-2xl mx-auto space-y-6">
                 {client.history.map((event, index) => (
                   <div key={event.id} className="relative pl-8 pb-6 border-l-2 border-surface-border last:border-0 last:pb-0">
@@ -194,7 +206,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
 
           {/* Aba Dados */}
           {activeTab === 'data' && (
-            <div className="absolute inset-0 overflow-y-auto p-8 bg-background scrollbar-hide">
+            <div className="absolute inset-0 overflow-y-auto p-8 bg-background custom-scrollbar">
               <div className="max-w-2xl mx-auto space-y-6">
                 <div className="glass-panel p-6 space-y-4">
                   <div>
