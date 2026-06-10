@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/automations",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/restart-instances",
+      "schedule": "0 3 * * *"
     }
   ]
 }

@@ -275,6 +275,24 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json({ success: true, message: 'Mensagem processada com sucesso!' });
+    } else if (body.event === 'connection.update') {
+      const state = body.data?.state;
+      const instanceName = body.instance;
+      console.log(`[Webhook] Evento de conexão recebido para ${instanceName}: ${state}`);
+      
+      if (state === 'close' || state === 'disconnected') {
+        const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL || '';
+        const apiKey = process.env.EVOLUTION_API_KEY || process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || '';
+        
+        if (apiUrl && apiKey && instanceName) {
+           console.log(`[Webhook] Conexão caiu para ${instanceName}. Tentando restart automático...`);
+           fetch(`${apiUrl}/instance/restart/${instanceName}`, {
+             method: 'POST',
+             headers: { 'apikey': apiKey }
+           }).catch(err => console.error(`[Webhook] Falha ao tentar restart de ${instanceName}:`, err));
+        }
+      }
+      return NextResponse.json({ success: true, message: 'Evento de conexão processado.' });
     }
 
     return NextResponse.json({ success: true, message: 'Evento ignorado' });
