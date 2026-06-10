@@ -40,6 +40,47 @@ export default function AdminPage() {
   const [isDeactivatingAll, setIsDeactivatingAll] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Admin users state for individual toggles
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
+  const fetchAdminUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const res = await fetch('/api/admin/users');
+      if (res.ok) {
+        const data = await res.json();
+        setAdminUsers(data.users || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  const handleToggleUserAI = async (userId: string, currentEnabled: boolean) => {
+    const newEnabled = !currentEnabled;
+    const toastId = toast.loading(newEnabled ? 'Ativando IA para vendedor...' : 'Desativando IA para vendedor...');
+    
+    // Update locally instantly for better UX
+    setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, auto_reply_enabled: newEnabled } : u));
+    
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, enabled: newEnabled })
+      });
+      if (!res.ok) throw new Error('Falha ao atualizar');
+      toast.success(`IA ${newEnabled ? 'ativada' : 'desativada'} com sucesso!`, { id: toastId });
+    } catch (err) {
+      // Revert on error
+      setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, auto_reply_enabled: currentEnabled } : u));
+      toast.error('Erro ao atualizar IA do vendedor.', { id: toastId });
+    }
+  };
+
   const handleAddAttachment = () => {
     const newAttachment: Attachment = { id: uuidv4(), trigger: '', url: '', name: '', type: 'document' };
     setLocalSettings({
@@ -163,6 +204,7 @@ export default function AdminPage() {
       if (!res.ok) throw new Error('Falha');
       const data = await res.json();
       toast.success(`IA ${enabled ? 'ativada' : 'desativada'} para ${data.count} operadores!`, { id: toastId });
+      fetchAdminUsers(); // Update the toggles visually
     } catch (err) {
       toast.error('Erro ao alterar configuração global da IA.', { id: toastId });
     } finally {
@@ -181,6 +223,7 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       fetchGlobalPrompt(password);
       fetchSettings();
+      fetchAdminUsers();
       toast.success('Login bem sucedido!');
     } else {
       toast.error('Senha incorreta!');
@@ -519,7 +562,7 @@ export default function AdminPage() {
               Use estes botões para ativar ou desativar o <strong>Atendimento Automático da IA</strong> para TODOS os operadores do sistema de uma única vez. 
               Após a alteração, cada operador ainda poderá ligar/desligar individualmente em seu próprio painel.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 mb-6">
               <button
                 onClick={() => handleToggleGlobalAI(true)}
                 disabled={isActivatingAll || isDeactivatingAll}
@@ -534,6 +577,33 @@ export default function AdminPage() {
               >
                 {isDeactivatingAll ? 'Desativando...' : 'Desligar IA para Todos'}
               </button>
+            </div>
+            
+            <div className="border-t border-surface-border/50 pt-6 mt-2">
+              <h3 className="text-md font-semibold text-white mb-4">Controle Individual por Vendedor</h3>
+              {isLoadingUsers ? (
+                <div className="text-gray-400 text-sm">Carregando vendedores...</div>
+              ) : (
+                <div className="space-y-3">
+                  {adminUsers.map(user => (
+                    <div key={user.id} className="flex items-center justify-between p-4 bg-background/50 border border-surface-border rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-white">{user.name}</p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
+                      </div>
+                      <button
+                        onClick={() => handleToggleUserAI(user.id, user.auto_reply_enabled)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${user.auto_reply_enabled ? 'bg-green-500' : 'bg-surface-border'}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.auto_reply_enabled ? 'translate-x-6' : 'translate-x-1'}`}
+                        />
+                      </button>
+                    </div>
+                  ))}
+                  {adminUsers.length === 0 && <p className="text-gray-400 text-sm">Nenhum vendedor encontrado.</p>}
+                </div>
+              )}
             </div>
           </div>
         </div>

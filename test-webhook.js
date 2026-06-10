@@ -1,39 +1,32 @@
-const fetch = require('node-fetch');
+
 
 async function testWebhook() {
+  const url = 'http://localhost:3000/api/webhook/whatsapp'; // Or deployed URL, let's use deployed to see if Vercel gets it.
+  const deployedUrl = 'https://pacific-flowers-crm.vercel.app/api/webhook/whatsapp';
+
   const payload = {
-    event: "messages.upsert",
-    instance: "user_test123", // seller ID (should exist or it'll just use 'test123' as ID)
+    event: 'messages.upsert',
+    instance: 'user_305ce3a3-1de2-4a55-bdb9-7ec0f832e89d',
     data: {
+      key: {
+        remoteJid: '5511999999999@s.whatsapp.net',
+        fromMe: false
+      },
       message: {
-        key: {
-          fromMe: false,
-          remoteJid: "5511999999999@s.whatsapp.net"
-        },
-        pushName: "Cliente Teste",
-        message: {
-          conversation: "Olá, me chamo Roberto. Queria saber sobre os kits da Pacific Flowers."
-        }
-      }
+        conversation: 'Mensagem de teste para o Fabio'
+      },
+      pushName: 'Teste Lead Fabio'
     }
   };
 
-  try {
-    console.log("Enviando webhook simulado...");
-    const res = await fetch('http://localhost:3000/api/webhook/whatsapp', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-    console.log("Status:", res.status);
-    console.log("Resposta do Webhook:", data);
-  } catch (err) {
-    console.error("Erro no teste:", err);
-  }
+  const res = await fetch(deployedUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  
+  const text = await res.text();
+  console.log('Status:', res.status);
+  console.log('Response:', text);
 }
-
 testWebhook();
