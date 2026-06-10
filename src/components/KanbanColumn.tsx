@@ -93,7 +93,7 @@ export function KanbanColumn({ status, clients, onCardClick }: KanbanColumnProps
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
         {clients.map(client => (
           <KanbanCard 
             key={client.id} 
