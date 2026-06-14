@@ -29,6 +29,7 @@ export default function SimulatorPage() {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,6 +38,12 @@ export default function SimulatorPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (!isLoading && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isLoading]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -175,6 +182,7 @@ export default function SimulatorPage() {
         <div className="p-4 bg-surface-hover/50 border-t border-surface-border">
           <form onSubmit={handleSendMessage} className="flex space-x-4">
             <input
+              ref={inputRef}
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
@@ -184,6 +192,7 @@ export default function SimulatorPage() {
             />
             <button
               type="submit"
+              onMouseDown={(e) => e.preventDefault()}
               disabled={!inputText.trim() || isLoading}
               className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
             >
