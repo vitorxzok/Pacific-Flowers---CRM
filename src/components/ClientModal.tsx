@@ -53,7 +53,9 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
     if (!newMessage.trim()) return;
     addMessage(client.id, { text: newMessage, sender: 'attendant' });
     setNewMessage('');
-    setTimeout(() => inputRef.current?.focus(), 100);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const handleSaveData = () => {
@@ -177,7 +179,11 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                   placeholder="Mensagem..."
                   className="flex-1 bg-[#2a3942] text-white rounded-lg px-4 py-3 focus:outline-none placeholder-gray-400"
                 />
-                <button onClick={handleSendMessage} className="p-3 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] transition-colors">
+                <button 
+                  onClick={handleSendMessage} 
+                  onMouseDown={(e) => e.preventDefault()} 
+                  className="p-3 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] transition-colors"
+                >
                   <Send className="w-5 h-5 ml-0.5" />
                 </button>
               </div>
