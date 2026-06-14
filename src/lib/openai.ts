@@ -302,7 +302,11 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
           console.log(`[AI TOOL] Solicitado envio do anexo com gatilho: ${args.triggerName}`);
           
           const attachments = settings?.attachments || [];
-          const attachment = attachments.find((a: any) => a.trigger?.toUpperCase() === args.triggerName?.toUpperCase());
+          
+          const normalizeStr = (str: string) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase() : "";
+          const targetTrigger = normalizeStr(args.triggerName);
+          
+          const attachment = attachments.find((a: any) => normalizeStr(a.trigger) === targetTrigger);
           
           if (attachment && attachment.url) {
             // Obter phone e instanceName do cliente
