@@ -106,9 +106,14 @@ export async function POST(request: Request) {
     let finalContent = aiMessage.content;
     let attachmentTrigger = null;
     let attachment = null;
+    let needsSecondPass = false;
 
     if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+      openAiMessages.push(aiMessage as any); // Add the assistant's tool calls to the history
+      
       for (const toolCall of aiMessage.tool_calls as any[]) {
+        let toolResult = '';
+        
         if (toolCall.function.name === 'sendAttachment') {
           const args = JSON.parse(toolCall.function.arguments);
           attachmentTrigger = args.triggerName;
@@ -122,16 +127,46 @@ export async function POST(request: Request) {
             );
             if (matchedAttachment) {
               attachment = matchedAttachment;
+              toolResult = `Anexo '${attachmentTrigger}' enviado com sucesso.`;
+            } else {
+              toolResult = `Gatilho '${attachmentTrigger}' não encontrado.`;
             }
+          } else {
+             toolResult = `Anexo solicitado, mas não configurado.`;
           }
-        } 
+        } else if (toolCall.function.name === 'updateClientName') {
+           const args = JSON.parse(toolCall.function.arguments);
+           toolResult = `Nome atualizado com sucesso para ${args.name}.`;
+        } else if (toolCall.function.name === 'changeClientStatus') {
+           const args = JSON.parse(toolCall.function.arguments);
+           toolResult = `Status atualizado para ${args.status}.`;
+        } else if (toolCall.function.name === 'transferToHuman') {
+           const args = JSON.parse(toolCall.function.arguments);
+           toolResult = `Transferência realizada. Resumo: ${args.summary}. Você deve agora se despedir.`;
+        }
+
+        openAiMessages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: toolResult
+        } as any);
+        needsSecondPass = true;
       }
+    }
+
+    if (needsSecondPass) {
+      const secondResponse = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: openAiMessages as any,
+        temperature: 0.2,
+      });
+      finalContent = secondResponse.choices[0].message.content;
     }
 
     if (!finalContent && attachmentTrigger && !attachment) {
       finalContent = `[A IA tentou enviar um anexo com o gatilho "${attachmentTrigger}", mas nenhum arquivo com esse gatilho exato foi encontrado nas Configurações]`;
     } else if (attachmentTrigger && attachment) {
-      finalContent = (finalContent || '') + `\n\n[Sistema: O anexo do gatilho "${attachmentTrigger}" foi enviado ao cliente com sucesso.]`;
+      finalContent = (finalContent || '') + `\n\n[Sistema: O anexo do gatilho "${attachmentTrigger}" foi simulado com sucesso.]`;
     } else if (!finalContent && !attachmentTrigger) {
       finalContent = '[A IA não gerou nenhuma resposta ou anexo. Isso pode ocorrer se ela já tiver encerrado o fluxo.]';
     }
