@@ -809,13 +809,22 @@ Conduzir sempre para uma destas ações:
               >
                 Restaurar Padrão
               </button>
-              <button
-                onClick={handleSaveSystemPrompt}
-                disabled={isSavingPrompt}
-                className="w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors flex items-center justify-center gap-2"
-              >
-                {isSavingPrompt ? 'Salvando...' : 'Salvar Treinamento Global'}
-              </button>
+              <div className="flex gap-2 w-full">
+                <button
+                  onClick={handleSaveSystemPrompt}
+                  disabled={isSavingPrompt}
+                  className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg"
+                >
+                  {isSavingPrompt ? 'Salvando...' : 'Considerar prompt atual o novo padrão'}
+                </button>
+                <button
+                  onClick={handleSaveSystemPrompt}
+                  disabled={isSavingPrompt}
+                  className="w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-lg"
+                >
+                  {isSavingPrompt ? 'Salvando...' : 'Salvar Treinamento Global'}
+                </button>
+              </div>
             </div>
             </div>
           </div>

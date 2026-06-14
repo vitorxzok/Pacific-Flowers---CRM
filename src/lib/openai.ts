@@ -242,7 +242,8 @@ Conduzir sempre para uma destas ações:
   // APÊNDICE OBRIGATÓRIO: Instruções de Ferramentas (Sempre adicionar ao final, independentemente de ser prompt customizado ou padrão)
   const toolInstructions = `
 --------------------------------------------------------------------------------
-MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
+MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO E PROCEDIMENTOS OCULTOS:
+- REGRA DE OURO MÁXIMA: Se o texto do seu treinamento tiver instruções em formato de script como '(ENVIAR CATÁLOGO)', '(ENVIAR FOTO DO KIT)' ou similares entre parênteses, VOCÊ NUNCA DEVE ESCREVER ISSO NA SUA MENSAGEM PARA O CLIENTE. O cliente NÃO pode ver comandos de sistema. Em vez disso, chame a ferramenta 'sendAttachment' correspondente silenciosamente enquanto responde o restante do texto natural.
 - Quando você precisar enviar o catálogo ou o link para o cliente lojista, chame a função 'sendAttachment' com o gatilho 'CATALOGO' e não escreva o link no texto, diga apenas que enviou o catálogo.
 - Quando sugerir um kit, chame a função 'sendAttachment' com o gatilho exato (ex: 'KIT_350', 'KIT_850').
 - Quando o cliente disser o nome dele, chame OBRIGATORIAMENTE a função 'updateClientName' para salvar o nome dele no sistema.
