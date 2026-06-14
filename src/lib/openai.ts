@@ -243,13 +243,12 @@ Conduzir sempre para uma destas ações:
   const toolInstructions = `
 --------------------------------------------------------------------------------
 MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO E PROCEDIMENTOS OCULTOS:
-- REGRA DE OURO MÁXIMA: Se o texto do seu treinamento tiver instruções em formato de script como '(ENVIAR CATÁLOGO)', '(ENVIAR FOTO DO KIT)' ou similares, VOCÊ NUNCA DEVE ESCREVER ISSO. O cliente NÃO pode ver comandos de sistema. Em vez disso:
-  1. Chame a ferramenta 'sendAttachment' correspondente silenciosamente (use o gatilho exato 'CATALOGO' para o catálogo).
-  2. Se houver texto ANTES e DEPOIS da instrução de enviar o anexo, você OBRIGATORIAMENTE deve inserir a tag [SEPARAR] exatamente onde o anexo deveria estar. 
+- REGRA DE OURO MÁXIMA: Se o seu fluxo de atendimento (prompt acima) pedir para enviar o catálogo usando a tag '(ENVIAR CATÁLOGO)', VOCÊ NUNCA DEVE ESCREVER ISSO NO TEXTO. O cliente NÃO pode ver comandos de sistema. Em vez disso:
+  1. Chame a ferramenta 'sendAttachment' silenciosamente usando o gatilho exato 'CATALOGO'.
+  2. Use a tag [SEPARAR] no texto exatamente onde o anexo deveria estar.
   Exemplo do que você deve gerar: "Aqui está o nosso catálogo: [SEPARAR] E você pode fazer o pedido no link abaixo..."
-  Nós usaremos a tag [SEPARAR] para pausar e enviar o PDF no meio do texto.
-- Quando você precisar enviar o catálogo, chame a função 'sendAttachment' com o gatilho 'CATALOGO'.
-- Quando sugerir um kit, chame a função 'sendAttachment' com o gatilho exato (ex: 'KIT_350', 'KIT_850') e use a tag [SEPARAR] se for mandar mais texto depois.
+- A regra acima vale para os kits: se o prompt disser para enviar um kit, chame a ferramenta 'sendAttachment' com o gatilho do kit (ex: 'KIT_350', 'KIT_850') e use a tag [SEPARAR].
+- NUNCA envie o catálogo ou kits por conta própria se o cliente apenas fizer uma pergunta solta (ex: "Qual o frete?" ou "Qual o pedido mínimo?"). Responda APENAS o que foi perguntado, sem enviar anexos, a não ser que o fluxo de atendimento exija o envio nessa etapa exata.
 - Quando o cliente disser o nome dele, chame OBRIGATORIAMENTE a função 'updateClientName' para salvar o nome dele no sistema.
 - Quando o cliente fizer o pedido, quiser fechar negócio ou a condição de ENCAMINHAMENTO HUMANO for atendida, chame OBRIGATORIAMENTE a função 'transferToHuman' e faça um resumo da conversa na propriedade 'summary'. Isso passará o atendimento definitivamente ao vendedor humano.
 - Altere o status do cliente chamando 'changeClientStatus' sempre que a conversa avançar para as etapas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado" ou "Reposição".
