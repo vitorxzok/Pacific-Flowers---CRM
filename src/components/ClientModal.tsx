@@ -28,6 +28,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
   const [tagsStr, setTagsStr] = useState((client.tags || []).join(', '));
   const { addMessage, updateClientNotes, updateClientTags, deleteClient } = useCRMStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,6 +37,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
   useEffect(() => {
     if (activeTab === 'chat') {
       scrollToBottom();
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [client.messages, activeTab]);
 
@@ -51,6 +53,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
     if (!newMessage.trim()) return;
     addMessage(client.id, { text: newMessage, sender: 'attendant' });
     setNewMessage('');
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleSaveData = () => {
@@ -166,6 +169,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
               </div>
               <div className="p-4 bg-[#202c33] border-t border-white/10 flex items-center space-x-3">
                 <input
+                  ref={inputRef}
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
