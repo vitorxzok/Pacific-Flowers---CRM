@@ -61,11 +61,12 @@ export function Sidebar() {
   if (pathname === '/login') return null;
 
   return (
-    <aside className="w-64 bg-surface/80 backdrop-blur-md border-r border-surface-border h-full flex flex-col">
-      <div className="p-6 flex items-center space-x-3">
-        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+    <aside className="w-16 md:w-64 bg-surface/80 backdrop-blur-md border-r border-surface-border h-full flex flex-col transition-all duration-300 z-50">
+      <div className="p-4 md:p-6 flex items-center justify-center md:justify-start space-x-3">
+        <span className="hidden md:block text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 truncate">
           Pacific Flowers
         </span>
+        <span className="block md:hidden text-xl font-bold text-white">PF</span>
       </div>
 
       <nav className="flex-1 px-4 py-4 space-y-2">
@@ -84,20 +85,20 @@ export function Sidebar() {
                 )
               )}
             >
-              <item.icon className="w-5 h-5" />
-              <span>{item.name}</span>
+              <item.icon className="w-6 h-6 flex-shrink-0" />
+              <span className="hidden md:inline truncate">{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-surface-border">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-surface-hover/50">
+      <div className="p-2 md:p-4 border-t border-surface-border">
+        <div className="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 rounded-lg bg-surface-hover/50 gap-2 md:gap-0">
           <div className="flex items-center space-x-3 truncate">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold flex-shrink-0">
               {userName.charAt(0).toUpperCase()}
             </div>
-            <div className="flex flex-col overflow-hidden">
+            <div className="hidden md:flex flex-col overflow-hidden">
               <span className="text-sm font-medium text-white truncate" title={userName}>{userName}</span>
               <span className="text-xs text-gray-400 truncate">{userRole}</span>
             </div>
@@ -107,7 +108,7 @@ export function Sidebar() {
             className="p-2 text-gray-400 hover:text-red-400 transition-colors"
             title="Sair"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-5 h-5" />
           </button>
         </div>
       </div>
