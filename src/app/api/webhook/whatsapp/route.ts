@@ -231,40 +231,36 @@ export async function POST(request: Request) {
                 body: JSON.stringify({ number: phone, delay: 3000, presence: 'composing' })
               });
 
-              // 2. Aguarda 3 segundos reais na thread do servidor
-              await new Promise(r => setTimeout(r, 3000));
-
-              // 3. Envia a mensagem com estrutura padrão
+              // Em vez de travar a Vercel com setTimeout, delegamos o delay para a Evolution API.
+              // A Evolution vai agendar e enviar.
               await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
                 body: JSON.stringify({ 
                   number: phone, 
                   text: aiReply,
-                  options: {
-                    delay: 100,
-                    presence: 'composing'
-                  }
+                  delay: 3000 // O próprio Whatsapp API aguarda 3s
                 })
               });
               console.log(`[AI] Resposta enviada com sucesso para ${phone}`);
               
-              // 4. Envia os anexos (ex: catálogo) com delay de 3 segundos
+              // 4. Envia os anexos (ex: catálogo) com delay cumulativo de mais 3s (totalizando 6s)
               if (mediaToSend && mediaToSend.length > 0) {
+                let currentDelay = 6000;
                 for (const media of mediaToSend) {
-                  await new Promise(r => setTimeout(r, 3000));
-                  console.log(`[AI] Enviando anexo para ${phone}...`);
-                  const evoRes = await fetch(`${apiUrl}/message/sendMedia/${instanceName}`, {
+                  console.log(`[AI] Enviando anexo para ${phone} (agendado via Evolution API)...`);
+                  
+                  // Inserir o delay no payload do Evolution API em vez de esperar aqui
+                  const mediaWithDelay = { ...media, delay: currentDelay };
+                  
+                  // Executa de forma assíncrona sem travar o webhook
+                  fetch(`${apiUrl}/message/sendMedia/${instanceName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                    body: JSON.stringify(media)
-                  });
-                  if (!evoRes.ok) {
-                    const evoErr = await evoRes.text();
-                    console.error(`[AI] Erro do Evolution API ao enviar mídia: Status ${evoRes.status} - ${evoErr}`);
-                  } else {
-                    console.log(`[AI] Anexo enviado com sucesso para ${phone}`);
-                  }
+                    body: JSON.stringify(mediaWithDelay)
+                  }).catch(err => console.error(`[AI] Erro ao enviar mídia em background:`, err));
+                  
+                  currentDelay += 3000;
                 }
               }
             } catch (err) {
