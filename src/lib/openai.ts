@@ -70,7 +70,7 @@ Todos os produtos são vendidos em múltiplos de 12 unidades para facilitar a re
 
 ENVIO CATÁLOGO + LINK
 
-(ENVIAR CATÁLOGO)
+(INSTRUÇÃO DE SISTEMA: Chame a ferramenta 'sendAttachment' com gatilho 'CATALOGO' nesta etapa. NUNCA escreva no texto a ação de enviar, o cliente não pode ver comandos de sistema.)
 
 Você também pode montar seu pedido diretamente pelo link:
 
