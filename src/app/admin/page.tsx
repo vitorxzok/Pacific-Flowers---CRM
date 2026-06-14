@@ -144,27 +144,30 @@ export default function AdminPage() {
     }
   }, [settings, localSettings]);
 
-  const handleSaveSettings = async () => {
-    if (!localSettings) return;
-    setIsSavingSettings(true);
+  const saveSettingsToServer = async (settingsToSave: any) => {
     const toastId = toast.loading('Salvando configurações globalmente...');
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, settings: localSettings })
+        body: JSON.stringify({ password, settings: settingsToSave })
       });
       if (!res.ok) throw new Error('Falha ao salvar configurações globais');
       
       // Update local store to keep UI in sync
-      await setSettings(localSettings);
+      await setSettings(settingsToSave);
       
       toast.success('Configurações salvas para todos os usuários!', { id: toastId });
     } catch (err) {
       toast.error('Erro ao salvar configurações.', { id: toastId });
-    } finally {
-      setIsSavingSettings(false);
     }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!localSettings) return;
+    setIsSavingSettings(true);
+    await saveSettingsToServer(localSettings);
+    setIsSavingSettings(false);
   };
 
   const fetchGlobalPrompt = async (pwd: string) => {
@@ -811,7 +814,17 @@ export default function AdminPage() {
                         </div>
                         <div className="flex items-end pb-[2px]">
                           <button
-                            onClick={() => handleRemoveAttachment(attachment.id)}
+                            onClick={async () => {
+                              const newSettings = { 
+                                ...localSettings, 
+                                attachments: localSettings.attachments.filter((_, i) => i !== idx) 
+                              };
+                              setLocalSettings(newSettings);
+                              
+                              const toastId = toast.loading('Removendo...');
+                              await saveSettingsToServer(newSettings);
+                              toast.success('Anexo removido.', { id: toastId });
+                            }}
                             className="flex items-center justify-center w-10 h-10 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors"
                             title="Remover"
                           >
