@@ -207,12 +207,29 @@ export async function POST(request: Request) {
         const mediaToSend = aiResponse?.mediaToSend || [];
 
         if (aiReply) {
+          // Remove [SEPARAR] do texto antes de salvar no banco para ficar limpo no CRM
+          const cleanText = aiReply.replace(/\[SEPARAR\]/g, '').trim();
+          
           await supabase.from('mensagens').insert({
             client_id: clientId,
-            text: aiReply,
+            text: cleanText,
             sender: 'attendant',
             read: true
           });
+
+          // Se houver mídia, salva também no banco para aparecer no CRM
+          if (mediaToSend && mediaToSend.length > 0) {
+            for (const media of mediaToSend) {
+              await supabase.from('mensagens').insert({
+                client_id: clientId,
+                text: media.caption || 'Anexo enviado',
+                media_url: media.media,
+                media_type: media.mediatype,
+                sender: 'attendant',
+                read: true
+              });
+            }
+          }
 
           if (clientData?.status === 'Novo') {
             await supabase.from('clientes').update({ status: 'Contato Feito' }).eq('id', clientId);
