@@ -68,7 +68,7 @@ export function KanbanColumn({ status, clients, onCardClick }: KanbanColumnProps
 
   return (
     <div 
-      className="flex flex-col w-[320px] flex-shrink-0 bg-surface/50 border border-surface-border rounded-xl h-full backdrop-blur-md overflow-hidden transition-all duration-300"
+      className="flex flex-col w-[280px] sm:w-[320px] flex-shrink-0 bg-surface/50 border border-surface-border rounded-xl h-full backdrop-blur-md overflow-hidden transition-all duration-300"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >

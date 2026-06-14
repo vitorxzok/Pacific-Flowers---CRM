@@ -46,7 +46,7 @@ export function KanbanBoard() {
 
   return (
     <>
-      <div className="flex space-x-6 h-full items-start overflow-x-auto pb-4">
+      <div className="flex space-x-4 sm:space-x-6 h-full items-start overflow-x-auto pb-4">
         {COLUMNS.map((status) => {
           const columnClients = filteredClients.filter(
             (client) => client.status === status

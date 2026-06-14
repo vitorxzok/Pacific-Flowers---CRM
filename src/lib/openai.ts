@@ -207,7 +207,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: openAiMessages as any,
-      temperature: 0.7,
+      temperature: 0.2,
       tools: [
         {
           type: 'function',
@@ -467,7 +467,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
       const secondResponse = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: openAiMessages as any,
-        temperature: 0.7,
+        temperature: 0.2,
       });
 
       responseMessage = secondResponse.choices[0].message;
