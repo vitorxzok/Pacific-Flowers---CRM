@@ -1043,7 +1043,7 @@ Conduzir sempre para uma destas ações:
                             onClick={async () => {
                               const newSettings = { 
                                 ...localSettings, 
-                                attachments: localSettings.attachments.filter((_, i) => i !== idx) 
+                                attachments: localSettings.attachments.filter((a: any) => a.id !== attachment.id) 
                               };
                               setLocalSettings(newSettings);
                               

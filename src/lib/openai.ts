@@ -237,6 +237,7 @@ Conduzir sempre para uma destas ações:
 - Solicitação de kit.
 - Escolha de produtos pelo catálogo.
 - Encaminhamento para fechamento com atendimento humano.`;
+  }
 
   // APÊNDICE OBRIGATÓRIO: Instruções de Ferramentas (Sempre adicionar ao final, independentemente de ser prompt customizado ou padrão)
   const toolInstructions = `
