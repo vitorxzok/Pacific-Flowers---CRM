@@ -122,12 +122,13 @@ export default function AdminPage() {
       
       const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
       
-      setLocalSettings((prev: any) => {
-        const updated = (prev?.attachments || []).map((a: Attachment) => 
-          a.id === id ? { ...a, url: publicUrl, name: file.name } : a
-        );
-        return { ...prev, attachments: updated };
-      });
+      const updatedAttachments = (localSettings?.attachments || []).map((a: Attachment) => 
+        a.id === id ? { ...a, url: publicUrl, name: file.name } : a
+      );
+      const newSettings = { ...localSettings, attachments: updatedAttachments };
+      
+      setLocalSettings(newSettings);
+      await saveSettingsToServer(newSettings);
       
       toast.success('Upload concluído!', { id: toastId });
     } catch (error: any) {
