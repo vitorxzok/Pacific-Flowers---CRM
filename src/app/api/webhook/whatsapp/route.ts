@@ -231,20 +231,22 @@ export async function POST(request: Request) {
                 body: JSON.stringify({ number: phone, delay: 1000, presence: 'composing' })
               }).catch(() => {});
 
-              // 2. Envia a mensagem de texto IMEDIATAMENTE
-              await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                body: JSON.stringify({ 
-                  number: phone, 
-                  text: aiReply,
-                  options: {
-                    delay: 100,
-                    presence: 'composing'
-                  }
-                })
-              });
-              console.log(`[AI] Resposta enviada com sucesso para ${phone}`);
+              // Divide a mensagem se houver a tag [SEPARAR]
+              const aiReplyParts = aiReply.split('[SEPARAR]').map(p => p.trim()).filter(p => p.length > 0);
+              
+              if (aiReplyParts.length > 0) {
+                // Envia a PRIMEIRA parte do texto
+                await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                  body: JSON.stringify({ 
+                    number: phone, 
+                    text: aiReplyParts[0],
+                    options: { delay: 100, presence: 'composing' }
+                  })
+                });
+                console.log(`[AI] Resposta parte 1 enviada com sucesso para ${phone}`);
+              }
               
               // 3. Se houver mídia (catálogo), aguarda exatamente 3 segundos e envia
               if (mediaToSend && mediaToSend.length > 0) {
@@ -252,7 +254,6 @@ export async function POST(request: Request) {
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 
                 for (const media of mediaToSend) {
-                  // Restauramos o formato original do payload de mídia
                   const evoRes = await fetch(`${apiUrl}/message/sendMedia/${instanceName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
@@ -264,6 +265,25 @@ export async function POST(request: Request) {
                   } else {
                     console.log(`[AI] Anexo enviado com sucesso para ${phone}`);
                   }
+                }
+              }
+
+              // Se houver mais partes do texto, envia depois do anexo
+              if (aiReplyParts.length > 1) {
+                for (let i = 1; i < aiReplyParts.length; i++) {
+                  console.log(`[AI] Aguardando 3 segundos para enviar parte ${i+1} do texto para ${phone}...`);
+                  await new Promise(resolve => setTimeout(resolve, 3000));
+                  
+                  await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                    body: JSON.stringify({ 
+                      number: phone, 
+                      text: aiReplyParts[i],
+                      options: { delay: 100, presence: 'composing' }
+                    })
+                  });
+                  console.log(`[AI] Resposta parte ${i+1} enviada com sucesso para ${phone}`);
                 }
               }
             } catch (err) {
