@@ -15,6 +15,8 @@ export interface Message {
   text: string;
   timestamp: string; // ISO date string
   read?: boolean;
+  media_url?: string;
+  media_type?: string;
 }
 
 export interface Client {

@@ -156,11 +156,21 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                   return (
                     <div key={msg.id} className={clsx("flex", isAttendant ? "justify-end" : "justify-start")}>
                       <div className={clsx(
-                        "max-w-[70%] rounded-xl px-4 py-2 relative shadow-sm",
+                        "max-w-[70%] rounded-xl px-4 py-2 relative shadow-sm flex flex-col",
                         isAttendant ? "bg-[#005c4b] text-white rounded-tr-none" : "bg-[#202c33] text-white rounded-tl-none"
                       )}>
-                        <p className="text-sm">{msg.text}</p>
-                        <span className="text-[10px] text-white/60 float-right mt-1 ml-4">
+                        {msg.media_url ? (
+                          <div className="flex flex-col gap-2">
+                            <a href={msg.media_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">
+                              <FileText className="w-5 h-5 text-blue-300" />
+                              <span className="text-sm text-blue-300 underline font-medium truncate">Ver Anexo</span>
+                            </a>
+                            {msg.text && <p className="text-sm">{msg.text}</p>}
+                          </div>
+                        ) : (
+                          <p className="text-sm">{msg.text}</p>
+                        )}
+                        <span className="text-[10px] text-white/60 self-end mt-1 ml-4">
                           {safeFormatDate(msg.timestamp, "HH:mm")}
                         </span>
                       </div>
