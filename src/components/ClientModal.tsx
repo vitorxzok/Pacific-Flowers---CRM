@@ -53,7 +53,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
     if (!newMessage.trim()) return;
     addMessage(client.id, { text: newMessage, sender: 'attendant' });
     setNewMessage('');
-    setTimeout(() => inputRef.current?.focus(), 0);
+    setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   const handleSaveData = () => {
