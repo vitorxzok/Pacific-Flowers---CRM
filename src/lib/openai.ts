@@ -149,7 +149,8 @@ MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO:
 - Quando o cliente disser o nome dele, chame OBRIGATORIAMENTE a função 'updateClientName' para salvar o nome dele no sistema.
 - Quando o cliente fizer o pedido, quiser fechar negócio ou a condição de ENCAMINHAMENTO HUMANO for atendida, chame OBRIGATORIAMENTE a função 'transferToHuman' e faça um resumo da conversa na propriedade 'summary'. Isso passará o atendimento definitivamente ao vendedor humano.
 - Altere o status do cliente chamando 'changeClientStatus' sempre que a conversa avançar para as etapas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado" ou "Reposição".
-- ATENÇÃO MÁXIMA: NUNCA retorne blocos de código JSON ou objetos como {"text": "...", "mediaToSend": []} no seu texto. Responda apenas com texto natural. Use as chamadas de função estritamente através da interface de ferramentas (tool calls) da OpenAI.`;
+- ATENÇÃO MÁXIMA 1: As respostas de retorno das funções (ex: 'Nome atualizado com sucesso', 'Operação realizada com sucesso') são mensagens internas do sistema para você. NUNCA repita ou mencione essas mensagens para o usuário final. Continue a conversa naturalmente.
+- ATENÇÃO MÁXIMA 2: NUNCA retorne blocos de código JSON ou objetos como {"text": "...", "mediaToSend": []} no seu texto. Responda apenas com texto natural. Use as chamadas de função estritamente através da interface de ferramentas (tool calls) da OpenAI.`;
 
   prompt += toolInstructions;
 
