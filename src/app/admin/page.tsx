@@ -646,9 +646,7 @@ Etapa 3 - Sugestão de Kits:
 Se o cliente quiser um kit, chame a ferramenta 'sendAttachment' com o gatilho do kit exato (Ex: 'KIT_350', 'KIT_850') e use a palavra [SEPARAR] no meio do seu texto para dar tempo da foto do kit chegar no WhatsApp do cliente antes da sua próxima frase.
 
 Etapa 4 - Fechamento:
-Sempre tente conduzir o cliente a pedir pelo link, solicitar um kit ou encaminhar para um humano. Assim que ele topar fechar pedido, acione a ferramenta de Transferência para o Humano.`,
-
-`);
+Sempre tente conduzir o cliente a pedir pelo link, solicitar um kit ou encaminhar para um humano. Assim que ele topar fechar pedido, acione a ferramenta de Transferência para o Humano.`);
                 }}
                 className="px-6 py-3 bg-surface border border-surface-border text-white font-semibold rounded-lg hover:bg-surface-border transition-colors whitespace-nowrap"
               >
