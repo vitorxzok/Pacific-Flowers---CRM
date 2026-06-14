@@ -224,6 +224,31 @@ export default function AdminPage() {
     }
   };
 
+  const fetchAdminGlobalSettings = async (pwd: string) => {
+    try {
+      const res = await fetch(`/api/admin/settings?pwd=${pwd}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLocalSettings({
+          autoReplyEnabled: data.auto_reply_enabled || false,
+          minutesWithoutResponse: data.minutes_without_response || 15,
+          followUpIntervalHours: data.followup_interval_hours || 24,
+          insistenciaMaxRepetitions: data.insistencia_max_repetitions || 3,
+          insistenciaDaysInterval: data.insistencia_days_interval || 2,
+          reposicao_days_global: data.reposicao_days_global || 30,
+          kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
+          kanbanColumnNames: data.kanban_column_names || {},
+          businessName: data.business_name || '',
+          businessContext: data.business_context || '',
+          productsCatalog: data.products_catalog || '',
+          attachments: data.attachments || []
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -233,7 +258,7 @@ export default function AdminPage() {
     if (success) {
       setIsAuthenticated(true);
       fetchGlobalPrompt(password);
-      fetchSettings();
+      fetchAdminGlobalSettings(password);
       fetchAdminUsers();
       toast.success('Login bem sucedido!');
     } else {

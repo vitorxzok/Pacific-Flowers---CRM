@@ -80,17 +80,17 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       if (response.ok) {
         const data = await response.json();
         set({ settings: {
-          autoReplyEnabled: data.auto_reply_enabled || false,
-          minutesWithoutResponse: data.minutes_without_response || 15,
-          followUpIntervalHours: data.followup_interval_hours || 24,
-          insistenciaMaxRepetitions: data.insistencia_max_repetitions || 3,
-          insistenciaDaysInterval: data.insistencia_days_interval || 2,
-          reposicao_days_global: data.reposicao_days_global || 30,
-          kanbanColumns: data.kanban_columns || ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
-          kanbanColumnNames: data.kanban_column_names || {},
-          businessName: data.business_name || '',
-          businessContext: data.business_context || '',
-          productsCatalog: data.products_catalog || '',
+          autoReplyEnabled: data.auto_reply_enabled ?? data.autoReplyEnabled ?? false,
+          minutesWithoutResponse: data.minutes_without_response ?? data.minutesWithoutResponse ?? 15,
+          followUpIntervalHours: data.followup_interval_hours ?? data.followUpIntervalHours ?? 24,
+          insistenciaMaxRepetitions: data.insistencia_max_repetitions ?? data.insistenciaMaxRepetitions ?? 3,
+          insistenciaDaysInterval: data.insistencia_days_interval ?? data.insistenciaDaysInterval ?? 2,
+          reposicao_days_global: data.reposicao_days_global ?? 30,
+          kanbanColumns: data.kanban_columns ?? data.kanbanColumns ?? ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
+          kanbanColumnNames: data.kanban_column_names ?? data.kanbanColumnNames ?? {},
+          businessName: data.business_name ?? data.businessName ?? '',
+          businessContext: data.business_context ?? data.businessContext ?? '',
+          productsCatalog: data.products_catalog ?? data.productsCatalog ?? '',
           attachments: data.attachments || []
         }});
       }

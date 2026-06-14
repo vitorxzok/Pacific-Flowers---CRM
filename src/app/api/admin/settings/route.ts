@@ -25,14 +25,14 @@ export async function POST(request: Request) {
           crm_settings: {
             ...currentSettings,
             attachments: settings.attachments,
-            kanbanColumns: settings.kanbanColumns,
-            kanbanColumnNames: settings.kanbanColumnNames,
-            businessName: settings.businessName,
-            productsCatalog: settings.productsCatalog,
-            minutesWithoutResponse: settings.minutesWithoutResponse,
-            followUpIntervalHours: settings.followUpIntervalHours,
-            insistenciaMaxRepetitions: settings.insistenciaMaxRepetitions,
-            insistenciaDaysInterval: settings.insistenciaDaysInterval,
+            kanban_columns: settings.kanbanColumns,
+            kanban_column_names: settings.kanbanColumnNames,
+            business_name: settings.businessName,
+            products_catalog: settings.productsCatalog,
+            minutes_without_response: settings.minutesWithoutResponse,
+            followup_interval_hours: settings.followUpIntervalHours,
+            insistencia_max_repetitions: settings.insistenciaMaxRepetitions,
+            insistencia_days_interval: settings.insistenciaDaysInterval,
             reposicao_days_global: settings.reposicao_days_global
           }
         }
@@ -40,6 +40,30 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const pwd = searchParams.get('pwd');
+    if (pwd !== 'admin') return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+
+    const { data: { users }, error } = await supabase.auth.admin.listUsers();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Find the first user with crm_settings
+    let settings = {};
+    for (const user of users) {
+      if (user.user_metadata?.crm_settings) {
+        settings = user.user_metadata.crm_settings;
+        break;
+      }
+    }
+
+    return NextResponse.json(settings);
   } catch (err: any) {
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
