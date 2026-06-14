@@ -111,26 +111,20 @@ export async function POST(request: Request) {
       for (const toolCall of aiMessage.tool_calls as any[]) {
         if (toolCall.function.name === 'sendAttachment') {
           const args = JSON.parse(toolCall.function.arguments);
-          attachmentTrigger = args.triggerName; // O parâmetro correto definido na tool é triggerName
+          attachmentTrigger = args.triggerName;
           
           if (settings && settings.attachments && attachmentTrigger) {
+            const normalizeStr = (str: string) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase() : "";
+            const targetTrigger = normalizeStr(attachmentTrigger);
+            
             const matchedAttachment = settings.attachments.find(
-              (a: any) => a.trigger?.toUpperCase() === attachmentTrigger?.toUpperCase()
+              (a: any) => normalizeStr(a.trigger) === targetTrigger
             );
             if (matchedAttachment) {
               attachment = matchedAttachment;
             }
           }
-        } else if (toolCall.function.name === 'updateClientName') {
-          const args = JSON.parse(toolCall.function.arguments);
-          finalContent = (finalContent || '') + `\n\n[Sistema: O nome do cliente foi atualizado para "${args.name}"]`;
-        } else if (toolCall.function.name === 'transferToHuman') {
-          const args = JSON.parse(toolCall.function.arguments);
-          finalContent = (finalContent || '') + `\n\n[Sistema: Atendimento transferido para humano. Resumo: "${args.summary}"]`;
-        } else if (toolCall.function.name === 'changeClientStatus') {
-          const args = JSON.parse(toolCall.function.arguments);
-          finalContent = (finalContent || '') + `\n\n[Sistema: O status do cliente no CRM mudou para "${args.status}"]`;
-        }
+        } 
       }
     }
 
