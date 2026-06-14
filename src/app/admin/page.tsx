@@ -147,12 +147,21 @@ export default function AdminPage() {
   const handleSaveSettings = async () => {
     if (!localSettings) return;
     setIsSavingSettings(true);
-    const toastId = toast.loading('Salvando configurações...');
+    const toastId = toast.loading('Salvando configurações globalmente...');
     try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, settings: localSettings })
+      });
+      if (!res.ok) throw new Error('Falha ao salvar configurações globais');
+      
+      // Update local store to keep UI in sync
       await setSettings(localSettings);
-      toast.success('Configurações salvas com sucesso!', { id: toastId });
+      
+      toast.success('Configurações salvas para todos os usuários!', { id: toastId });
     } catch (err) {
-      toast.error('Erro ao salvar.', { id: toastId });
+      toast.error('Erro ao salvar configurações.', { id: toastId });
     } finally {
       setIsSavingSettings(false);
     }
