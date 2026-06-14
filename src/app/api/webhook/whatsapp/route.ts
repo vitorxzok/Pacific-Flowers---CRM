@@ -152,14 +152,26 @@ export async function POST(request: Request) {
 
       if (!crmSettings) crmSettings = {};
 
-      // BUSCAR ANEXOS GLOBAIS (De todos os usuários, para que os anexos do admin funcionem para todos)
+      // BUSCAR CONFIGURAÇÕES GLOBAIS (Anexos, Prompt, Business Name) de todos os usuários
+      // Para que a configuração do Admin funcione para todos os atendentes
       const { data: allUsersData } = await supabase.auth.admin.listUsers();
       if (allUsersData?.users) {
         let globalAttachments: any[] = [];
+        let fallbackSystemPrompt: string | null = null;
+        let fallbackBusinessName: string | null = null;
+        let fallbackAutoReplyEnabled = false;
+
         allUsersData.users.forEach(u => {
-          const uAttachments = u.user_metadata?.crm_settings?.attachments;
-          if (Array.isArray(uAttachments)) {
-            globalAttachments = [...globalAttachments, ...uAttachments];
+          const uSettings = u.user_metadata?.crm_settings;
+          if (uSettings) {
+            // Coletar anexos
+            if (Array.isArray(uSettings.attachments)) {
+              globalAttachments = [...globalAttachments, ...uSettings.attachments];
+            }
+            // Coletar prompt global (pega do primeiro que tiver, geralmente o admin)
+            if (uSettings.systemPrompt && !fallbackSystemPrompt) fallbackSystemPrompt = uSettings.systemPrompt;
+            if (uSettings.businessName && !fallbackBusinessName) fallbackBusinessName = uSettings.businessName;
+            if (uSettings.auto_reply_enabled === true) fallbackAutoReplyEnabled = true;
           }
         });
         
@@ -172,6 +184,12 @@ export async function POST(request: Request) {
             existingUrls.add(globalAtt.url);
           }
         }
+
+        // Aplicar fallbacks de prompt caso o atendente atual não tenha
+        if (!crmSettings.systemPrompt && fallbackSystemPrompt) crmSettings.systemPrompt = fallbackSystemPrompt;
+        if (!crmSettings.businessName && fallbackBusinessName) crmSettings.businessName = fallbackBusinessName;
+        // Se auto reply estiver desabilitado no atendente, tenta herdar o global
+        if (!autoReplyEnabled && fallbackAutoReplyEnabled) autoReplyEnabled = true;
       }
 
       const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada'];
