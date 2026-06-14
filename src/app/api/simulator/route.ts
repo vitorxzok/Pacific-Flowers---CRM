@@ -28,25 +28,76 @@ export async function POST(request: Request) {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: openAiMessages as any,
-      temperature: 0.7,
+      temperature: 0.2,
       tools: [
         {
           type: 'function',
           function: {
             name: 'sendAttachment',
-            description: 'Envia um anexo (mídia, catálogo, foto de kit) para o cliente com base em um gatilho',
+            description: 'Envia um anexo (mídia, catálogo, foto de kit) para o cliente pelo WhatsApp com base em um gatilho configurado.',
             parameters: {
               type: 'object',
               properties: {
                 triggerName: {
                   type: 'string',
-                  description: 'O nome exato do gatilho configurado. Ex: "CATALOGO"',
-                },
+                  description: 'O nome exato do gatilho configurado pelo vendedor. Ex: "CATALOGO", "KIT_350", "KIT_850"'
+                }
               },
-              required: ['triggerName'],
-            },
-          },
+              required: ['triggerName']
+            }
+          }
         },
+        {
+          type: 'function',
+          function: {
+            name: 'updateClientName',
+            description: 'Atualiza o nome do cliente no sistema de CRM (Banco de Dados) após ele se apresentar.',
+            parameters: {
+              type: 'object',
+              properties: {
+                name: {
+                  type: 'string',
+                  description: 'O nome e sobrenome do cliente'
+                }
+              },
+              required: ['name']
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'transferToHuman',
+            description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, quiser fechar negócio ou pedir para falar com um humano.',
+            parameters: {
+              type: 'object',
+              properties: {
+                summary: {
+                  type: 'string',
+                  description: 'Um resumo breve do atendimento: perfil do cliente (lojista, pessoal), produtos interessados, e motivo da transferência.'
+                }
+              },
+              required: ['summary']
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'changeClientStatus',
+            description: 'Altera a etapa do funil do cliente com base no andamento do atendimento (Ex: Contato Feito, Em Qualificação, Proposta Enviada, Reposição). Use quando o cliente avançar naturalmente na conversa.',
+            parameters: {
+              type: 'object',
+              properties: {
+                status: {
+                  type: 'string',
+                  description: 'O novo status do cliente no Kanban. Opções válidas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado", "Reposição"'
+                }
+              },
+              required: ['status']
+            }
+          }
+        }
       ],
       tool_choice: 'auto',
     });
@@ -70,6 +121,15 @@ export async function POST(request: Request) {
               attachment = matchedAttachment;
             }
           }
+        } else if (toolCall.function.name === 'updateClientName') {
+          const args = JSON.parse(toolCall.function.arguments);
+          finalContent = (finalContent || '') + `\n\n[Sistema: O nome do cliente foi atualizado para "${args.name}"]`;
+        } else if (toolCall.function.name === 'transferToHuman') {
+          const args = JSON.parse(toolCall.function.arguments);
+          finalContent = (finalContent || '') + `\n\n[Sistema: Atendimento transferido para humano. Resumo: "${args.summary}"]`;
+        } else if (toolCall.function.name === 'changeClientStatus') {
+          const args = JSON.parse(toolCall.function.arguments);
+          finalContent = (finalContent || '') + `\n\n[Sistema: O status do cliente no CRM mudou para "${args.status}"]`;
         }
       }
     }
