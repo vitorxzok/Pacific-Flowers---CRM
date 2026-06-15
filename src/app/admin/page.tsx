@@ -834,7 +834,15 @@ REGRAS IMPORTANTES
 
 * Sempre enviar catálogo + link juntos para lojistas
 * Nunca perguntar se deseja catálogo
-* Nunca enviar o catálogo duas vezes`);
+* Nunca enviar o catálogo duas vezes
+* Caso o cliente queira saber mais sobre a empresa, use essas informações como base:
+A Pacific Flowers é uma empresa consolidada no mercado, com mais de 25 anos de experiência na fabricação e fornecimento de produtos voltados para papelarias, supermercados, distribuidores e comércios em geral. Ao longo de sua trajetória, construiu uma reputação baseada em qualidade, confiança e compromisso com seus clientes.
+
+Com produção própria, a Pacific Flowers garante controle total sobre seus processos, oferecendo produtos com excelente padrão de qualidade e preços altamente competitivos. Seu portfólio inclui itens essenciais para o dia a dia do varejo, como giz de cera, envelopes kraft, cadernos, placas indicativas, impressos padronizados, splash e cartazes de oferta, além de jogos encartelados.
+
+A empresa se destaca por entender as necessidades do mercado e oferecer soluções práticas, funcionais e acessíveis, sempre com foco em fortalecer seus parceiros comerciais e impulsionar suas vendas.
+
+Mais do que uma fornecedora, a Pacific Flowers é uma parceira estratégica, comprometida em entregar valor, eficiência e crescimento para seus clientes.\`);
                 }}
                 className="px-6 py-3 bg-surface border border-surface-border text-white font-semibold rounded-lg hover:bg-surface-border transition-colors whitespace-nowrap"
               >
