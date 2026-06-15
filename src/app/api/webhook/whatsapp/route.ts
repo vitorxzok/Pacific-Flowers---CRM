@@ -168,12 +168,16 @@ export async function POST(request: Request) {
             if (Array.isArray(uSettings.attachments)) {
               globalAttachments = [...globalAttachments, ...uSettings.attachments];
             }
-            // Coletar prompt global (pega do primeiro que tiver, geralmente o admin)
-            if (uSettings.systemPrompt && !fallbackSystemPrompt) fallbackSystemPrompt = uSettings.systemPrompt;
             if (uSettings.businessName && !fallbackBusinessName) fallbackBusinessName = uSettings.businessName;
             if (uSettings.auto_reply_enabled === true) fallbackAutoReplyEnabled = true;
           }
         });
+        
+        // Fetch global system prompt from DB
+        const { data: globalSettings } = await supabase.from('global_settings').select('system_prompt').eq('id', 1).single();
+        if (globalSettings?.system_prompt) {
+          fallbackSystemPrompt = globalSettings.system_prompt;
+        }
         
         if (!crmSettings.attachments) crmSettings.attachments = [];
         

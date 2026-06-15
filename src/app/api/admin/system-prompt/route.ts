@@ -13,19 +13,10 @@ export async function GET(request: Request) {
     const password = searchParams.get('pwd');
     if (password !== 'admin') return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
-    const { data: { users }, error } = await supabase.auth.admin.listUsers();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { data, error } = await supabase.from('global_settings').select('system_prompt').eq('id', 1).single();
+    if (error && error.code !== 'PGRST116') return NextResponse.json({ error: error.message }, { status: 500 });
     
-    // Find the first user that has systemPrompt, or return empty
-    let systemPrompt = '';
-    for (const user of users) {
-      if (user.user_metadata?.crm_settings?.systemPrompt) {
-        systemPrompt = user.user_metadata.crm_settings.systemPrompt;
-        break;
-      }
-    }
-    
-    return NextResponse.json({ systemPrompt });
+    return NextResponse.json({ systemPrompt: data?.system_prompt || '' });
   } catch (err: any) {
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
@@ -36,22 +27,8 @@ export async function POST(request: Request) {
     const { password, systemPrompt } = await request.json();
     if (password !== 'admin') return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
-    const { data: { users }, error } = await supabase.auth.admin.listUsers();
+    const { error } = await supabase.from('global_settings').upsert({ id: 1, system_prompt: systemPrompt });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    // Update ALL users
-    for (const user of users) {
-      const currentSettings = user.user_metadata?.crm_settings || {};
-      await supabase.auth.admin.updateUserById(user.id, {
-        user_metadata: {
-          ...user.user_metadata,
-          crm_settings: {
-            ...currentSettings,
-            systemPrompt
-          }
-        }
-      });
-    }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
