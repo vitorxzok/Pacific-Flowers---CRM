@@ -311,7 +311,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
 
     // 2. Chamar a OpenAI com suporte a chamadas de função
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: openAiMessages as any,
       temperature: 0.2,
       tools: [
