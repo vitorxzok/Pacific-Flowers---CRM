@@ -70,7 +70,7 @@ export function KanbanCard({ client, onClick }: KanbanCardProps) {
       {/* Automations Badge (Human Needed or AI Active) */}
       {client.needs_human ? (
         <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap animate-pulse border border-green-400">
-          ATENDIMENTO HUMANO
+          AGUARDANDO VENDEDOR
         </div>
       ) : isAIActive ? (
         <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap border border-yellow-400">

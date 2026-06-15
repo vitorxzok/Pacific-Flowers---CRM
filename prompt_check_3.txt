@@ -1,0 +1,126 @@
+
+--- USER e9b95e91-eac3-45d3-ac12-f604b10384be ---
+LOJISTA (FLUXO PRINCIPAL)
+Olá NOME 👋
+Perfeito.
+Para facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.
+Os produtos são vendidos em múltiplos de 12 unidades, ok?
+
+---
+ENVIO CATÁLOGO EM 3 SEGUNDOS (INSTRUÇÃO DE SISTEMA: Chame a ferramenta 'sendAttachment' com gatilho 'CATALOGO' nesta etapa. NUNCA escreva no texto a ação de enviar, o cliente não pode ver comandos de sistema.)
+
+---
+LINK APOS ENVIAR O CATALOGO ENVIAR AS INFORMAÇOES DO LINK EM 3 SEGUNDOS
+Você pode ver todos os produtos aqui:
+E também pode montar seu pedido direto pelo link PedidoRápido:
+pacific-flowers.vercel.app
+
+---
+
+--- USER 844d2881-9f80-440d-9587-7dce4a01c05a ---
+LOJISTA (FLUXO PRINCIPAL)
+Olá NOME 👋
+Perfeito.
+Para facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.
+Os produtos são vendidos em múltiplos de 12 unidades, ok?
+
+---
+ENVIO CATÁLOGO EM 3 SEGUNDOS (INSTRUÇÃO DE SISTEMA: Chame a ferramenta 'sendAttachment' com gatilho 'CATALOGO' nesta etapa. NUNCA escreva no texto a ação de enviar, o cliente não pode ver comandos de sistema.)
+
+---
+LINK APOS ENVIAR O CATALOGO ENVIAR AS INFORMAÇOES DO LINK EM 3 SEGUNDOS
+Você pode ver todos os produtos aqui:
+E também pode montar seu pedido direto pelo link PedidoRápido:
+pacific-flowers.vercel.app
+
+---
+
+--- USER a0bd4534-e203-48fa-9c41-ca1f037c1d71 ---
+LOJISTA (FLUXO PRINCIPAL)
+Olá NOME 👋
+Perfeito.
+Para facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.
+Os produtos são vendidos em múltiplos de 12 unidades, ok?
+
+---
+ENVIO CATÁLOGO EM 3 SEGUNDOS (INSTRUÇÃO DE SISTEMA: Chame a ferramenta 'sendAttachment' com gatilho 'CATALOGO' nesta etapa. NUNCA escreva no texto a ação de enviar, o cliente não pode ver comandos de sistema.)
+
+---
+LINK APOS ENVIAR O CATALOGO ENVIAR AS INFORMAÇOES DO LINK EM 3 SEGUNDOS
+Você pode ver todos os produtos aqui:
+E também pode montar seu pedido direto pelo link PedidoRápido:
+pacific-flowers.vercel.app
+
+---
+
+--- USER 7474e18d-4ec6-4cd9-b105-35a812f4e0cd ---
+LOJISTA (FLUXO PRINCIPAL)
+Olá NOME 👋
+Perfeito.
+Para facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.
+Os produtos são vendidos em múltiplos de 12 unidades, ok?
+
+---
+ENVIO CATÁLOGO EM 3 SEGUNDOS (INSTRUÇÃO DE SISTEMA: Chame a ferramenta 'sendAttachment' com gatilho 'CATALOGO' nesta etapa. NUNCA escreva no texto a ação de enviar, o cliente não pode ver comandos de sistema.)
+
+---
+LINK APOS ENVIAR O CATALOGO ENVIAR AS INFORMAÇOES DO LINK EM 3 SEGUNDOS
+Você pode ver todos os produtos aqui:
+E também pode montar seu pedido direto pelo link PedidoRápido:
+pacific-flowers.vercel.app
+
+---
+
+--- USER 305ce3a3-1de2-4a55-bdb9-7ec0f832e89d ---
+LOJISTA (FLUXO PRINCIPAL)
+Olá NOME 👋
+Perfeito.
+Para facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.
+Os produtos são vendidos em múltiplos de 12 unidades, ok?
+
+---
+ENVIO CATÁLOGO EM 3 SEGUNDOS (INSTRUÇÃO DE SISTEMA: Chame a ferramenta 'sendAttachment' com gatilho 'CATALOGO' nesta etapa. NUNCA escreva no texto a ação de enviar, o cliente não pode ver comandos de sistema.)
+
+---
+LINK APOS ENVIAR O CATALOGO ENVIAR AS INFORMAÇOES DO LINK EM 3 SEGUNDOS
+Você pode ver todos os produtos aqui:
+E também pode montar seu pedido direto pelo link PedidoRápido:
+pacific-flowers.vercel.app
+
+---
+
+--- USER ddf3feaa-77e0-40dd-a80c-244522c441a8 ---
+LOJISTA (FLUXO PRINCIPAL)
+Olá NOME 👋
+Perfeito.
+Para facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.
+Os produtos são vendidos em múltiplos de 12 unidades, ok?
+
+---
+ENVIO CATÁLOGO EM 3 SEGUNDOS (INSTRUÇÃO DE SISTEMA: Chame a ferramenta 'sendAttachment' com gatilho 'CATALOGO' nesta etapa. NUNCA escreva no texto a ação de enviar, o cliente não pode ver comandos de sistema.)
+
+---
+LINK APOS ENVIAR O CATALOGO ENVIAR AS INFORMAÇOES DO LINK EM 3 SEGUNDOS
+Você pode ver todos os produtos aqui:
+E também pode montar seu pedido direto pelo link PedidoRápido:
+pacific-flowers.vercel.app
+
+---
+
+--- USER 595e3af9-bbb8-496b-b4a7-4e8cea257c4e ---
+LOJISTA (FLUXO PRINCIPAL)
+Olá NOME 👋
+Perfeito.
+Para facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.
+Os produtos são vendidos em múltiplos de 12 unidades, ok?
+
+---
+ENVIO CATÁLOGO EM 3 SEGUNDOS (INSTRUÇÃO DE SISTEMA: Chame a ferramenta 'sendAttachment' com gatilho 'CATALOGO' nesta etapa. NUNCA escreva no texto a ação de enviar, o cliente não pode ver comandos de sistema.)
+
+---
+LINK APOS ENVIAR O CATALOGO ENVIAR AS INFORMAÇOES DO LINK EM 3 SEGUNDOS
+Você pode ver todos os produtos aqui:
+E também pode montar seu pedido direto pelo link PedidoRápido:
+pacific-flowers.vercel.app
+
+---

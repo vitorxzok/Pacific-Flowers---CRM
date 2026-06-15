@@ -152,7 +152,19 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
             <div className="absolute inset-0 flex flex-col" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg")', backgroundSize: 'cover', backgroundBlendMode: 'overlay', backgroundColor: 'rgba(11, 20, 26, 0.9)' }}>
               <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
                 {client.messages.map((msg) => {
+                  const isSystem = msg.sender === 'system';
                   const isAttendant = msg.sender === 'attendant';
+                  
+                  if (isSystem) {
+                    return (
+                      <div key={msg.id} className="flex justify-center my-4">
+                        <div className="bg-[#1e2a30] text-gray-300 text-xs px-4 py-2 rounded-lg border border-white/10 shadow-sm text-center max-w-[80%] whitespace-pre-wrap">
+                          {msg.text}
+                        </div>
+                      </div>
+                    );
+                  }
+
                   return (
                     <div key={msg.id} className={clsx("flex", isAttendant ? "justify-end" : "justify-start")}>
                       <div className={clsx(
@@ -168,7 +180,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                             {msg.text && <p className="text-sm">{msg.text}</p>}
                           </div>
                         ) : (
-                          <p className="text-sm">{msg.text}</p>
+                          <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                         )}
                         <span className="text-[10px] text-white/60 self-end mt-1 ml-4">
                           {safeFormatDate(msg.timestamp, "HH:mm")}

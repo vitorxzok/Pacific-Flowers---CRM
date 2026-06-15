@@ -1,0 +1,77 @@
+User: e9b95e91-eac3-45d3-ac12-f604b10384be
+[
+  {
+    "id": "655275d4-0838-4f8d-83c6-1b6450a28691",
+    "name": "Catálogo - Com Preço.pdf",
+    "trigger": "CATALOGO",
+    "type": "document",
+    "url": "https://nkvesifvkyjbicnqefco.supabase.co/storage/v1/object/public/media/anexos/jkdnnhy7wi_1781464663523.pdf"
+  }
+]
+
+User: 844d2881-9f80-440d-9587-7dce4a01c05a
+[
+  {
+    "id": "655275d4-0838-4f8d-83c6-1b6450a28691",
+    "name": "Catálogo - Com Preço.pdf",
+    "trigger": "CATALOGO",
+    "type": "document",
+    "url": "https://nkvesifvkyjbicnqefco.supabase.co/storage/v1/object/public/media/anexos/jkdnnhy7wi_1781464663523.pdf"
+  }
+]
+
+User: a0bd4534-e203-48fa-9c41-ca1f037c1d71
+[
+  {
+    "id": "655275d4-0838-4f8d-83c6-1b6450a28691",
+    "name": "Catálogo - Com Preço.pdf",
+    "trigger": "CATALOGO",
+    "type": "document",
+    "url": "https://nkvesifvkyjbicnqefco.supabase.co/storage/v1/object/public/media/anexos/jkdnnhy7wi_1781464663523.pdf"
+  }
+]
+
+User: 7474e18d-4ec6-4cd9-b105-35a812f4e0cd
+[
+  {
+    "id": "655275d4-0838-4f8d-83c6-1b6450a28691",
+    "name": "Catálogo - Com Preço.pdf",
+    "trigger": "CATALOGO",
+    "type": "document",
+    "url": "https://nkvesifvkyjbicnqefco.supabase.co/storage/v1/object/public/media/anexos/jkdnnhy7wi_1781464663523.pdf"
+  }
+]
+
+User: 305ce3a3-1de2-4a55-bdb9-7ec0f832e89d
+[
+  {
+    "id": "655275d4-0838-4f8d-83c6-1b6450a28691",
+    "name": "Catálogo - Com Preço.pdf",
+    "trigger": "CATALOGO",
+    "type": "document",
+    "url": "https://nkvesifvkyjbicnqefco.supabase.co/storage/v1/object/public/media/anexos/jkdnnhy7wi_1781464663523.pdf"
+  }
+]
+
+User: ddf3feaa-77e0-40dd-a80c-244522c441a8
+[
+  {
+    "id": "655275d4-0838-4f8d-83c6-1b6450a28691",
+    "name": "Catálogo - Com Preço.pdf",
+    "trigger": "CATALOGO",
+    "type": "document",
+    "url": "https://nkvesifvkyjbicnqefco.supabase.co/storage/v1/object/public/media/anexos/jkdnnhy7wi_1781464663523.pdf"
+  }
+]
+
+User: 595e3af9-bbb8-496b-b4a7-4e8cea257c4e
+[
+  {
+    "id": "655275d4-0838-4f8d-83c6-1b6450a28691",
+    "name": "Catálogo - Com Preço.pdf",
+    "trigger": "CATALOGO",
+    "type": "document",
+    "url": "https://nkvesifvkyjbicnqefco.supabase.co/storage/v1/object/public/media/anexos/jkdnnhy7wi_1781464663523.pdf"
+  }
+]
+

@@ -533,10 +533,21 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
         if (toolCall.function.name === 'transferToHuman') {
           console.log(`[AI TOOL] Transferindo cliente para humano. Resumo: ${args.summary}`);
           
-          // Mudar status para 'Qualificado' e setar needs_human
+          // Recuperar os dados do cliente para pegar o telefone, notes e o attendant_id
+          const { data: clientData } = await supabase
+            .from('clientes')
+            .select('name, phone, attendant_id, notes')
+            .eq('id', clientId)
+            .single();
+
+          // Adicionar o resumo gerado pela IA nas notas do cliente
+          let newNotes = clientData?.notes ? clientData.notes + '\n\n' : '';
+          newNotes += `--- Resumo da IA Clara ---\n${args.summary}`;
+
+          // Mudar status para 'Qualificado', setar needs_human, e salvar as notas
           await supabase
             .from('clientes')
-            .update({ status: 'Qualificado', needs_human: true })
+            .update({ status: 'Qualificado', needs_human: true, notes: newNotes })
             .eq('id', clientId);
 
           // Inserir um evento no histórico com o resumo da IA
@@ -550,12 +561,15 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
               to_status: 'Qualificado'
             });
 
-          // Recuperar os dados do cliente para pegar o telefone e o attendant_id
-          const { data: clientData } = await supabase
-            .from('clientes')
-            .select('name, phone, attendant_id')
-            .eq('id', clientId)
-            .single();
+          // Inserir uma mensagem de sistema no chat para alertar o atendente
+          await supabase
+            .from('mensagens')
+            .insert({
+              client_id: clientId,
+              sender: 'system',
+              text: `⚠️ A IA encerrou o atendimento e transferiu para humano.\nResumo: ${args.summary}`,
+              read: true
+            });
 
           if (clientData && clientData.attendant_id) {
             // Recuperar o número de WhatsApp do vendedor
