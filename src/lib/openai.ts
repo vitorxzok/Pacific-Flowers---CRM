@@ -242,18 +242,14 @@ Conduzir sempre para uma destas ações:
   // APÊNDICE OBRIGATÓRIO: Instruções de Ferramentas (Sempre adicionar ao final, independentemente de ser prompt customizado ou padrão)
   const toolInstructions = `
 --------------------------------------------------------------------------------
-MUITO IMPORTANTE - CHAMADAS DE FUNÇÃO E PROCEDIMENTOS OCULTOS:
-- REGRA DE OURO MÁXIMA: Se o seu fluxo de atendimento (prompt acima) pedir para enviar o catálogo usando a tag '(ENVIAR CATÁLOGO)', VOCÊ NUNCA DEVE ESCREVER ISSO NO TEXTO. O cliente NÃO pode ver comandos de sistema. Em vez disso:
-  1. Chame a ferramenta 'sendAttachment' silenciosamente usando o gatilho exato 'CATALOGO'.
-  2. Use a tag [SEPARAR] no texto exatamente onde o anexo deveria estar.
-  Exemplo do que você deve gerar: "Aqui está o nosso catálogo: [SEPARAR] E você pode fazer o pedido no link abaixo..."
-- A regra acima vale para os kits: se o prompt disser para enviar um kit, chame a ferramenta 'sendAttachment' com o gatilho do kit (ex: 'KIT_350', 'KIT_850') e use a tag [SEPARAR].
-- NUNCA envie o catálogo ou kits por conta própria se o cliente apenas fizer uma pergunta solta (ex: "Qual o frete?" ou "Qual o pedido mínimo?"). Responda APENAS o que foi perguntado, sem enviar anexos, a não ser que o fluxo de atendimento exija o envio nessa etapa exata.
+MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
+- Para enviar arquivos, catálogos ou fotos, NUNCA coloque links soltos no texto. Em vez disso, chame a ferramenta 'sendAttachment' com o gatilho exato (ex: 'CATALOGO', 'KIT_350').
+- Toda vez que chamar 'sendAttachment', coloque a tag [SEPARAR] no meio do seu texto exatamente no momento em que a imagem/PDF deve aparecer. O sistema usará essa tag para dar uma pausa dramática e enviar o arquivo.
+- NUNCA envie o catálogo ou kits por conta própria se o cliente apenas fizer uma pergunta solta (ex: "Qual o frete?" ou "Qual o pedido mínimo?"). Responda APENAS o que foi perguntado, a não ser que o fluxo de atendimento exija o envio nessa etapa exata.
 - Quando o cliente disser o nome dele, chame OBRIGATORIAMENTE a função 'updateClientName' para salvar o nome dele no sistema.
-- Quando o cliente fizer o pedido, quiser fechar negócio ou a condição de ENCAMINHAMENTO HUMANO for atendida, chame OBRIGATORIAMENTE a função 'transferToHuman' e faça um resumo da conversa na propriedade 'summary'. Isso passará o atendimento definitivamente ao vendedor humano.
+- Quando o cliente fizer o pedido ou topar fechar, chame OBRIGATORIAMENTE a função 'transferToHuman' com um resumo na propriedade 'summary'. Isso passará o atendimento definitivamente ao vendedor.
 - Altere o status do cliente chamando 'changeClientStatus' sempre que a conversa avançar para as etapas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado" ou "Reposição".
-- ATENÇÃO MÁXIMA 1: As respostas de retorno das funções (ex: 'Nome atualizado com sucesso', 'Operação realizada com sucesso') são mensagens internas do sistema para você. NUNCA repita ou mencione essas mensagens para o usuário final. Continue a conversa naturalmente.
-- ATENÇÃO MÁXIMA 2: NUNCA retorne blocos de código JSON ou objetos como {"text": "...", "mediaToSend": []} no seu texto. Responda apenas com texto natural. Use as chamadas de função estritamente através da interface de ferramentas (tool calls) da OpenAI.`;
+- ATENÇÃO: NUNCA mencione as chamadas de sistema, json, gatilhos, tags ou operações internas para o cliente. Comporte-se como um humano natural.`;
 
   prompt += toolInstructions;
 
