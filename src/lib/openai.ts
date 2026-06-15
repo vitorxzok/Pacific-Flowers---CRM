@@ -458,7 +458,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
                     number: phone,
                     mediatype: "document", // can be document or image depending on evolution api mapping, usually document handles pdfs well
                     mimetype: attachment.name?.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
-                    caption: `Aqui está o que você pediu! (${args.triggerName})`,
+                    caption: "",
                     media: attachment.url,
                     fileName: attachment.name || 'arquivo.pdf'
                   };
@@ -466,7 +466,6 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
                   mediaToSend.push(mediaPayload);
                   
                   toolResult = `Anexo '${args.triggerName}' enviado com sucesso para o cliente.`;
-                  finalContent = finalContent + `\n\n[ANEXO ENVIADO: ${args.triggerName}]`;
                   if (args.triggerName?.toUpperCase() === 'CATALOGO') {
                     catalogSentThisTurn = true;
                   }
