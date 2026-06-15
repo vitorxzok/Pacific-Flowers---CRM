@@ -188,8 +188,6 @@ export async function POST(request: Request) {
         // Aplicar fallbacks de prompt caso o atendente atual não tenha
         if (!crmSettings.systemPrompt && fallbackSystemPrompt) crmSettings.systemPrompt = fallbackSystemPrompt;
         if (!crmSettings.businessName && fallbackBusinessName) crmSettings.businessName = fallbackBusinessName;
-        // Se auto reply estiver desabilitado no atendente, tenta herdar o global
-        if (!autoReplyEnabled && fallbackAutoReplyEnabled) autoReplyEnabled = true;
       }
 
       const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada'];
