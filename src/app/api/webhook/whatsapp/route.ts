@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       }
 
       // 3. LÓGICA DE INTELIGÊNCIA ARTIFICIAL (AUTO-REPLY E ANÁLISE SILENCIOSA)
-      const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled, attendant_id').eq('id', clientId).single();
+      const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled, attendant_id, needs_human').eq('id', clientId).single();
       
       let autoReplyEnabled = false;
       let crmSettings: any = null;
@@ -192,11 +192,13 @@ export async function POST(request: Request) {
         // Aplicar fallbacks de prompt caso o atendente atual não tenha
         if (!crmSettings.systemPrompt && fallbackSystemPrompt) crmSettings.systemPrompt = fallbackSystemPrompt;
         if (!crmSettings.businessName && fallbackBusinessName) crmSettings.businessName = fallbackBusinessName;
+        // Aplicar fallback para autoReplyEnabled se o cliente for genérico
+        if (!clientData?.attendant_id && fallbackAutoReplyEnabled) autoReplyEnabled = true;
       }
 
       const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada'];
       const isAutoReplyStage = autoReplyStatuses.includes(clientData?.status);
-      const isAIEnabled = clientData?.ai_enabled !== false;
+      const isAIEnabled = clientData?.ai_enabled !== false && clientData?.needs_human !== true;
 
       // Importar funções do OpenAI
       const { generateAIResponse, analyzeConversationAndMoveStatus } = await import('@/lib/openai');

@@ -11,7 +11,7 @@ export interface HistoryEvent {
 
 export interface Message {
   id: string;
-  sender: 'client' | 'attendant';
+  sender: 'client' | 'attendant' | 'system';
   text: string;
   timestamp: string; // ISO date string
   read?: boolean;
