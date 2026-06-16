@@ -382,16 +382,20 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
           type: 'function',
           function: {
             name: 'transferToHuman',
-            description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, quiser fechar negócio ou pedir para falar com um humano.',
+            description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, enviar pedido ou pedir sugestão.',
             parameters: {
               type: 'object',
               properties: {
                 summary: {
                   type: 'string',
                   description: 'Um resumo breve do atendimento: perfil do cliente (lojista, pessoal), produtos interessados, e motivo da transferência.'
+                },
+                target_status: {
+                  type: 'string',
+                  description: 'O status exato para onde o cliente deve ir ao ser transferido (ex: "Proposta Enviada", "Em Qualificação").'
                 }
               },
-              required: ['summary']
+              required: ['summary', 'target_status']
             }
           }
         },
@@ -544,10 +548,12 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
           let newNotes = clientData?.notes ? clientData.notes + '\n\n' : '';
           newNotes += `--- Resumo da IA Clara ---\n${args.summary}`;
 
-          // Mudar status para 'Qualificado', setar needs_human, e salvar as notas
+          const statusToSet = args.target_status || 'Qualificado';
+
+          // Mudar status para o definido, setar needs_human, e salvar as notas
           await supabase
             .from('clientes')
-            .update({ status: 'Qualificado', needs_human: true, notes: newNotes })
+            .update({ status: statusToSet, needs_human: true, notes: newNotes })
             .eq('id', clientId);
 
           // Inserir um evento no histórico com o resumo da IA
