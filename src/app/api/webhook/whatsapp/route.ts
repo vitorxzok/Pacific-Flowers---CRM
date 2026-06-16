@@ -206,7 +206,7 @@ export async function POST(request: Request) {
       // DEBUG MESSAGE
       await supabase.from('mensagens').insert({
         client_id: clientId,
-        text: `[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, isAutoReplyStage: ${isAutoReplyStage}, fallback: ${fallbackAutoReplyEnabled}, att_id: ${clientData?.attendant_id}`,
+        text: `[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, isAutoReplyStage: ${isAutoReplyStage}, att_id: ${clientData?.attendant_id}`,
         sender: 'system',
         read: true
       });
@@ -354,6 +354,6 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('Erro ao processar webhook:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno do servidor', details: error?.message, stack: error?.stack }, { status: 500 });
   }
 }
