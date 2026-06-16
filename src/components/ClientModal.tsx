@@ -85,6 +85,26 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                 <span className="px-2 py-0.5 rounded-full bg-surface-hover border border-surface-border text-gray-300">
                   {client.status}
                 </span>
+                
+                {/* Badge de IA / Vendedor clicável no Modal */}
+                {client.needs_human ? (
+                  <button 
+                    onClick={() => useCRMStore.getState().toggleNeedsHuman(client.id, false)}
+                    className="bg-green-500 hover:bg-green-600 transition-colors text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg animate-pulse border border-green-400"
+                    title="Clique para retornar atendimento à IA"
+                  >
+                    AGUARDANDO VENDEDOR
+                  </button>
+                ) : (useCRMStore.getState().settings.autoReplyEnabled && client.ai_enabled !== false && !client.needs_human) ? (
+                  <button 
+                    onClick={() => useCRMStore.getState().toggleNeedsHuman(client.id, true)}
+                    className="bg-yellow-500 hover:bg-yellow-600 transition-colors text-black text-[10px] font-bold px-2 py-1 rounded shadow-lg border border-yellow-400"
+                    title="Clique para pausar IA e assumir o atendimento"
+                  >
+                    IA ATENDENDO
+                  </button>
+                ) : null}
+
               </div>
             </div>
           </div>
