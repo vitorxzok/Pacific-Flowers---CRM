@@ -82,8 +82,8 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
               <div className="flex items-center space-x-4 mt-1 text-sm text-gray-400">
                 <span className="flex items-center"><Phone className="w-4 h-4 mr-1" /> {client.phone}</span>
                 <span className="flex items-center"><User className="w-4 h-4 mr-1" /> {client.attendant}</span>
-                <span className="px-2 py-0.5 rounded-full bg-surface-hover border border-surface-border text-gray-300">
-                  {client.status}
+                <span className="flex items-center whitespace-nowrap text-gray-300">
+                  <FileText className="w-4 h-4 mr-1" /> {client.status}
                 </span>
               </div>
             </div>
