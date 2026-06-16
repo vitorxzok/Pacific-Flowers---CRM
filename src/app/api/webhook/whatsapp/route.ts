@@ -106,6 +106,24 @@ export async function POST(request: Request) {
             updateData.attendant_id = sellerId;
           }
 
+          // Se a conversa estava inativa (Finalizado, Perdido, etc) e o cliente mandou mensagem, 
+          // a conversa volta ao início e a IA assume novamente.
+          const inactiveStatuses = ['Finalizado', 'Perdido', 'Reposição', 'Não Fechado'];
+          if (inactiveStatuses.includes(clients[0].status)) {
+            updateData.status = 'Novo';
+            updateData.needs_human = false; // IA volta a atender
+            console.log(`[Webhook] Cliente ${clientId} estava em ${clients[0].status} e enviou mensagem. Retornando para 'Novo' e devolvendo para a IA.`);
+            
+            // Registra no histórico do lead
+            await supabase.from('history_events').insert({
+              client_id: clientId,
+              type: 'status_change',
+              description: `Cliente enviou nova mensagem após encerramento. Status resetado para Novo e IA reativada.`,
+              from_status: clients[0].status,
+              to_status: 'Novo'
+            });
+          }
+
           const { error: updateError } = await supabase
             .from('clientes')
             .update(updateData)
