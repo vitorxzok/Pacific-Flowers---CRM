@@ -12,7 +12,7 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ client, onClick }: KanbanCardProps) {
-  const { settings } = useCRMStore();
+  const { settings, toggleNeedsHuman } = useCRMStore();
   
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('clientId', client.id);
@@ -69,11 +69,19 @@ export function KanbanCard({ client, onClick }: KanbanCardProps) {
     >
       {/* Automations Badge (Human Needed or AI Active) */}
       {client.needs_human ? (
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap animate-pulse border border-green-400">
+        <div 
+          onClick={(e) => { e.stopPropagation(); toggleNeedsHuman(client.id, false); }}
+          className="absolute -top-2 left-1/2 -translate-x-1/2 bg-green-500 hover:bg-green-600 cursor-pointer transition-colors text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap animate-pulse border border-green-400"
+          title="Clique para retornar atendimento à IA"
+        >
           AGUARDANDO VENDEDOR
         </div>
       ) : isAIActive ? (
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap border border-yellow-400">
+        <div 
+          onClick={(e) => { e.stopPropagation(); toggleNeedsHuman(client.id, true); }}
+          className="absolute -top-2 left-1/2 -translate-x-1/2 bg-yellow-500 hover:bg-yellow-600 cursor-pointer transition-colors text-black text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap border border-yellow-400"
+          title="Clique para pausar IA e assumir o atendimento"
+        >
           IA ATENDENDO
         </div>
       ) : null}

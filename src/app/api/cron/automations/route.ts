@@ -53,7 +53,7 @@ export async function GET(request: Request) {
           // Muda o status para 'Em Qualificação' primeiro para evitar disparos duplicados se der timeout
           await supabase
             .from('clientes')
-            .update({ status: 'Em Qualificação', updated_at: new Date().toISOString() })
+            .update({ status: 'Em Qualificação', needs_human: false, updated_at: new Date().toISOString() })
             .eq('id', client.id);
 
           // Gera a resposta da IA forçando um system prompt customizado
@@ -315,16 +315,19 @@ export async function GET(request: Request) {
               }
 
               if (!sentRecently && isBusinessHours) {
-                // Move para Reposição se estiver Finalizado
+                // Move para Reposição se estiver Finalizado e devolve o controle para a IA
                 if (client.status === 'Finalizado') {
-                  await supabase.from('clientes').update({ status: 'Reposição' }).eq('id', client.id);
+                  await supabase.from('clientes').update({ status: 'Reposição', needs_human: false }).eq('id', client.id);
                   await supabase.from('history').insert({
                     client_id: client.id,
                     type: 'status_change',
-                    description: `Status alterado de Finalizado para Reposição automaticamente.`,
+                    description: `Status alterado de Finalizado para Reposição automaticamente. Controle retornado para a IA.`,
                     from_status: 'Finalizado',
                     to_status: 'Reposição'
                   });
+                } else {
+                  // Se já estiver em Reposição, apenas devolve o controle
+                  await supabase.from('clientes').update({ needs_human: false }).eq('id', client.id);
                 }
 
                 // Injeta contexto pra IA e manda mensagem de reposição

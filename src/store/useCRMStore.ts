@@ -19,6 +19,7 @@ interface CRMStore {
   addMessage: (clientId: string, message: { text: string, sender: 'client' | 'attendant' }) => Promise<void>;
   deleteClient: (clientId: string) => Promise<void>;
   updateClientAIEnabled: (clientId: string, enabled: boolean) => Promise<void>;
+  toggleNeedsHuman: (clientId: string, needsHuman: boolean) => Promise<void>;
   updateClientReposicaoDate: (clientId: string, date: string | null) => Promise<void>;
   fetchAdminClients: (password: string) => Promise<boolean>;
   markClientsAsExported: (clientIds: string[]) => Promise<void>;
@@ -356,5 +357,25 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       .eq('id', clientId);
 
     if (error) console.error("Error updating ai_enabled:", error);
+  },
+
+  toggleNeedsHuman: async (clientId: string, needsHuman: boolean) => {
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, needs_human: needsHuman, ...(needsHuman ? {} : { ai_enabled: true }) } : c
+      ),
+    }));
+
+    const updateData: any = { needs_human: needsHuman, updated_at: new Date().toISOString() };
+    if (!needsHuman) {
+      updateData.ai_enabled = true;
+    }
+
+    const { error } = await supabase
+      .from('clientes')
+      .update(updateData)
+      .eq('id', clientId);
+
+    if (error) console.error("Error updating needs_human:", error);
   },
 }));

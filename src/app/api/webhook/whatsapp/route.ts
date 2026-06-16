@@ -60,12 +60,13 @@ export async function POST(request: Request) {
 
       let clientId;
 
-      // 1. Procurar o cliente no banco pelo telefone (ignorando vendedor para evitar UNIQUE constraint error no insert)
+      // 1. Procurar o cliente no banco pelo telefone (limitando ao vendedor correto)
       const last8Digits = phone.slice(-8);
       const { data: clients, error: clientError } = await supabase
         .from('clientes')
         .select('id, phone, status, ai_enabled, attendant_id')
         .ilike('phone', `%${last8Digits}`)
+        .eq('attendant_id', sellerId)
         .limit(1);
 
       if (clientError || !clients || clients.length === 0) {
