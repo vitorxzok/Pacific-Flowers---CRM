@@ -639,8 +639,16 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
       return { text: (responseMessage.content || '') + finalContent, mediaToSend };
     }
 
-  } catch (error) {
-    console.error('Erro ao gerar resposta com OpenAI:', error);
+  } catch (error: any) {
+    console.error('Erro na IA:', error);
+    if (supabase && clientId) {
+      await supabase.from('mensagens').insert({
+        client_id: clientId,
+        text: `[DEBUG AI ERROR] ${error.message}`,
+        sender: 'system',
+        read: true
+      });
+    }
     return { text: null, mediaToSend: [] };
   }
 }

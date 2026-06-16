@@ -341,13 +341,18 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     // Optimistic UI update
     set((state) => ({
       clients: state.clients.map((c) =>
-        c.id === clientId ? { ...c, ai_enabled: enabled } : c
+        c.id === clientId ? { ...c, ai_enabled: enabled, ...(enabled ? { needs_human: false } : {}) } : c
       ),
     }));
 
+    const updateData: any = { ai_enabled: enabled, updated_at: new Date().toISOString() };
+    if (enabled) {
+      updateData.needs_human = false;
+    }
+
     const { error } = await supabase
       .from('clientes')
-      .update({ ai_enabled: enabled, updated_at: new Date().toISOString() })
+      .update(updateData)
       .eq('id', clientId);
 
     if (error) console.error("Error updating ai_enabled:", error);

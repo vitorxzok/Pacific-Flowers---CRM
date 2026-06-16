@@ -203,6 +203,14 @@ export async function POST(request: Request) {
       // Importar funções do OpenAI
       const { generateAIResponse, analyzeConversationAndMoveStatus } = await import('@/lib/openai');
 
+      // DEBUG MESSAGE
+      await supabase.from('mensagens').insert({
+        client_id: clientId,
+        text: `[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, isAutoReplyStage: ${isAutoReplyStage}, fallback: ${fallbackAutoReplyEnabled}, att_id: ${clientData?.attendant_id}`,
+        sender: 'system',
+        read: true
+      });
+
       if (!isFromMe && autoReplyEnabled && isAIEnabled && isAutoReplyStage) {
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
