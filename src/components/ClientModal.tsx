@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Client } from '@/types';
-import { X, MessageCircle, Clock, FileText, Send, User, Phone, Trash2 } from 'lucide-react';
+import { X, MessageCircle, Clock, FileText, Send, User, Phone, Trash2, Bot } from 'lucide-react';
 import { useCRMStore } from '@/store/useCRMStore';
 import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -85,30 +85,32 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                 <span className="px-2 py-0.5 rounded-full bg-surface-hover border border-surface-border text-gray-300">
                   {client.status}
                 </span>
-                
-                {/* Badge de IA / Vendedor clicável no Modal */}
-                {client.needs_human ? (
-                  <button 
-                    onClick={() => useCRMStore.getState().toggleNeedsHuman(client.id, false)}
-                    className="bg-green-500 hover:bg-green-600 transition-colors text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg animate-pulse border border-green-400"
-                    title="Clique para retornar atendimento à IA"
-                  >
-                    AGUARDANDO VENDEDOR
-                  </button>
-                ) : (useCRMStore.getState().settings.autoReplyEnabled && client.ai_enabled !== false && !client.needs_human) ? (
-                  <button 
-                    onClick={() => useCRMStore.getState().toggleNeedsHuman(client.id, true)}
-                    className="bg-yellow-500 hover:bg-yellow-600 transition-colors text-black text-[10px] font-bold px-2 py-1 rounded shadow-lg border border-yellow-400"
-                    title="Clique para pausar IA e assumir o atendimento"
-                  >
-                    IA ATENDENDO
-                  </button>
-                ) : null}
-
               </div>
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            
+            {/* Badge de IA / Vendedor clicável no Modal */}
+            {client.needs_human ? (
+              <button 
+                onClick={() => useCRMStore.getState().toggleNeedsHuman(client.id, false)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-green-500/50 bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-semibold transition-colors animate-pulse"
+                title="Clique para retornar atendimento à IA"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Aguardando Vendedor</span>
+              </button>
+            ) : (useCRMStore.getState().settings.autoReplyEnabled && client.ai_enabled !== false && !client.needs_human) ? (
+              <button 
+                onClick={() => useCRMStore.getState().toggleNeedsHuman(client.id, true)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-yellow-500/50 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 text-xs font-semibold transition-colors"
+                title="Clique para pausar IA e assumir o atendimento"
+              >
+                <Bot className="w-3.5 h-3.5" />
+                <span>IA Atendendo</span>
+              </button>
+            ) : null}
+
             {/* Toggle IA */}
             <div className="flex items-center space-x-2 bg-surface-hover px-3 py-1.5 rounded-lg border border-surface-border">
               <span className="text-xs font-semibold text-gray-300">
