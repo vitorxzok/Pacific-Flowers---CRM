@@ -17,14 +17,27 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Erro ao buscar configurações dos usuários' }, { status: 500 });
     }
 
-    // Mapa de configurações por attendant_id
+    // Mapa de configurações por attendant_id e fallback global
     const settingsByAttendant: Record<string, any> = {};
+    let fallbackSettings: any = {
+      auto_reply_enabled: false,
+      minutes_without_response: 15,
+      followup_interval_hours: 24,
+      insistencia_max_repetitions: 3,
+      insistencia_days_interval: 2
+    };
+
     for (const u of usersData.users) {
-      settingsByAttendant[u.id] = u.user_metadata?.crm_settings || {
-        auto_reply_enabled: false,
-        minutes_without_response: 15,
-        followup_interval_hours: 24
-      };
+      const uSettings = u.user_metadata?.crm_settings;
+      if (uSettings) {
+        settingsByAttendant[u.id] = uSettings;
+        // Pega qualquer configuração válida como fallback para clientes sem atendente
+        if (uSettings.auto_reply_enabled === true) fallbackSettings.auto_reply_enabled = true;
+        if (uSettings.minutes_without_response) fallbackSettings.minutes_without_response = uSettings.minutes_without_response;
+        if (uSettings.followup_interval_hours) fallbackSettings.followup_interval_hours = uSettings.followup_interval_hours;
+        if (uSettings.insistencia_max_repetitions) fallbackSettings.insistencia_max_repetitions = uSettings.insistencia_max_repetitions;
+        if (uSettings.insistencia_days_interval) fallbackSettings.insistencia_days_interval = uSettings.insistencia_days_interval;
+      }
     }
 
     // Resultados das execuções
@@ -109,10 +122,7 @@ export async function GET(request: Request) {
     if (clientesInativos && clientesInativos.length > 0) {
       for (const client of clientesInativos) {
         try {
-          const clientSettings = settingsByAttendant[client.attendant_id] || {
-            auto_reply_enabled: false,
-            minutes_without_response: 15
-          };
+          const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
           
           if (!clientSettings.auto_reply_enabled) {
             continue; // Pula se a resposta rápida estiver desativada para este atendente
@@ -180,12 +190,7 @@ export async function GET(request: Request) {
         if (clientesInsistencia && clientesInsistencia.length > 0) {
           for (const client of clientesInsistencia) {
             try {
-              const clientSettings = settingsByAttendant[client.attendant_id] || {
-                auto_reply_enabled: false,
-                followup_interval_hours: 24,
-                insistencia_max_repetitions: 3,
-                insistencia_days_interval: 2
-              };
+              const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
               
               if (!clientSettings.auto_reply_enabled) {
                 continue; // Pula se a resposta rápida/insistência estiver desativada
