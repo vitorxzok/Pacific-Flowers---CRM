@@ -153,12 +153,17 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       is_exported: c.is_exported || false,
       connected_instance: c.connected_instance || undefined,
       connected_instance_phone: c.connected_instance ? instancesMap.get(c.connected_instance) : undefined,
-      messages: c.mensagens ? c.mensagens.map((m: any) => ({
+      messages: c.mensagens ? c.mensagens.sort((a: any, b: any) => {
+        const timeA = new Date(a.created_at || a.timestamp || 0).getTime();
+        const timeB = new Date(b.created_at || b.timestamp || 0).getTime();
+        return timeA - timeB;
+      }).map((m: any) => ({
         id: m.id,
         text: m.text,
         sender: m.sender === 'client' ? 'client' : m.sender,
-        timestamp: m.timestamp || new Date().toISOString(),
-        read: m.read || true,
+        timestamp: m.created_at || m.timestamp || new Date().toISOString(),
+        media_url: m.media_url,
+        read: m.read !== false,
       })) : [],
       history: c.mensagens ? c.mensagens.map((m: any) => ({
         id: m.id,

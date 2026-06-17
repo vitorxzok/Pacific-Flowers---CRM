@@ -148,6 +148,34 @@ export default function AdminPage() {
     }
   }, [settings, localSettings]);
 
+  // Subscrição Supabase Realtime para atualizar o admin
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const supabase = createClient();
+    const channel = supabase
+      .channel('admin_realtime_main')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'clientes' },
+        async () => {
+          await fetchAdminClients(password);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'mensagens' },
+        async () => {
+          await fetchAdminClients(password);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated, password, fetchAdminClients]);
+
   const saveSettingsToServer = async (settingsToSave: any) => {
     const toastId = toast.loading('Salvando configurações globalmente...');
     try {

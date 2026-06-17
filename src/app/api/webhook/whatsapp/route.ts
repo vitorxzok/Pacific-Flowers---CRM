@@ -62,12 +62,21 @@ export async function POST(request: Request) {
 
       // 1. Procurar o cliente no banco pelo telefone (limitando ao vendedor correto)
       const last8Digits = phone.slice(-8);
-      const { data: clients, error: clientError } = await supabase
+      const last8Formatted = `${last8Digits.slice(0,4)}-${last8Digits.slice(4)}`;
+      
+      let clientQuery = supabase
         .from('clientes')
-        .select('id, phone, status, ai_enabled, attendant_id')
-        .ilike('phone', `%${last8Digits}`)
-        .eq('attendant_id', sellerId)
+        .select('id, phone, status, ai_enabled, attendant_id, needs_human')
+        .or(`phone.ilike.%${last8Digits},phone.ilike.%${last8Formatted}`)
         .limit(1);
+
+      if (sellerId) {
+        clientQuery = clientQuery.eq('attendant_id', sellerId);
+      } else {
+        clientQuery = clientQuery.is('attendant_id', null);
+      }
+
+      const { data: clients, error: clientError } = await clientQuery;
 
       if (clientError || !clients || clients.length === 0) {
         console.warn(`Cliente não encontrado para o telefone: ${phone} (Vendedor: ${sellerId}). Criando novo lead...`);
