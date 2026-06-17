@@ -360,6 +360,10 @@ export async function POST(request: Request) {
       const instanceName = body.instance;
       console.log(`[Webhook] Evento de conexão recebido para ${instanceName}: ${state}`);
       
+      if (instanceName && state) {
+        await supabase.from('whatsapp_instances').update({ status: state }).eq('instance_name', instanceName);
+      }
+
       if (state === 'close' || state === 'disconnected') {
         const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL || '';
         const apiKey = process.env.EVOLUTION_API_KEY || process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || '';

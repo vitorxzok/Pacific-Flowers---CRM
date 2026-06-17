@@ -131,6 +131,9 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       return;
     }
 
+    const { data: instancesData } = await supabase.from('whatsapp_instances').select('instance_name, phone_number');
+    const instancesMap = new Map(instancesData?.map(i => [i.instance_name, i.phone_number]) || []);
+
     const formattedClients: Client[] = data.map((c: any) => ({
       id: c.id,
       name: c.name || 'Desconhecido',
@@ -149,6 +152,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       needs_human: c.needs_human,
       is_exported: c.is_exported || false,
       connected_instance: c.connected_instance || undefined,
+      connected_instance_phone: c.connected_instance ? instancesMap.get(c.connected_instance) : undefined,
       messages: c.mensagens ? c.mensagens.map((m: any) => ({
         id: m.id,
         text: m.text,
@@ -189,7 +193,16 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       if (!response.ok) return false;
       
       const { clients } = await response.json();
-      set({ clients });
+
+      const { data: instancesData } = await supabase.from('whatsapp_instances').select('instance_name, phone_number');
+      const instancesMap = new Map(instancesData?.map(i => [i.instance_name, i.phone_number]) || []);
+
+      const enhancedClients = clients.map((c: any) => ({
+        ...c,
+        connected_instance_phone: c.connected_instance ? instancesMap.get(c.connected_instance) : undefined
+      }));
+
+      set({ clients: enhancedClients });
       return true;
     } catch (error) {
       console.error("Erro ao buscar clientes admin:", error);

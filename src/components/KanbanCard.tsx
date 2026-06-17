@@ -122,8 +122,8 @@ export function KanbanCard({ client, onClick }: KanbanCardProps) {
             <span className="truncate">{client.phone}</span>
           </div>
           {client.connected_instance && (
-            <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-[4px] text-[9px] font-bold">
-              Slot {client.connected_instance.split('_').pop()}
+            <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-[4px] text-[9px] font-bold" title={`Instância: ${client.connected_instance}`}>
+              WhatsApp: {client.connected_instance_phone || `Slot ${client.connected_instance.split('_').pop()}`}
             </span>
           )}
         </div>

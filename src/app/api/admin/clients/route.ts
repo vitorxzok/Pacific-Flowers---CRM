@@ -35,6 +35,13 @@ export async function GET(request: Request) {
       avatarUrl: undefined,
       notes: c.notes || '',
       ai_enabled: c.ai_enabled !== false,
+      connected_instance: c.connected_instance || undefined,
+      storeName: c.store_name || '',
+      purchaseValue: c.purchase_value ? Number(c.purchase_value) : undefined,
+      purchaseDate: c.purchase_date || undefined,
+      insistencia_count: c.insistencia_count || 0,
+      needs_human: c.needs_human,
+      is_exported: c.is_exported || false,
       messages: c.mensagens ? c.mensagens.map((m: any) => ({
         id: m.id,
         text: m.text,

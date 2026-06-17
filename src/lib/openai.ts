@@ -277,7 +277,7 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
 export async function generateAIResponse(clientId: string, supabase: any, contextOverride?: string, settings?: any) {
   let mediaToSend: any[] = [];
   try {
-    const { data: clientInfo } = await supabase.from('clientes').select('phone, attendant_id, status').eq('id', clientId).single();
+    const { data: clientInfo } = await supabase.from('clientes').select('name, phone, attendant_id, status').eq('id', clientId).single();
 
     // 1. Obter o histórico de mensagens
     const { data: recentMessages, error: messagesError } = await supabase
@@ -320,7 +320,9 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     if (clientInfo && clientInfo.status) {
       openAiMessages.push({
         role: 'system',
-        content: `[CONTEXTO INTERNO] O status atual deste cliente no CRM é: "${clientInfo.status}".\nSe o status for "Em Qualificação", significa que você JÁ ABORDOU e JÁ ENVIOU o catálogo. Foque em entender as necessidades, responder dúvidas e conduzir para a venda ou passar para humano, MAS NÃO repita a mensagem inicial de envio de catálogo.`
+        content: `[CONTEXTO INTERNO] O status atual deste cliente no CRM é: "${clientInfo.status}".
+Nome do cliente: "${clientInfo.name || 'Desconhecido'}". Se for 'Desconhecido' ou 'Lead WhatsApp...', pergunte o nome do cliente de forma natural, caso ainda não saiba. Se já souber o nome, chame-o pelo nome.
+Se o status for "Em Qualificação", significa que você JÁ ABORDOU e JÁ ENVIOU o catálogo. Foque em entender as necessidades, responder dúvidas e conduzir para a venda ou passar para humano, MAS NÃO repita a mensagem inicial de envio de catálogo.`
       });
     }
 
