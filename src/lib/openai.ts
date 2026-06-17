@@ -280,17 +280,20 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     const { data: clientInfo } = await supabase.from('clientes').select('phone, attendant_id, status').eq('id', clientId).single();
 
     // 1. Obter o histórico de mensagens
-    const { data: messages, error: messagesError } = await supabase
+    const { data: recentMessages, error: messagesError } = await supabase
       .from('mensagens')
       .select('text, sender, timestamp')
       .eq('client_id', clientId)
-      .order('timestamp', { ascending: true })
+      .order('timestamp', { ascending: false })
       .limit(20);
 
     if (messagesError) throw messagesError;
 
     // Se não houver mensagens (estranho, pois o webhook acabou de inserir), não faz nada
-    if (!messages || messages.length === 0) return null;
+    if (!recentMessages || recentMessages.length === 0) return null;
+
+    // Inverter para ficar na ordem cronológica correta (mais antigas primeiro)
+    const messages = recentMessages.reverse();
 
     // Converter para o formato da OpenAI
     let openAiMessages = [
