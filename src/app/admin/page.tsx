@@ -776,7 +776,7 @@ REGRAS FINAIS:
                           <div className="flex flex-wrap gap-2 mt-2">
                             {user.instances.map((inst: any) => (
                               <span key={inst.name} className={`px-2 py-1 rounded text-xs font-medium border ${inst.status === 'open' ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'}`}>
-                                Slot {inst.name.split('_').pop()} • {inst.phone || 'Conectando...'}
+                                Slot {inst.name.split('_').pop()} • {inst.phone || (inst.status === 'open' ? 'Conectado' : 'Conectando...')}
                               </span>
                             ))}
                           </div>

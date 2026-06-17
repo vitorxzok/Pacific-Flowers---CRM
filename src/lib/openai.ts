@@ -104,10 +104,8 @@ Após enviar a política perguntar:
 
 Essas condições atendem o que você precisa?
 
-Se o cliente responder que não:
-
-Sem problema 😊
-Com qual valor você gostaria de trabalhar, para que eu monte uma sugestão de kit pra você?
+Se o cliente responder que não, pedir desconto no produto, ou quiser negociar:
+Chame a ferramenta 'transferToHuman' IMEDIATAMENTE para que um vendedor humano assuma a negociação.
 
 ---
 
@@ -279,6 +277,8 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
 export async function generateAIResponse(clientId: string, supabase: any, contextOverride?: string, settings?: any) {
   let mediaToSend: any[] = [];
   try {
+    const { data: clientInfo } = await supabase.from('clientes').select('phone, attendant_id, status').eq('id', clientId).single();
+
     // 1. Obter o histórico de mensagens
     const { data: messages, error: messagesError } = await supabase
       .from('mensagens')
@@ -311,6 +311,13 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
       openAiMessages.push({
         role: 'system',
         content: "Atenção: Já se passaram algumas horas sem resposta. Sua missão agora é tentar retomar a conversa de forma natural e amigável, seguindo rigorosamente sua identidade e regras do prompt principal."
+      });
+    }
+
+    if (clientInfo && clientInfo.status) {
+      openAiMessages.push({
+        role: 'system',
+        content: `[CONTEXTO INTERNO] O status atual deste cliente no CRM é: "${clientInfo.status}".\nSe o status for "Em Qualificação", significa que você JÁ ABORDOU e JÁ ENVIOU o catálogo. Foque em entender as necessidades, responder dúvidas e conduzir para a venda ou passar para humano, MAS NÃO repita a mensagem inicial de envio de catálogo.`
       });
     }
 
@@ -428,8 +435,6 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
           const attachment = attachments.find((a: any) => normalizeStr(a.trigger) === targetTrigger);
           
           if (attachment && attachment.url) {
-            // Obter phone e instanceName do cliente
-            const { data: clientInfo } = await supabase.from('clientes').select('phone, attendant_id').eq('id', clientId).single();
             if (clientInfo && clientInfo.phone && clientInfo.attendant_id) {
               const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL || '';
               const apiKey = process.env.EVOLUTION_API_KEY || process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || '';
