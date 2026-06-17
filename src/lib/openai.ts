@@ -429,7 +429,6 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
     let responseMessage = response.choices[0].message;
     let finalContent = '';
     let catalogSentThisTurn = false;
-    let currentMediaToSend: any[] = []; // Local array instead of global
 
     // Processar Chamadas de Ferramenta (Tool Calls)
     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
@@ -473,9 +472,9 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
                   };
                   
                   // Add to local array ONLY IF NOT ALREADY ADDED (prevent duplicates from AI calling tool twice)
-                  const alreadyAdded = currentMediaToSend.some(m => m.media === mediaPayload.media);
+                  const alreadyAdded = mediaToSend.some(m => m.media === mediaPayload.media);
                   if (!alreadyAdded) {
-                    currentMediaToSend.push(mediaPayload);
+                    mediaToSend.push(mediaPayload);
                   }
                   
                   toolResult = `Anexo '${args.triggerName}' enviado com sucesso para o cliente.`;
