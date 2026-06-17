@@ -774,8 +774,8 @@ REGRAS FINAIS:
                         <p className="text-xs text-gray-400 mb-1">{user.email}</p>
                         {user.instances && user.instances.length > 0 ? (
                           <div className="flex flex-wrap gap-2 mt-2">
-                            {user.instances.map((inst: any) => (
-                              <span key={inst.name} className={`px-2 py-1 rounded text-xs font-medium border ${inst.status === 'open' ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'}`}>
+                            {user.instances.filter((inst: any) => /_\d+$/.test(inst.name)).map((inst: any, idx: number) => (
+                              <span key={idx} className={`px-2 py-1 rounded text-xs font-medium border ${inst.status === 'open' ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'}`}>
                                 Slot {inst.name.split('_').pop()} • {inst.phone || (inst.status === 'open' ? 'Conectado' : 'Conectando...')}
                               </span>
                             ))}

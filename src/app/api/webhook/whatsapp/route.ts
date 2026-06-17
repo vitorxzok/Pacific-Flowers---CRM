@@ -221,8 +221,6 @@ export async function POST(request: Request) {
         if (!clientData?.attendant_id && fallbackAutoReplyEnabled) autoReplyEnabled = true;
       }
 
-      const autoReplyStatuses = ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada'];
-      const isAutoReplyStage = autoReplyStatuses.includes(clientData?.status);
       const isAIEnabled = clientData?.ai_enabled !== false && clientData?.needs_human !== true;
 
       // Importar funções do OpenAI
@@ -231,12 +229,12 @@ export async function POST(request: Request) {
       // DEBUG MESSAGE
       await supabase.from('mensagens').insert({
         client_id: clientId,
-        text: `[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, isAutoReplyStage: ${isAutoReplyStage}, att_id: ${clientData?.attendant_id}`,
+        text: `[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, att_id: ${clientData?.attendant_id}`,
         sender: 'system',
         read: true
       });
 
-      if (!isFromMe && autoReplyEnabled && isAIEnabled && isAutoReplyStage) {
+      if (!isFromMe && autoReplyEnabled && isAIEnabled) {
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
         const aiResponse = await generateAIResponse(clientId, supabase, undefined, crmSettings);
@@ -345,7 +343,7 @@ export async function POST(request: Request) {
             }
           }
         }
-      } else if (!isAutoReplyStage || !isAIEnabled) {
+      } else if (!isAIEnabled) {
         // --- FLUXO 2: ANÁLISE SILENCIOSA DO FUNIL (QUANDO HUMANO ASSUMIU OU IA DESATIVADA) ---
         // A IA apenas lerá o contexto para ver se avança o Kanban (Apresentação, Negociação, etc.)
         // Executamos de forma assíncrona para não travar o webhook
