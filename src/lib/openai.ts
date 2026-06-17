@@ -269,8 +269,7 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
 - Altere o status do cliente chamando 'changeClientStatus' sempre que a conversa avançar para as etapas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado" ou "Reposição".
 - MÍDIAS RECEBIDAS: Se o cliente enviar um áudio ("[Áudio]"), foto ("[Imagem]"), vídeo ("[Vídeo]"), documento ("[Documento]") ou figurinha ("[Figurinha]"), você DEVE informar educadamente que é uma inteligência artificial e que no momento só consegue compreender mensagens de texto, pedindo para ele escrever o que precisa.
 - ATENÇÃO: NUNCA mencione as chamadas de sistema, json, gatilhos, tags ou operações internas para o cliente. Comporte-se como um humano natural.`;
-
-  prompt += toolInstructions;
+  }
 
   if (settings && settings.businessName && settings.businessName.trim() !== '') {
     prompt += `\n\n--- INFORMAÃ‡ÃƒO IMPORTANTE ---\nVocÃª Ã© o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
