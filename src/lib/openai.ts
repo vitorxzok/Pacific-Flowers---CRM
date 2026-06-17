@@ -320,9 +320,13 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     if (clientInfo && clientInfo.status) {
       openAiMessages.push({
         role: 'system',
-        content: `[CONTEXTO INTERNO] O status atual deste cliente no CRM é: "${clientInfo.status}".
-Nome do cliente: "${clientInfo.name || 'Desconhecido'}". Se for 'Desconhecido' ou 'Lead WhatsApp...', pergunte o nome do cliente de forma natural, caso ainda não saiba. Se já souber o nome, chame-o pelo nome.
-Se o status for "Em Qualificação", significa que você JÁ ABORDOU e JÁ ENVIOU o catálogo. Foque em entender as necessidades, responder dúvidas e conduzir para a venda ou passar para humano, MAS NÃO repita a mensagem inicial de envio de catálogo.`
+        content: `[CONTEXTO INTERNO OBRIGATÓRIO]
+Status atual no CRM: "${clientInfo.status}".
+Nome do cliente no CRM: "${clientInfo.name || 'Desconhecido'}".
+
+REGRA 1 - NOME: Se o nome for 'Desconhecido' ou começar com 'Lead WhatsApp', VOCÊ DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigável na sua resposta. NUNCA ignore isso. Se já souber o nome (diferente de Desconhecido ou Lead WhatsApp), chame-o pelo nome.
+REGRA 2 - CATÁLOGO: Se o status for "Em Qualificação", significa que você JÁ ABORDOU e JÁ ENVIOU o catálogo no passado. Foque no atendimento e em responder dúvidas. MAS se ele PEDIR o catálogo novamente, envie usando a ferramenta.
+REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
       });
     }
 

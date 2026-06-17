@@ -84,7 +84,8 @@ export async function POST(request: Request) {
             url: webhookUrl,
             webhookByEvents: false,
             events: [
-              "MESSAGES_UPSERT"
+              "MESSAGES_UPSERT",
+              "CONNECTION_UPDATE"
             ]
           }
         }),

@@ -43,7 +43,10 @@ export async function GET(request: Request) {
 
     // data é um array de instâncias
     // filtrar apenas as instâncias que pertencem a este usuário
-    const userInstances = (Array.isArray(data) ? data : []).filter((inst: any) => inst.instanceName?.startsWith(`user_${userId}_`));
+    const userInstances = (Array.isArray(data) ? data : []).filter((inst: any) => {
+      const name = inst.name || inst.instanceName || '';
+      return name.startsWith(`user_${userId}_`) || name === `user_${userId}`;
+    });
 
     // Mapear para um formato fácil de usar no frontend
     const instancesData = await Promise.all(userInstances.map(async (inst: any) => {
@@ -58,19 +61,20 @@ export async function GET(request: Request) {
       // Atualiza o whatsapp_number no banco
       const phoneNumber = owner ? owner.split('@')[0] : '';
       
-      const slotMatch = inst.instanceName.match(/user_.*_(\d+)$/);
+      const actualInstanceName = inst.name || inst.instanceName || '';
+      const slotMatch = actualInstanceName.match(/user_.*_(\d+)$/);
       const slotId = slotMatch ? parseInt(slotMatch[1], 10) : 1;
 
       // Update whatsapp_instances table
-      const { data: existingInstance } = await supabase.from('whatsapp_instances').select('id').eq('instance_name', inst.instanceName).single();
+      const { data: existingInstance } = await supabase.from('whatsapp_instances').select('id').eq('instance_name', actualInstanceName).single();
       if (existingInstance) {
         await supabase.from('whatsapp_instances').update({ status: state, phone_number: phoneNumber || null }).eq('id', existingInstance.id);
       } else {
-        await supabase.from('whatsapp_instances').insert({ user_id: userId, instance_name: inst.instanceName, status: state, phone_number: phoneNumber || null });
+        await supabase.from('whatsapp_instances').insert({ user_id: userId, instance_name: actualInstanceName, status: state, phone_number: phoneNumber || null });
       }
 
       return {
-        instanceName: inst.instanceName,
+        instanceName: actualInstanceName,
         slotId,
         state,
         owner,
