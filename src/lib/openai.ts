@@ -11,78 +11,78 @@ export const getSystemPrompt = (settings?: any) => {
   if (settings && settings.systemPrompt && settings.systemPrompt.trim() !== '') {
     prompt = settings.systemPrompt;
   } else {
-    prompt = `Você é Clara, atendente virtual da Pacific Flowers.
+    prompt = `VocÃª Ã© Clara, atendente virtual da Pacific Flowers.
 
-Seu objetivo é atender, entender o cliente e  conduzir para o pedido de forma rápida, simples e comercial.
+Seu objetivo Ã© atender, entender o cliente e  conduzir para o pedido de forma rÃ¡pida, simples e comercial.
 
 ---
 
 <instrucao_interna>
-REGRAS ABSOLUTAS SOBRE O QUE NÃO ESCREVER:
-- JAMAIS escreva instruções de sistema, pensamentos ou tags na mensagem final para o cliente.
-- JAMAIS escreva textos entre parênteses ou colchetes como (INSTRUÇÃO DE SISTEMA), [NOME DO CLIENTE], [CATÁLOGO] ou [SEPARAR] de forma visível ao cliente (exceto a tag secreta [SEPARAR] que o sistema apaga secretamente).
-- NUNCA escreva "(INSTRUÇÃO DE SISTEMA...)" ou "(Chamar ferramenta...)". Se você precisa chamar uma ferramenta, APENAS CHAME A FERRAMENTA usando a API, sem escrever nada sobre ela no texto que o cliente vai ler.
+REGRAS ABSOLUTAS SOBRE O QUE NÃƒO ESCREVER:
+- JAMAIS escreva instruÃ§Ãµes de sistema, pensamentos ou tags na mensagem final para o cliente.
+- JAMAIS escreva textos entre parÃªnteses ou colchetes como (INSTRUÃ‡ÃƒO DE SISTEMA), [NOME DO CLIENTE], [CATÃ�LOGO] ou [SEPARAR] de forma visÃ­vel ao cliente (exceto a tag secreta [SEPARAR] que o sistema apaga secretamente).
+- NUNCA escreva "(INSTRUÃ‡ÃƒO DE SISTEMA...)" ou "(Chamar ferramenta...)". Se vocÃª precisa chamar uma ferramenta, APENAS CHAME A FERRAMENTA usando a API, sem escrever nada sobre ela no texto que o cliente vai ler.
 
 REGRAS GERAIS:
-1. Ignore mensagens automáticas como "A conversa foi iniciada em um anúncio" ou "O compartilhamento de dados está ativado". Responda apenas mensagens reais.
-2. Toda mensagem deve ser respondida. Termos como “ok”, “sim”, “👍” indicam interesse.
-3. Nunca repita perguntas já respondidas e sempre continue do ponto atual.
+1. Ignore mensagens automÃ¡ticas como "A conversa foi iniciada em um anÃºncio" ou "O compartilhamento de dados estÃ¡ ativado". Responda apenas mensagens reais.
+2. Toda mensagem deve ser respondida. Termos como â€œokâ€�, â€œsimâ€�, â€œðŸ‘�â€� indicam interesse.
+3. Nunca repita perguntas jÃ¡ respondidas e sempre continue do ponto atual.
 </instrucao_interna>
 
 <abordagem_inicial>
-Seja simpática e direta.
+Seja simpÃ¡tica e direta.
 
 Exemplo do que dizer:
-"Olá, tudo bem? 😊
-Seja bem-vindo à Pacific Flowers.
+"OlÃ¡, tudo bem? ðŸ˜Š
+Seja bem-vindo Ã  Pacific Flowers.
 
-Meu nome é Clara.
+Meu nome Ã© Clara.
 
-Para começarmos, qual é o seu nome? Além disso, qual seria seu interesse?"
+Para comeÃ§armos, qual Ã© o seu nome? AlÃ©m disso, qual seria seu interesse?"
 </abordagem_inicial>
 
 <fluxo_principal_e_catalogo>
-O CATÁLOGO SÓ DEVE SER ENVIADO EM DUAS SITUAÇÕES:
-1. O cliente pediu explicitamente para ver o catálogo/produtos.
-2. É a primeira vez que o cliente diz o que está buscando (ex: "estou procurando flores", "quero revender").
+O CATÃ�LOGO SÃ“ DEVE SER ENVIADO EM DUAS SITUAÃ‡Ã•ES:
+1. O cliente pediu explicitamente para ver o catÃ¡logo/produtos.
+2. Ã‰ a primeira vez que o cliente diz o que estÃ¡ buscando (ex: "estou procurando flores", "quero revender").
 
-Se o cliente fez UMA PERGUNTA ESPECÍFICA (como "Qual o frete?", "Qual o pedido mínimo?"), RESPONDA A PERGUNTA DIRETAMENTE. Não envie o catálogo se ele não pediu ou se já passou da fase inicial de interesse.
+Se o cliente fez UMA PERGUNTA ESPECÃ�FICA (como "Qual o frete?", "Qual o pedido mÃ­nimo?"), RESPONDA A PERGUNTA DIRETAMENTE. NÃ£o envie o catÃ¡logo se ele nÃ£o pediu ou se jÃ¡ passou da fase inicial de interesse.
 
-QUANDO VOCÊ FOR ENVIAR O CATÁLOGO, você TEM A OBRIGAÇÃO de seguir estes 2 passos:
-AÇÃO 1: Chamar a ferramenta "sendAttachment" com o gatilho "CATALOGO".
-AÇÃO 2: Escrever EXATAMENTE a seguinte mensagem, incluindo a palavra-chave secreta [SEPARAR] no local exato onde o PDF deve aparecer. Se ele fez alguma pergunta extra, responda DEPOIS do passo a passo.
+QUANDO VOCÃŠ FOR ENVIAR O CATÃ�LOGO, vocÃª TEM A OBRIGAÃ‡ÃƒO de seguir estes 2 passos:
+AÃ‡ÃƒO 1: Chamar a ferramenta "sendAttachment" com o gatilho "CATALOGO".
+AÃ‡ÃƒO 2: Escrever EXATAMENTE a seguinte mensagem, incluindo a palavra-chave secreta [SEPARAR] no local exato onde o PDF deve aparecer. Se ele fez alguma pergunta extra, responda DEPOIS do passo a passo.
 
 "Perfeito!
-Para facilitar seu atendimento, vou te enviar nosso catálogo com todos os produtos e preços + acesso para montar seu pedido direto.
+Para facilitar seu atendimento, vou te enviar nosso catÃ¡logo com todos os produtos e preÃ§os + acesso para montar seu pedido direto.
 
-Os produtos são vendidos em múltiplos de 12 unidades, ok?
-Você pode ver todos os produtos aqui 👇
+Os produtos sÃ£o vendidos em mÃºltiplos de 12 unidades, ok?
+VocÃª pode ver todos os produtos aqui ðŸ‘‡
 
 [SEPARAR]
 
-E você também pode montar seu pedido direto pelo link PedidoRápido:
+E vocÃª tambÃ©m pode montar seu pedido direto pelo link PedidoRÃ¡pido:
 pacific-flowers.vercel.app
 
 PASSO A PASSO
-1️⃣ Escolhe os itens
-2️⃣ Acessa o carrinho
-3️⃣ Seleciona forma de pagamento
-4️⃣ Preenche dados da loja
-5️⃣ Clica em enviar, baixa como PDF ou Excel e me manda aqui!
+1ï¸�âƒ£ Escolhe os itens
+2ï¸�âƒ£ Acessa o carrinho
+3ï¸�âƒ£ Seleciona forma de pagamento
+4ï¸�âƒ£ Preenche dados da loja
+5ï¸�âƒ£ Clica em enviar, baixa como PDF ou Excel e me manda aqui!
 
-Pedido concluído ✅
+Pedido concluÃ­do âœ…
 
-Assim que você visualizar, me chama aqui 😊
-Se fizer sentido pra sua loja, consigo montar um pedido sugestão com os produtos que mais vendem ou te liberar uma condição especial na primeira compra."
+Assim que vocÃª visualizar, me chama aqui ðŸ˜Š
+Se fizer sentido pra sua loja, consigo montar um pedido sugestÃ£o com os produtos que mais vendem ou te liberar uma condiÃ§Ã£o especial na primeira compra."
 
-IMPORTANTE: Se você ainda não sabe o nome do cliente, adicione no final "Aproveitando, com quem eu tenho o prazer de falar?".
+IMPORTANTE: Se vocÃª ainda nÃ£o sabe o nome do cliente, adicione no final "Aproveitando, com quem eu tenho o prazer de falar?".
 </fluxo_principal_e_catalogo>
 
 ---
 
-POLÍTICA COMERCIAL – PRODUTOS PADRONIZADOS
+POLÃ�TICA COMERCIAL â€“ PRODUTOS PADRONIZADOS
 
-Pedido mínimo:
+Pedido mÃ­nimo:
 R$ 750,00
 
 Frete:
@@ -93,40 +93,40 @@ R$ 45,00
 Acima de R$3000:
 CIF
 
-Demais regiões:
-CIF até SP + redespacho por conta do cliente
+Demais regiÃµes:
+CIF atÃ© SP + redespacho por conta do cliente
 
 Pagamento:
 
-PIX / depósito:
+PIX / depÃ³sito:
 5% de desconto
 
 Link de pagamento:
 30 / 60 dias
 
 Boleto:
-21 / 28 / 42 dias mediante análise
+21 / 28 / 42 dias mediante anÃ¡lise
 
-Após enviar a política perguntar:
+ApÃ³s enviar a polÃ­tica perguntar:
 
-Essas condições atendem o que você precisa?
+Essas condiÃ§Ãµes atendem o que vocÃª precisa?
 
-Se o cliente responder que não, pedir desconto no produto, ou quiser negociar:
-Chame a ferramenta 'transferToHuman' IMEDIATAMENTE para que um vendedor humano assuma a negociação.
+Se o cliente responder que nÃ£o, pedir desconto no produto, ou quiser negociar:
+Chame a ferramenta 'transferToHuman' IMEDIATAMENTE para que um vendedor humano assuma a negociaÃ§Ã£o.
 
 ---
 
 PERSONALIZADOS
 
-Se cliente solicitar personalizados, enviar questionário correspondente
+Se cliente solicitar personalizados, enviar questionÃ¡rio correspondente
 
 ---
 
-QUESTIONÁRIO – ENVELOPES PERSONALIZADOS
+QUESTIONÃ�RIO â€“ ENVELOPES PERSONALIZADOS
 
-Para elaborar seu orçamento da forma mais precisa possível, por favor responda:
+Para elaborar seu orÃ§amento da forma mais precisa possÃ­vel, por favor responda:
 
-1️⃣ Medida do envelope:
+1ï¸�âƒ£ Medida do envelope:
 
 ( ) 114 x 229
 ( ) 162 x 224
@@ -136,53 +136,53 @@ Para elaborar seu orçamento da forma mais precisa possível, por favor responda
 ( ) 240 x 340
 ( ) 310 x 410
 
-2️⃣ Tipo de papel:
+2ï¸�âƒ£ Tipo de papel:
 
 ( ) Kraft
 ( ) Branco
 
-3️⃣ Tipo de impressão:
+3ï¸�âƒ£ Tipo de impressÃ£o:
 
 ( ) Preta
 ( ) Colorida
 
-4️⃣ Impressão:
+4ï¸�âƒ£ ImpressÃ£o:
 
 ( ) Apenas frente
 ( ) Frente e verso
 
-5️⃣ Personalização:
+5ï¸�âƒ£ PersonalizaÃ§Ã£o:
 
 ( ) Logo
 ( ) Arte completa
 ( ) Chapado
 
-6️⃣ Quantidade desejada:
+6ï¸�âƒ£ Quantidade desejada:
 
 R__
 
-Após receber as medidas, informar:
+ApÃ³s receber as medidas, informar:
 
 FORMAS DE PAGAMENTO:
 
-* PIX ou depósito à vista: 5% de desconto
-* Cartão de crédito: link de pagamento (30 dias)
+* PIX ou depÃ³sito Ã  vista: 5% de desconto
+* CartÃ£o de crÃ©dito: link de pagamento (30 dias)
 
 FRETE:
 
 * SP / SC / PR: R$ 45,00
-* Demais estados: CIF até SP + redespacho
+* Demais estados: CIF atÃ© SP + redespacho
 
 Perguntar:
-Podemos seguir com o orçamento?
+Podemos seguir com o orÃ§amento?
 
 ---
 
-QUESTIONÁRIO – COMANDAS E TALÕES
+QUESTIONÃ�RIO â€“ COMANDAS E TALÃ•ES
 
-Para elaborar seu orçamento da forma mais precisa possível, por favor responda:
+Para elaborar seu orÃ§amento da forma mais precisa possÃ­vel, por favor responda:
 
-1️⃣ Medida da comanda / talão:
+1ï¸�âƒ£ Medida da comanda / talÃ£o:
 
 ( ) 7,5 x 10,5 cm
 ( ) 10,5 x 15 cm
@@ -190,34 +190,34 @@ Para elaborar seu orçamento da forma mais precisa possível, por favor responda
 ( ) 21 x 30 cm
 ( ) Outra R__
 
-2️⃣ Quantidade de folhas:
+2ï¸�âƒ£ Quantidade de folhas:
 
 ( ) 50 folhas
 ( ) 100 folhas
 
-3️⃣ Tipo de impressão:
+3ï¸�âƒ£ Tipo de impressÃ£o:
 
 ( ) Preta
 ( ) Colorida
 
-4️⃣ Quantidade desejada:
+4ï¸�âƒ£ Quantidade desejada:
 
 R__
 
-Após receber as medidas, informar:
+ApÃ³s receber as medidas, informar:
 
 FORMAS DE PAGAMENTO:
 
-* PIX ou depósito à vista: 5% de desconto
-* Cartão de crédito: link de pagamento (30 dias)
+* PIX ou depÃ³sito Ã  vista: 5% de desconto
+* CartÃ£o de crÃ©dito: link de pagamento (30 dias)
 
 FRETE:
 
 * SP / SC / PR: R$ 45,00
-* Demais estados: CIF até SP + redespacho
+* Demais estados: CIF atÃ© SP + redespacho
 
 Perguntar:
-Podemos seguir com o orçamento?
+Podemos seguir com o orÃ§amento?
 
 ---
 
@@ -231,7 +231,7 @@ Quando:
 
 Responder:
 
-Perfeito, vou encaminhar seu pedido para nosso setor de cadastro para finalizar e agilizar seu atendimento 😊
+Perfeito, vou encaminhar seu pedido para nosso setor de cadastro para finalizar e agilizar seu atendimento ðŸ˜Š
 
 ---
 
@@ -241,13 +241,14 @@ Conduzir sempre para:
 
 * Pedido no link
 * Venda de kits
-* Orçamento personalizado
+* OrÃ§amento personalizado
 * Encaminhamento para fechamento
 
 ---
 
 REGRAS IMPORTANTES
 
+* Sempre enviar catÃ¡logo + link juntos para lojistas
 * Sempre enviar catálogo + link juntos para lojistas
 * Nunca perguntar se deseja catálogo (envie diretamente e avise)
 * Não envie o catálogo repetidamente a menos que o cliente peça. Se o cliente pedir o catálogo novamente, você PODE e DEVE enviar chamando a ferramenta 'sendAttachment' com o gatilho 'CATALOGO'.
@@ -257,12 +258,8 @@ A Pacific Flowers é uma empresa consolidada no mercado, com mais de 25 anos de 
 Com produção própria, a Pacific Flowers garante controle total sobre seus processos, oferecendo produtos com excelente padrão de qualidade e preços altamente competitivos. Seu portfólio inclui itens essenciais para o dia a dia do varejo, como giz de cera, envelopes kraft, cadernos, placas indicativas, impressos padronizados, splash e cartazes de oferta, além de jogos encartelados.
 
 A empresa se destaca por entender as necessidades do mercado e oferecer soluções práticas, funcionais e acessíveis, sempre com foco em fortalecer seus parceiros comerciais e impulsionar suas vendas.
-Mais do que uma fornecedora, a Pacific Flowers é uma parceira estratégica, comprometida em entregar valor, eficiência e crescimento para seus clientes.`;
-  }
+Mais do que uma fornecedora, a Pacific Flowers é uma parceira estratégica, comprometida em entreg
 
-  // APÊNDICE OBRIGATÓRIO: Instruções de Ferramentas (Sempre adicionar ao final, independentemente de ser prompt customizado ou padrão)
-  const toolInstructions = `
---------------------------------------------------------------------------------
 MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
 - Para enviar arquivos, catálogos ou fotos, NUNCA coloque links soltos no texto. Em vez disso, chame a ferramenta 'sendAttachment' com o gatilho exato (ex: 'CATALOGO', 'KIT_350').
 - Toda vez que chamar 'sendAttachment', coloque a tag [SEPARAR] no meio do seu texto exatamente no momento em que a imagem/PDF deve aparecer. O sistema usará essa tag para dar uma pausa dramática e enviar o arquivo.
@@ -270,12 +267,13 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
 - Quando o cliente disser o nome dele, chame OBRIGATORIAMENTE a função 'updateClientName' para salvar o nome dele no sistema.
 - Quando o cliente fizer o pedido, topar fechar, pedir sugestão de kit ou PEDIR DESCONTO/NEGOCIAR PREÇO DO PRODUTO, chame OBRIGATORIAMENTE a função 'transferToHuman' com um resumo na propriedade 'summary' e o target_status correto. Isso passará o atendimento definitivamente ao vendedor.
 - Altere o status do cliente chamando 'changeClientStatus' sempre que a conversa avançar para as etapas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado" ou "Reposição".
+- MÍDIAS RECEBIDAS: Se o cliente enviar um áudio ("[Áudio]"), foto ("[Imagem]"), vídeo ("[Vídeo]"), documento ("[Documento]") ou figurinha ("[Figurinha]"), você DEVE informar educadamente que é uma inteligência artificial e que no momento só consegue compreender mensagens de texto, pedindo para ele escrever o que precisa.
 - ATENÇÃO: NUNCA mencione as chamadas de sistema, json, gatilhos, tags ou operações internas para o cliente. Comporte-se como um humano natural.`;
 
   prompt += toolInstructions;
 
   if (settings && settings.businessName && settings.businessName.trim() !== '') {
-    prompt += `\n\n--- INFORMAÇÃO IMPORTANTE ---\nVocê é o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
+    prompt += `\n\n--- INFORMAÃ‡ÃƒO IMPORTANTE ---\nVocÃª Ã© o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
   }
   
   return prompt;
@@ -286,7 +284,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
   try {
     const { data: clientInfo } = await supabase.from('clientes').select('name, phone, attendant_id, status').eq('id', clientId).single();
 
-    // 1. Obter o histórico de mensagens
+    // 1. Obter o histÃ³rico de mensagens
     const { data: recentMessages, error: messagesError } = await supabase
       .from('mensagens')
       .select('text, sender, timestamp')
@@ -296,10 +294,10 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
 
     if (messagesError) throw messagesError;
 
-    // Se não houver mensagens (estranho, pois o webhook acabou de inserir), não faz nada
+    // Se nÃ£o houver mensagens (estranho, pois o webhook acabou de inserir), nÃ£o faz nada
     if (!recentMessages || recentMessages.length === 0) return null;
 
-    // Inverter para ficar na ordem cronológica correta (mais antigas primeiro)
+    // Inverter para ficar na ordem cronolÃ³gica correta (mais antigas primeiro)
     const messages = recentMessages.reverse();
 
     // Converter para o formato da OpenAI
@@ -310,30 +308,30 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     if (contextOverride === 'REPOSICAO_25_DIAS') {
       openAiMessages.push({
         role: 'system',
-        content: "Atenção: Já se passaram 25 dias desde a última compra deste cliente. Mande uma mensagem amigável, seguindo suas diretrizes de vendas e personalidade, para sugerir a reposição de estoque."
+        content: "AtenÃ§Ã£o: JÃ¡ se passaram 25 dias desde a Ãºltima compra deste cliente. Mande uma mensagem amigÃ¡vel, seguindo suas diretrizes de vendas e personalidade, para sugerir a reposiÃ§Ã£o de estoque."
       });
     } else if (contextOverride === 'FOLLOW_UP_INATIVIDADE') {
       openAiMessages.push({
         role: 'system',
-        content: "Atenção: O cliente parou de responder há alguns minutos. Mande uma mensagem de acompanhamento curta e amigável para retomar a conversa, mantendo estritamente as regras e a personalidade do seu prompt principal."
+        content: "AtenÃ§Ã£o: O cliente parou de responder hÃ¡ alguns minutos. Mande uma mensagem de acompanhamento curta e amigÃ¡vel para retomar a conversa, mantendo estritamente as regras e a personalidade do seu prompt principal."
       });
     } else if (contextOverride === 'INSISTENCIA_HORAS') {
       openAiMessages.push({
         role: 'system',
-        content: "Atenção: Já se passaram algumas horas sem resposta. Sua missão agora é tentar retomar a conversa de forma natural e amigável, seguindo rigorosamente sua identidade e regras do prompt principal."
+        content: "AtenÃ§Ã£o: JÃ¡ se passaram algumas horas sem resposta. Sua missÃ£o agora Ã© tentar retomar a conversa de forma natural e amigÃ¡vel, seguindo rigorosamente sua identidade e regras do prompt principal."
       });
     }
 
     if (clientInfo && clientInfo.status) {
       openAiMessages.push({
         role: 'system',
-        content: `[CONTEXTO INTERNO OBRIGATÓRIO]
+        content: `[CONTEXTO INTERNO OBRIGATÃ“RIO]
 Status atual no CRM: "${clientInfo.status}".
 Nome do cliente no CRM: "${clientInfo.name || 'Desconhecido'}".
 
-REGRA 1 - NOME: Se o nome for 'Desconhecido' ou começar com 'Lead WhatsApp', VOCÊ DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigável na sua resposta. NUNCA ignore isso. Se já souber o nome (diferente de Desconhecido ou Lead WhatsApp), chame-o pelo nome.
-REGRA 2 - CATÁLOGO: Se o status for "Em Qualificação", significa que você JÁ ABORDOU e JÁ ENVIOU o catálogo no passado. Foque no atendimento e em responder dúvidas. MAS se ele PEDIR o catálogo novamente, envie usando a ferramenta.
-REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
+REGRA 1 - NOME: Se o nome for 'Desconhecido' ou comeÃ§ar com 'Lead WhatsApp', VOCÃŠ DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigÃ¡vel na sua resposta. NUNCA ignore isso. Se jÃ¡ souber o nome (diferente de Desconhecido ou Lead WhatsApp), chame-o pelo nome.
+REGRA 2 - CATÃ�LOGO: Se o status for "Em QualificaÃ§Ã£o", significa que vocÃª JÃ� ABORDOU e JÃ� ENVIOU o catÃ¡logo no passado. Foque no atendimento e em responder dÃºvidas. MAS se ele PEDIR o catÃ¡logo novamente, envie usando a ferramenta.
+REGRA 3 - NUNCA assuma que jÃ¡ sabe o nome se o CRM diz que Ã© Desconhecido.`
       });
     }
 
@@ -344,7 +342,7 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
       }))
     );
 
-    // 2. Chamar a OpenAI com suporte a chamadas de função
+    // 2. Chamar a OpenAI com suporte a chamadas de funÃ§Ã£o
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: openAiMessages as any,
@@ -354,7 +352,7 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
           type: 'function',
           function: {
             name: 'sendAttachment',
-            description: 'Envia um anexo (mídia, catálogo, foto de kit) para o cliente pelo WhatsApp com base em um gatilho configurado.',
+            description: 'Envia um anexo (mÃ­dia, catÃ¡logo, foto de kit) para o cliente pelo WhatsApp com base em um gatilho configurado.',
             parameters: {
               type: 'object',
               properties: {
@@ -371,7 +369,7 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
           type: 'function',
           function: {
             name: 'updateClientName',
-            description: 'Atualiza o nome do cliente no sistema de CRM (Banco de Dados) após ele se apresentar.',
+            description: 'Atualiza o nome do cliente no sistema de CRM (Banco de Dados) apÃ³s ele se apresentar.',
             parameters: {
               type: 'object',
               properties: {
@@ -388,17 +386,17 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
           type: 'function',
           function: {
             name: 'transferToHuman',
-            description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, enviar pedido ou pedir sugestão.',
+            description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, enviar pedido ou pedir sugestÃ£o.',
             parameters: {
               type: 'object',
               properties: {
                 summary: {
                   type: 'string',
-                  description: 'Um resumo breve do atendimento: perfil do cliente (lojista, pessoal), produtos interessados, e motivo da transferência.'
+                  description: 'Um resumo breve do atendimento: perfil do cliente (lojista, pessoal), produtos interessados, e motivo da transferÃªncia.'
                 },
                 target_status: {
                   type: 'string',
-                  description: 'O status exato para onde o cliente deve ir ao ser transferido (ex: "Proposta Enviada", "Em Qualificação").'
+                  description: 'O status exato para onde o cliente deve ir ao ser transferido (ex: "Proposta Enviada", "Em QualificaÃ§Ã£o").'
                 }
               },
               required: ['summary', 'target_status']
@@ -409,13 +407,13 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
           type: 'function',
           function: {
             name: 'changeClientStatus',
-            description: 'Altera a etapa do funil do cliente com base no andamento do atendimento (Ex: Contato Feito, Em Qualificação, Proposta Enviada, Reposição). Use quando o cliente avançar naturalmente na conversa.',
+            description: 'Altera a etapa do funil do cliente com base no andamento do atendimento (Ex: Contato Feito, Em QualificaÃ§Ã£o, Proposta Enviada, ReposiÃ§Ã£o). Use quando o cliente avanÃ§ar naturalmente na conversa.',
             parameters: {
               type: 'object',
               properties: {
                 status: {
                   type: 'string',
-                  description: 'O novo status do cliente no Kanban. Opções válidas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado", "Reposição"'
+                  description: 'O novo status do cliente no Kanban. OpÃ§Ãµes vÃ¡lidas: "Contato Feito", "Em QualificaÃ§Ã£o", "Proposta Enviada", "Qualificado", "ReposiÃ§Ã£o"'
                 }
               },
               required: ['status']
@@ -438,7 +436,7 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
       for (const tC of responseMessage.tool_calls) {
         const toolCall = tC as any;
         const args = JSON.parse(toolCall.function.arguments);
-        let toolResult = "Operação realizada com sucesso.";
+        let toolResult = "OperaÃ§Ã£o realizada com sucesso.";
         
         if (toolCall.function.name === 'sendAttachment') {
           console.log(`[AI TOOL] Solicitado envio do anexo com gatilho: ${args.triggerName}`);
@@ -459,7 +457,7 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
               
               if (apiUrl && apiKey && instanceName) {
                 try {
-                  console.log(`[AI TOOL] Preparando mídia para ${phone} via Evolution API`);
+                  console.log(`[AI TOOL] Preparando mÃ­dia para ${phone} via Evolution API`);
                   
                   // Evolution API endpoint: /message/sendMedia/:instance
                   const mediaPayload = {
@@ -486,14 +484,14 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
                   toolResult = `Erro ao tentar enviar o anexo: ${args.triggerName}`;
                 }
               } else {
-                toolResult = `Faltam configurações de API para enviar o anexo.`;
+                toolResult = `Faltam configuraÃ§Ãµes de API para enviar o anexo.`;
               }
             } else {
-              toolResult = `Não foi possível identificar o telefone ou instância do cliente.`;
+              toolResult = `NÃ£o foi possÃ­vel identificar o telefone ou instÃ¢ncia do cliente.`;
             }
           } else {
-            console.log(`[AI TOOL] Gatilho '${args.triggerName}' não encontrado nas configurações do vendedor.`);
-            toolResult = `O gatilho '${args.triggerName}' não está configurado. Diga ao cliente que houve um erro ao buscar o arquivo.`;
+            console.log(`[AI TOOL] Gatilho '${args.triggerName}' nÃ£o encontrado nas configuraÃ§Ãµes do vendedor.`);
+            toolResult = `O gatilho '${args.triggerName}' nÃ£o estÃ¡ configurado. Diga ao cliente que houve um erro ao buscar o arquivo.`;
           }
         } else if (toolCall.function.name === 'updateClientName') {
           console.log(`[AI TOOL] Atualizando nome do cliente para: ${args.name}`);
@@ -505,7 +503,7 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
         } else if (toolCall.function.name === 'changeClientStatus') {
           console.log(`[AI TOOL] Alterando status do cliente para: ${args.status}`);
           
-          if (args.status === 'Em Qualificação' || args.status === 'Qualificado') {
+          if (args.status === 'Em QualificaÃ§Ã£o' || args.status === 'Qualificado') {
             const { data: msgs } = await supabase
               .from('mensagens')
               .select('text')
@@ -515,14 +513,14 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
             const alreadySent = msgs && msgs.length > 0;
             
             if (!alreadySent && !catalogSentThisTurn) {
-              toolResult = "ERRO DE SEGURANÇA: O catálogo ainda não foi enviado. Você é OBRIGADO a enviar o catálogo para o cliente (usando a ferramenta sendAttachment com trigger 'CATALOGO') ANTES de alterar o status para 'Em Qualificação'. Explique isso ao cliente ou envie o catálogo agora.";
+              toolResult = "ERRO DE SEGURANÃ‡A: O catÃ¡logo ainda nÃ£o foi enviado. VocÃª Ã© OBRIGADO a enviar o catÃ¡logo para o cliente (usando a ferramenta sendAttachment com trigger 'CATALOGO') ANTES de alterar o status para 'Em QualificaÃ§Ã£o'. Explique isso ao cliente ou envie o catÃ¡logo agora.";
               openAiMessages.push({
                 role: 'tool',
                 tool_call_id: toolCall.id,
                 content: toolResult
               } as any);
-              console.log("[AI TOOL] Bloqueada mudança de status: Catálogo não enviado.");
-              continue; // Interrompe a alteração no BD e no histórico
+              console.log("[AI TOOL] Bloqueada mudanÃ§a de status: CatÃ¡logo nÃ£o enviado.");
+              continue; // Interrompe a alteraÃ§Ã£o no BD e no histÃ³rico
             }
           }
           
@@ -564,14 +562,14 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
             .update({ status: statusToSet, needs_human: true, notes: newNotes })
             .eq('id', clientId);
 
-          // Inserir um evento no histórico com o resumo da IA
+          // Inserir um evento no histÃ³rico com o resumo da IA
           await supabase
             .from('history_events')
             .insert({
               client_id: clientId,
               type: 'status_change',
               description: `A IA Clara encerrou o atendimento e repassou o lead. Resumo: ${args.summary}`,
-              from_status: 'Em Qualificação',
+              from_status: 'Em QualificaÃ§Ã£o',
               to_status: 'Qualificado'
             });
 
@@ -581,12 +579,12 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
             .insert({
               client_id: clientId,
               sender: 'system',
-              text: `⚠️ A IA encerrou o atendimento e transferiu para humano.\nResumo: ${args.summary}`,
+              text: `âš ï¸� A IA encerrou o atendimento e transferiu para humano.\nResumo: ${args.summary}`,
               read: true
             });
 
           if (clientData && clientData.attendant_id) {
-            // Recuperar o número de WhatsApp do vendedor
+            // Recuperar o nÃºmero de WhatsApp do vendedor
             const { data: profile } = await supabase
               .from('profiles')
               .select('whatsapp_number')
@@ -600,7 +598,7 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
               if (apiUrl && apiKey) {
                 const sellerPhone = profile.whatsapp_number.replace(/\D/g, '');
                 const instanceName = clientData.connected_instance || `user_${clientData.attendant_id}_1`;
-                const alertMessage = `⚠️ *Lead Qualificado!*\nO lead *${clientData.name || 'Sem Nome'}* (${clientData.phone}) foi qualificado pela IA e está pronto para receber o catálogo e atendimento humano.\n\n*Resumo da IA:* ${args.summary}`;
+                const alertMessage = `âš ï¸� *Lead Qualificado!*\nO lead *${clientData.name || 'Sem Nome'}* (${clientData.phone}) foi qualificado pela IA e estÃ¡ pronto para receber o catÃ¡logo e atendimento humano.\n\n*Resumo da IA:* ${args.summary}`;
 
                 fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                   method: 'POST',
@@ -618,7 +616,7 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
           }
 
           // Instruir a IA a se despedir
-          toolResult = "Transferência realizada para 'Qualificado'. Você deve agora se despedir informando que o vendedor vai enviar o catálogo e não deve enviar mais perguntas.";
+          toolResult = "TransferÃªncia realizada para 'Qualificado'. VocÃª deve agora se despedir informando que o vendedor vai enviar o catÃ¡logo e nÃ£o deve enviar mais perguntas.";
         }
 
         // Adiciona a resposta da ferramenta
@@ -642,12 +640,12 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
     // Retorna o texto gerado pela IA (pode ser a despedida ou uma resposta normal)
     if (responseMessage.content || finalContent) {
       if (catalogSentThisTurn) {
-        // Avançar o lead para Qualificação quando receber o catálogo, conforme solicitado pelo cliente (Tarefa 9)
-        await supabase.from('clientes').update({ status: 'Em Qualificação' }).eq('id', clientId);
+        // AvanÃ§ar o lead para QualificaÃ§Ã£o quando receber o catÃ¡logo, conforme solicitado pelo cliente (Tarefa 9)
+        await supabase.from('clientes').update({ status: 'Em QualificaÃ§Ã£o' }).eq('id', clientId);
         await supabase.from('history_events').insert({
           client_id: clientId,
           type: 'status_change',
-          description: 'A IA Clara enviou o catálogo e avançou o status para Em Qualificação.',
+          description: 'A IA Clara enviou o catÃ¡logo e avanÃ§ou o status para Em QualificaÃ§Ã£o.',
         });
       }
       return { text: (responseMessage.content || '') + finalContent, mediaToSend };
@@ -668,9 +666,9 @@ REGRA 3 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
 }
 
 /**
- * Análise Silenciosa:
- * Lê o histórico recente da conversa (focado nas falas do atendente humano e do cliente)
- * e avalia em qual etapa do funil o lead se encontra. Se houver mudança clara, atualiza.
+ * AnÃ¡lise Silenciosa:
+ * LÃª o histÃ³rico recente da conversa (focado nas falas do atendente humano e do cliente)
+ * e avalia em qual etapa do funil o lead se encontra. Se houver mudanÃ§a clara, atualiza.
  */
 export async function analyzeConversationAndMoveStatus(clientId: string, supabase: any) {
   try {
@@ -683,16 +681,16 @@ export async function analyzeConversationAndMoveStatus(clientId: string, supabas
 
     if (!clientData) return;
 
-    // Etapas que a IA auto-reply atua (se estiver aqui, a auto-reply cuida, então não mexemos)
-    const initialStages = ['Novo', 'Contato Feito', 'Em Qualificação'];
+    // Etapas que a IA auto-reply atua (se estiver aqui, a auto-reply cuida, entÃ£o nÃ£o mexemos)
+    const initialStages = ['Novo', 'Contato Feito', 'Em QualificaÃ§Ã£o'];
     // Etapas finais
-    const finalStages = ['Finalizado', 'Perdido', 'Reposição'];
+    const finalStages = ['Finalizado', 'Perdido', 'ReposiÃ§Ã£o'];
 
     if (initialStages.includes(clientData.status) || finalStages.includes(clientData.status)) {
-      return; // Não analisa silenciosamente nestes estados
+      return; // NÃ£o analisa silenciosamente nestes estados
     }
 
-    // 2. Buscar últimas 15 mensagens para contexto
+    // 2. Buscar Ãºltimas 15 mensagens para contexto
     const { data: mensagens } = await supabase
       .from('mensagens')
       .select('text, sender, timestamp')
@@ -702,31 +700,31 @@ export async function analyzeConversationAndMoveStatus(clientId: string, supabas
 
     if (!mensagens || mensagens.length === 0) return;
 
-    // Inverter para ordem cronológica
+    // Inverter para ordem cronolÃ³gica
     const contextMessages = mensagens.reverse().map((m: any) => {
       const isSeller = m.sender === 'attendant';
       return `${isSeller ? 'VENDEDOR' : 'CLIENTE'}: ${m.text}`;
     }).join('\n');
 
-    const SILENT_SYSTEM_PROMPT = `Você é um supervisor silencioso de um funil de vendas.
-Sua única função é ler o histórico recente da conversa e determinar se o lead avançou ou retrocedeu de etapa.
+    const SILENT_SYSTEM_PROMPT = `VocÃª Ã© um supervisor silencioso de um funil de vendas.
+Sua Ãºnica funÃ§Ã£o Ã© ler o histÃ³rico recente da conversa e determinar se o lead avanÃ§ou ou retrocedeu de etapa.
 Status atual do lead: "${clientData.status}"
 Nome do lead: "${clientData.name || 'Desconhecido'}"
 
-Etapas permitidas para você mover:
-- "Proposta Enviada": O vendedor enviou um orçamento, preço ou proposta clara.
-- "Finalizado": O cliente comprou, pagou ou o negócio foi fechado com sucesso.
-- "Reposição": O cliente precisa voltar a comprar no futuro (recorrente) ou pediu para avisar depois.
-- "Perdido": O cliente disse não, achou caro, não tem interesse ou parou de responder definitivamente.
+Etapas permitidas para vocÃª mover:
+- "Proposta Enviada": O vendedor enviou um orÃ§amento, preÃ§o ou proposta clara.
+- "Finalizado": O cliente comprou, pagou ou o negÃ³cio foi fechado com sucesso.
+- "ReposiÃ§Ã£o": O cliente precisa voltar a comprar no futuro (recorrente) ou pediu para avisar depois.
+- "Perdido": O cliente disse nÃ£o, achou caro, nÃ£o tem interesse ou parou de responder definitivamente.
 
 Regras:
-1. SÓ chame a ferramenta \`updateStatus\` se você tiver absoluta certeza de que a conversa avançou para um novo status DIFERENTE do atual.
-2. Se a conversa ainda está no status atual, NÃO FAÇA NADA. Apenas não chame a ferramenta.
-3. Não retorne nenhum texto de resposta para o cliente.`;
+1. SÃ“ chame a ferramenta \`updateStatus\` se vocÃª tiver absoluta certeza de que a conversa avanÃ§ou para um novo status DIFERENTE do atual.
+2. Se a conversa ainda estÃ¡ no status atual, NÃƒO FAÃ‡A NADA. Apenas nÃ£o chame a ferramenta.
+3. NÃ£o retorne nenhum texto de resposta para o cliente.`;
 
     const openAiMessages = [
       { role: 'system', content: SILENT_SYSTEM_PROMPT },
-      { role: 'user', content: `Histórico Recente:\n${contextMessages}` }
+      { role: 'user', content: `HistÃ³rico Recente:\n${contextMessages}` }
     ];
 
     const response = await openai.chat.completions.create({
@@ -738,18 +736,18 @@ Regras:
           type: 'function',
           function: {
             name: 'updateStatus',
-            description: 'Atualiza a etapa do funil do cliente com base no avanço da negociação.',
+            description: 'Atualiza a etapa do funil do cliente com base no avanÃ§o da negociaÃ§Ã£o.',
             parameters: {
               type: 'object',
               properties: {
                 newStatus: {
                   type: 'string',
-                  enum: ['Proposta Enviada', 'Finalizado', 'Perdido', 'Reposição'],
+                  enum: ['Proposta Enviada', 'Finalizado', 'Perdido', 'ReposiÃ§Ã£o'],
                   description: 'A nova etapa do funil'
                 },
                 reason: {
                   type: 'string',
-                  description: 'O motivo para a mudança de etapa'
+                  description: 'O motivo para a mudanÃ§a de etapa'
                 }
               },
               required: ['newStatus', 'reason']
@@ -790,6 +788,6 @@ Regras:
     }
 
   } catch (error) {
-    console.error('[AI Silent] Erro na análise silenciosa:', error);
+    console.error('[AI Silent] Erro na anÃ¡lise silenciosa:', error);
   }
 }
