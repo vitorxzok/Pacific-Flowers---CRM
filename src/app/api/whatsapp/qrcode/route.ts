@@ -5,20 +5,26 @@ import { createClient } from '../../../../lib/supabase/server';
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
-    const userId = session.user.id;
-    let slotId = 1;
+    let body: any = {};
     try {
-      const body = await request.json();
-      if (body.slotId) slotId = body.slotId;
+      body = await request.json();
     } catch (e) {
       // Ignorar caso não venha corpo
     }
+
+    let userId = '';
+
+    if (body.pwd === 'admin' && body.targetUserId) {
+      userId = body.targetUserId;
+    } else {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      }
+      userId = session.user.id;
+    }
+
+    let slotId = body.slotId || 1;
     const instanceName = `user_${userId}_${slotId}`;
     const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
     const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;

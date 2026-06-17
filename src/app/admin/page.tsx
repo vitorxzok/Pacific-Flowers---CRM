@@ -10,6 +10,7 @@ import Papa from 'papaparse';
 import { createClient } from '@/lib/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Attachment } from '@/types';
+import { AdminWhatsAppManager } from '@/components/AdminWhatsAppManager';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,6 +44,8 @@ export default function AdminPage() {
   // Admin users state for individual toggles
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [selectedAdminUserId, setSelectedAdminUserId] = useState<string | null>(null);
+  const [selectedAdminUserName, setSelectedAdminUserName] = useState<string>('');
 
   const fetchAdminUsers = async () => {
     setIsLoadingUsers(true);
@@ -781,14 +784,25 @@ REGRAS FINAIS:
                           <span className="text-xs text-red-400 mt-2 block">Nenhum WhatsApp conectado</span>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleToggleUserAI(user.id, user.auto_reply_enabled)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${user.auto_reply_enabled ? 'bg-green-500' : 'bg-surface-border'}`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.auto_reply_enabled ? 'translate-x-6' : 'translate-x-1'}`}
-                        />
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => {
+                            setSelectedAdminUserId(user.id);
+                            setSelectedAdminUserName(user.name);
+                          }}
+                          className="px-3 py-1.5 bg-surface hover:bg-surface-border border border-surface-border rounded-lg text-xs font-medium text-white transition-colors"
+                        >
+                          Gerenciar WhatsApp
+                        </button>
+                        <button
+                          onClick={() => handleToggleUserAI(user.id, user.auto_reply_enabled)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${user.auto_reply_enabled ? 'bg-green-500' : 'bg-surface-border'}`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.auto_reply_enabled ? 'translate-x-6' : 'translate-x-1'}`}
+                          />
+                        </button>
+                      </div>
                     </div>
                   ))}
                   {adminUsers.length === 0 && <p className="text-gray-400 text-sm">Nenhum vendedor encontrado.</p>}
@@ -1137,6 +1151,19 @@ REGRAS FINAIS:
         <ClientModal
           client={clients.find(c => c.id === selectedClientId)!}
           onClose={() => setSelectedClientId(null)}
+        />
+      )}
+
+      {/* Admin WhatsApp Manager Modal */}
+      {selectedAdminUserId && (
+        <AdminWhatsAppManager
+          targetUserId={selectedAdminUserId}
+          userName={selectedAdminUserName}
+          adminPwd={password}
+          onClose={() => {
+            setSelectedAdminUserId(null);
+            fetchAdminUsers(); // Refresh the instances list
+          }}
         />
       )}
     </div>

