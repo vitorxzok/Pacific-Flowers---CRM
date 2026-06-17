@@ -615,7 +615,7 @@ REGRA 3 - NUNCA assuma que jÃ¡ sabe o nome se o CRM diz que Ã© Desconhecido.
           }
 
           // Instruir a IA a se despedir
-          toolResult = "TransferÃªncia realizada para 'Qualificado'. VocÃª deve agora se despedir informando que o vendedor vai enviar o catÃ¡logo e nÃ£o deve enviar mais perguntas.";
+          toolResult = "Transferência realizada para 'Qualificado'. Você deve agora se despedir de forma educada confirmando que um especialista assumirá o atendimento, mas NUNCA prometa envio de catálogos ou kits se eles já foram enviados.";
         }
 
         // Adiciona a resposta da ferramenta
