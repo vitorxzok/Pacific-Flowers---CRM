@@ -39,6 +39,7 @@ export interface Client {
   needs_human?: boolean;
   custom_reposicao_date?: string;
   is_exported?: boolean;
+  connected_instance?: string;
 }
 
 export interface Attachment {

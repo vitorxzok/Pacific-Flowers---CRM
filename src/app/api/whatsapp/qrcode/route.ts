@@ -12,7 +12,14 @@ export async function POST(request: Request) {
     }
 
     const userId = session.user.id;
-    const instanceName = `user_${userId}`;
+    let slotId = 1;
+    try {
+      const body = await request.json();
+      if (body.slotId) slotId = body.slotId;
+    } catch (e) {
+      // Ignorar caso não venha corpo
+    }
+    const instanceName = `user_${userId}_${slotId}`;
     const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
     const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
 
@@ -85,6 +92,14 @@ export async function POST(request: Request) {
 
     // Evolution API returns base64 in different formats depending on the endpoint (create vs connect)
     const base64Qr = data.qrcode?.base64 || data.base64;
+
+    // Atualizar no DB
+    const { data: existingInstance } = await supabase.from('whatsapp_instances').select('id').eq('instance_name', instanceName).single();
+    if (existingInstance) {
+      await supabase.from('whatsapp_instances').update({ status: base64Qr ? 'connecting' : 'open' }).eq('id', existingInstance.id);
+    } else {
+      await supabase.from('whatsapp_instances').insert({ user_id: userId, instance_name: instanceName, status: base64Qr ? 'connecting' : 'open' });
+    }
 
     if (base64Qr) {
       return NextResponse.json({ success: true, qrcode: base64Qr });

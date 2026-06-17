@@ -523,7 +523,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
           // Recuperar os dados do cliente para pegar o telefone, notes e o attendant_id
           const { data: clientData } = await supabase
             .from('clientes')
-            .select('name, phone, attendant_id, notes')
+            .select('name, phone, attendant_id, notes, connected_instance')
             .eq('id', clientId)
             .single();
 
@@ -574,7 +574,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
               
               if (apiUrl && apiKey) {
                 const sellerPhone = profile.whatsapp_number.replace(/\D/g, '');
-                const instanceName = `user_${clientData.attendant_id}`;
+                const instanceName = clientData.connected_instance || `user_${clientData.attendant_id}_1`;
                 const alertMessage = `⚠️ *Lead Qualificado!*\nO lead *${clientData.name || 'Sem Nome'}* (${clientData.phone}) foi qualificado pela IA e está pronto para receber o catálogo e atendimento humano.\n\n*Resumo da IA:* ${args.summary}`;
 
                 fetch(`${apiUrl}/message/sendText/${instanceName}`, {

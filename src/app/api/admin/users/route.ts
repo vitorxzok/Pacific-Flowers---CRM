@@ -20,13 +20,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 
+    const { data: instancesData } = await supabaseServer
+      .from('whatsapp_instances')
+      .select('instance_name, phone_number, status');
+
     const usersList = usersData.users.map(u => {
       const crmSettings = u.user_metadata?.crm_settings || {};
+      const userInstances = instancesData?.filter(i => i.instance_name.startsWith(`user_${u.id}`)) || [];
+      
       return {
         id: u.id,
         name: u.user_metadata?.name || 'Vendedor Sem Nome',
         email: u.email,
-        auto_reply_enabled: crmSettings.auto_reply_enabled || false
+        auto_reply_enabled: crmSettings.auto_reply_enabled || false,
+        instances: userInstances.map(i => ({
+          name: i.instance_name,
+          phone: i.phone_number,
+          status: i.status
+        }))
       };
     });
     

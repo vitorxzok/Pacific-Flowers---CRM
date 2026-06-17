@@ -50,12 +50,12 @@ export async function POST(request: Request) {
 
       // Extrair o ID do usuário (vendedor) a partir do nome da instância
       const instanceName = body.instance || '';
-      let sellerId: string | null = instanceName.replace('user_', '');
-
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!sellerId || !uuidRegex.test(sellerId)) {
-        console.warn(`Instância não utiliza formato UUID: ${instanceName}. O attendant_id será nulo.`);
-        sellerId = null;
+      const match = instanceName.match(/^user_([a-f0-9\-]{36})(?:_(\d+))?$/i);
+      let sellerId: string | null = null;
+      if (match) {
+        sellerId = match[1];
+      } else {
+        console.warn(`Instância não utiliza formato válido: ${instanceName}. O attendant_id será nulo.`);
       }
 
       let clientId;
@@ -82,7 +82,8 @@ export async function POST(request: Request) {
             name: pushName,
             phone: phone,
             status: initialStatus,
-            attendant_id: sellerId
+            attendant_id: sellerId,
+            connected_instance: instanceName
           })
           .select()
           .single();
@@ -99,7 +100,12 @@ export async function POST(request: Request) {
         
         // Se a mensagem for do cliente, atualizamos followup_sent e resetamos a insistencia
         if (!isFromMe) {
-          const updateData: any = { followup_sent: false, insistencia_count: 0, updated_at: new Date().toISOString() };
+          const updateData: any = { 
+            followup_sent: false, 
+            insistencia_count: 0, 
+            updated_at: new Date().toISOString(),
+            connected_instance: instanceName 
+          };
           
           // Se o lead antigo não tiver vendedor associado, atribui ao atual (apenas se for válido)
           if (!clients[0].attendant_id && sellerId) {

@@ -116,9 +116,16 @@ export function KanbanCard({ client, onClick }: KanbanCardProps) {
 
       {/* Contato Básicos */}
       <div className="flex flex-col gap-1 mt-0.5">
-        <div className="flex items-center text-[11px] text-gray-300">
-          <Phone className="w-3 h-3 mr-1.5 text-gray-500" />
-          <span className="truncate">{client.phone}</span>
+        <div className="flex items-center text-[11px] text-gray-300 gap-2">
+          <div className="flex items-center">
+            <Phone className="w-3 h-3 mr-1.5 text-gray-500" />
+            <span className="truncate">{client.phone}</span>
+          </div>
+          {client.connected_instance && (
+            <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-[4px] text-[9px] font-bold">
+              Slot {client.connected_instance.split('_').pop()}
+            </span>
+          )}
         </div>
       </div>
 

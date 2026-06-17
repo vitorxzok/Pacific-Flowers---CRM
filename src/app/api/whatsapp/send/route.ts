@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     // Buscar o vendedor (attendant_id) associado a este cliente
     const { data: clientData, error: clientError } = await supabase
       .from('clientes')
-      .select('attendant_id')
+      .select('attendant_id, connected_instance')
       .eq('id', clientId)
       .single();
 
@@ -28,9 +28,9 @@ export async function POST(request: Request) {
     }
 
     // Usamos a instância associada ao vendedor que capturou o lead
-    // Se não tiver, usamos a do usuário logado como fallback
+    // Se não tiver, usamos a do usuário logado como fallback (assumindo slot 1)
     const sellerId = clientData.attendant_id || session.user.id;
-    const instanceName = `user_${sellerId}`;
+    const instanceName = clientData.connected_instance || `user_${sellerId}_1`;
 
     const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
     const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
