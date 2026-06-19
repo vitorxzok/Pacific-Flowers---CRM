@@ -268,7 +268,7 @@ export async function GET(request: Request) {
       // ========================================================
       // LÓGICA 4: PÓS-VENDA / REPOSIÇÃO
       // ========================================================
-      const { data: clientesFinalizados, error: reposicaoError } = await supabase
+      const { data: clientesFinalizados, error: finalizadosError } = await supabase
         .from('clientes')
         .select('id, name, phone, attendant_id, status, purchase_date, custom_reposicao_date, ai_enabled')
         .in('status', ['Finalizado', 'Reposição'])
