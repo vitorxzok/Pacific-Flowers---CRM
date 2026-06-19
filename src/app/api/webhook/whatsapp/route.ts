@@ -35,10 +35,10 @@ export async function POST(request: Request) {
         '';
 
       if (!text) {
-        if (messageObj?.imageMessage) text = messageObj.imageMessage.caption || '[Imagem]';
-        else if (messageObj?.audioMessage) text = '[Áudio]';
-        else if (messageObj?.videoMessage) text = messageObj.videoMessage.caption || '[Vídeo]';
-        else if (messageObj?.documentMessage) text = messageObj.documentMessage.fileName || '[Documento]';
+        if (messageObj?.imageMessage) text = `[IMAGEM] ${messageObj.imageMessage.caption || ''}`.trim();
+        else if (messageObj?.audioMessage) text = '[ÁUDIO]';
+        else if (messageObj?.videoMessage) text = `[VÍDEO] ${messageObj.videoMessage.caption || ''}`.trim();
+        else if (messageObj?.documentMessage) text = `[ARQUIVO RECEBIDO: ${messageObj.documentMessage.fileName || 'Documento em anexo'}]`;
         else if (messageObj?.stickerMessage) text = '[Figurinha]';
         else if (messageObj?.contactMessage) text = '[Contato]';
         else if (messageObj?.locationMessage) text = '[Localização]';
@@ -236,12 +236,7 @@ export async function POST(request: Request) {
       const { generateAIResponse, analyzeConversationAndMoveStatus } = await import('@/lib/openai');
 
       // DEBUG MESSAGE
-      await supabase.from('mensagens').insert({
-        client_id: clientId,
-        text: `[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, att_id: ${clientData?.attendant_id}`,
-        sender: 'system',
-        read: true
-      });
+      console.log(`[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, att_id: ${clientData?.attendant_id}`);
 
       if (!isFromMe && autoReplyEnabled && isAIEnabled) {
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---

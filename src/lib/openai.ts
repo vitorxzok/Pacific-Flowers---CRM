@@ -577,8 +577,8 @@ REGRA 3 - NUNCA assuma que jÃ¡ sabe o nome se o CRM diz que Ã© Desconhecido.
             .from('mensagens')
             .insert({
               client_id: clientId,
-              sender: 'system',
-              text: `âš ï¸� A IA encerrou o atendimento e transferiu para humano.\nResumo: ${args.summary}`,
+              sender: 'attendant',
+              text: `[SISTEMA] ⚠️ A IA encerrou o atendimento e transferiu para humano.\nResumo: ${args.summary}`,
               read: true
             });
 
@@ -652,14 +652,6 @@ REGRA 3 - NUNCA assuma que jÃ¡ sabe o nome se o CRM diz que Ã© Desconhecido.
 
   } catch (error: any) {
     console.error('Erro na IA:', error);
-    if (supabase && clientId) {
-      await supabase.from('mensagens').insert({
-        client_id: clientId,
-        text: `[DEBUG AI ERROR] ${error.message}`,
-        sender: 'system',
-        read: true
-      });
-    }
     return { text: null, mediaToSend: [] };
   }
 }

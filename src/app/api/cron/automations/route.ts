@@ -170,12 +170,13 @@ export async function GET(request: Request) {
           console.error(`Erro ao processar follow-up rapido para cliente ${client.id}:`, err);
         }
       }
-      
-      // ========================================================
-      // LÓGICA 3: INSISTÊNCIA DA IA (HORÁRIO COMERCIAL E LIMITES)
-      // ========================================================
-      
-      // Checar se estamos no horário comercial de Brasília (08:00 às 17:00)
+    }
+
+    // ========================================================
+    // LÓGICA 3: INSISTÊNCIA DA IA (HORÁRIO COMERCIAL E LIMITES)
+    // ========================================================
+    
+    // Checar se estamos no horário comercial de Brasília (08:00 às 17:00)
       const brtDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
       const currentHour = brtDate.getHours();
       const isBusinessHours = currentHour >= 8 && currentHour < 17;
@@ -365,7 +366,6 @@ export async function GET(request: Request) {
           }
         }
       }
-    }
 
     return NextResponse.json({ success: true, results });
 
