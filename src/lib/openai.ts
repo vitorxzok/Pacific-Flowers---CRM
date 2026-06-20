@@ -343,7 +343,7 @@ REGRA 3 - NUNCA assuma que jÃ¡ sabe o nome se o CRM diz que Ã© Desconhecido.
 
     // 2. Chamar a OpenAI com suporte a chamadas de funÃ§Ã£o
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: openAiMessages as any,
       temperature: 0.2,
       tools: [
