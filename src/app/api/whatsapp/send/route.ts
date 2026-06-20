@@ -45,7 +45,8 @@ export async function POST(request: Request) {
     // Formatar o body esperado pela Evolution API (message/sendText)
     const evolutionBody = {
       number: cleanedPhone,
-      text: text
+      text: text,
+      linkPreview: true
     };
 
     const response = await fetch(`${apiUrl}/message/sendText/${instanceName}`, {

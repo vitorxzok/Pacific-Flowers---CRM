@@ -291,17 +291,19 @@ export async function POST(request: Request) {
               const aiReplyParts = aiReply.split('[SEPARAR]').map(p => p.trim()).filter(p => p.length > 0);
               
               if (aiReplyParts.length > 0) {
-                // Envia a PRIMEIRA parte do texto
+                if (aiReplyParts[0].trim()) {
                 await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
                   body: JSON.stringify({ 
                     number: phone, 
                     text: aiReplyParts[0],
+                    linkPreview: true,
                     options: { delay: 100, presence: 'composing' }
                   })
                 });
                 console.log(`[AI] Resposta parte 1 enviada com sucesso para ${phone}`);
+                }
               }
               
               // 3. Se houver mídia (catálogo), aguarda exatamente 3 segundos e envia
@@ -336,6 +338,7 @@ export async function POST(request: Request) {
                     body: JSON.stringify({ 
                       number: phone, 
                       text: aiReplyParts[i],
+                      linkPreview: true,
                       options: { delay: 100, presence: 'composing' }
                     })
                   });
