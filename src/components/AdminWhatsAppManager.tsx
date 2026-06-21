@@ -119,7 +119,7 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, onClose
           Slot {slotId}
         </div>
         
-        {isConnected && (
+        {(isConnected || isConnecting) && (
           <button 
             onClick={() => handleDisconnect(slotId)}
             className="absolute top-2 right-2 p-1.5 bg-red-500/10 text-red-400 rounded-md hover:bg-red-500/20 transition-colors"

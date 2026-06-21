@@ -63,4 +63,6 @@ export interface Settings {
   businessContext?: string;
   productsCatalog?: string;
   attachments?: Attachment[];
+  workingHoursStart?: string;
+  workingHoursEnd?: string;
 }

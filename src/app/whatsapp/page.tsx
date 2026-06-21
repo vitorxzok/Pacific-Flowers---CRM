@@ -112,7 +112,7 @@ export default function WhatsAppConnection() {
             <Smartphone className="w-5 h-5 text-green-500" />
             Conexão {slotId}
           </h3>
-          {state === 'open' && (
+          {(state === 'open' || state === 'connecting' || !!qrCode) && (
             <button 
               onClick={() => handleDisconnect(slotId)}
               className="text-red-400 hover:text-red-300 transition-colors p-2"

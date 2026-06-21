@@ -43,7 +43,9 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     businessName: '',
     businessContext: '',
     productsCatalog: '',
-    attachments: []
+    attachments: [],
+    workingHoursStart: '07:30',
+    workingHoursEnd: '20:00'
   },
   
   setSettings: async (newSettings) => {
@@ -67,7 +69,9 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           business_name: merged.businessName,
           business_context: merged.businessContext,
           products_catalog: merged.productsCatalog,
-          attachments: merged.attachments
+          attachments: merged.attachments,
+          working_hours_start: merged.workingHoursStart,
+          working_hours_end: merged.workingHoursEnd
         })
       });
     } catch (error) {
@@ -92,7 +96,9 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           businessName: data.business_name ?? data.businessName ?? '',
           businessContext: data.business_context ?? data.businessContext ?? '',
           productsCatalog: data.products_catalog ?? data.productsCatalog ?? '',
-          attachments: data.attachments || []
+          attachments: data.attachments || [],
+          workingHoursStart: data.working_hours_start ?? data.workingHoursStart ?? '07:30',
+          workingHoursEnd: data.working_hours_end ?? data.workingHoursEnd ?? '20:00'
         }});
       }
     } catch (error) {
