@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       .from('whatsapp_instances')
       .delete()
       .eq('user_id', user_id)
-      .eq('connection_status', 'connecting');
+      .eq('status', 'connecting');
 
     if (deleteError) {
       console.error('Error deleting connecting instances from db:', deleteError);

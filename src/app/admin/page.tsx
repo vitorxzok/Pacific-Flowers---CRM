@@ -1014,11 +1014,11 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                           {index + 1}
                         </div>
                         <div className="flex-[3]">
-                          <label className="block text-xs font-medium text-gray-400 mb-1">Mensagem exata que a IA deve enviar</label>
+                          <label className="block text-xs font-medium text-gray-400 mb-1">Diretriz / Instrução para a IA (Opcional)</label>
                           <textarea 
                             value={cadence.text}
                             onChange={(e) => handleUpdateCadence(cadence.id, 'text', e.target.value)}
-                            placeholder="Olá! Conseguiu ver o catálogo que te mandei?"
+                            placeholder="Ex: Pergunte se o cliente aceita o catálogo, ou se gostaria de um orçamento sem compromisso..."
                             rows={2}
                             className="w-full bg-background border border-surface-border rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
                           />

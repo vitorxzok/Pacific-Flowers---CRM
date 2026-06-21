@@ -156,7 +156,13 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     } else if (contextOverride === 'INSISTENCIA_HORAS') {
       openAiMessages.push({
         role: 'system',
-        content: "AtenÃ§Ã£o: JÃ¡ se passaram algumas horas sem resposta. Sua missÃ£o agora Ã© tentar retomar a conversa de forma natural e amigÃ¡vel, seguindo rigorosamente sua identidade e regras do prompt principal."
+        content: "Atenção: Já se passaram algumas horas sem resposta. Sua missão agora é tentar retomar a conversa de forma natural e amigável, seguindo rigorosamente sua identidade e regras do prompt principal."
+      });
+    } else if (contextOverride && contextOverride.startsWith('INSISTENCIA_CUSTOM|')) {
+      const customInstruction = contextOverride.split('|')[1];
+      openAiMessages.push({
+        role: 'system',
+        content: `Atenção: O cliente parou de responder e você deve retomar o contato. Siga a seguinte instrução para esta etapa da cadência: "${customInstruction}". Responda de acordo com o histórico da conversa e mantenha o foco em levar o cliente ao fechamento do pedido.`
       });
     }
 

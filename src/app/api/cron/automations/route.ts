@@ -256,7 +256,7 @@ export async function GET(request: Request) {
                 const diffDays = diffHours / 24;
 
                 let shouldInsist = false;
-                let aiResponseText = '';
+                let aiContextOverride = 'INSISTENCIA_HORAS';
                 
                 const cadences = clientSettings.insistencia_cadences || [];
                 
@@ -266,7 +266,9 @@ export async function GET(request: Request) {
                     const currentCadence = cadences[currentInsistenciaCount];
                     if (diffHours >= (currentCadence.waitHours || 24)) {
                       shouldInsist = true;
-                      aiResponseText = currentCadence.text; // Use exact configured text
+                      if (currentCadence.text && currentCadence.text.trim()) {
+                        aiContextOverride = `INSISTENCIA_CUSTOM|${currentCadence.text.trim()}`;
+                      }
                     }
                   } else {
                     // Exhausted custom cadences, fallback to days
@@ -288,16 +290,10 @@ export async function GET(request: Request) {
                 }
 
                 if (shouldInsist) {
-                  // If we don't have exact text from a cadence, ask the AI to generate it
-                  if (!aiResponseText) {
-                    const generatedText = await generateAIResponse(client.id, supabase, "INSISTENCIA_HORAS", clientSettings);
-                    if (generatedText) {
-                      aiResponseText = generatedText;
-                    }
-                  }
+                  const generatedText = await generateAIResponse(client.id, supabase, aiContextOverride, clientSettings);
 
-                  if (aiResponseText) {
-                    await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+                  if (generatedText) {
+                    await supabase.from('mensagens').insert({ client_id: client.id, text: generatedText, sender: 'attendant', read: true });
 
                     // Incrementa o contador de insistência
                     await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount + 1, updated_at: new Date().toISOString() }).eq('id', client.id);
@@ -311,7 +307,7 @@ export async function GET(request: Request) {
                       await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                        body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
+                        body: JSON.stringify({ number: cleanedPhone, text: generatedText }),
                       });
                     }
                     results.followUpsEnviados++;
