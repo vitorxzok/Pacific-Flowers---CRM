@@ -857,6 +857,34 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                 </div>
               </div>
 
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
+                <div className="mb-2 sm:mb-0 pr-4">
+                  <h3 className="text-base font-semibold text-white">Horário de Expediente (Ações Automáticas)</h3>
+                  <p className="text-sm text-gray-400">Restringe envio automático (Insistência e Retorno Rápido) para o horário abaixo (Segunda a Domingo).</p>
+                </div>
+                <div className="flex items-center flex-shrink-0 gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 mb-1">Início</span>
+                    <input 
+                      type="time"
+                      value={localSettings?.workingHoursStart || '07:30'}
+                      onChange={(e) => setLocalSettings({ ...localSettings, workingHoursStart: e.target.value })}
+                      className="bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  <span className="text-gray-400 self-end pb-2">às</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 mb-1">Fim</span>
+                    <input 
+                      type="time"
+                      value={localSettings?.workingHoursEnd || '20:00'}
+                      onChange={(e) => setLocalSettings({ ...localSettings, workingHoursEnd: e.target.value })}
+                      className="bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Dias Padrão para Reposição */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
                 <div className="mb-2 sm:mb-0 pr-4">

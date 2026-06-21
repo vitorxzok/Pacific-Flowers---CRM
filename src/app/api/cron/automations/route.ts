@@ -24,7 +24,9 @@ export async function GET(request: Request) {
       minutes_without_response: 15,
       followup_interval_hours: 24,
       insistencia_max_repetitions: 3,
-      insistencia_days_interval: 2
+      insistencia_days_interval: 2,
+      working_hours_start: '07:30',
+      working_hours_end: '20:00'
     };
 
     for (const u of usersData.users) {
@@ -37,6 +39,8 @@ export async function GET(request: Request) {
         if (uSettings.followup_interval_hours) fallbackSettings.followup_interval_hours = uSettings.followup_interval_hours;
         if (uSettings.insistencia_max_repetitions) fallbackSettings.insistencia_max_repetitions = uSettings.insistencia_max_repetitions;
         if (uSettings.insistencia_days_interval) fallbackSettings.insistencia_days_interval = uSettings.insistencia_days_interval;
+        if (uSettings.working_hours_start) fallbackSettings.working_hours_start = uSettings.working_hours_start;
+        if (uSettings.working_hours_end) fallbackSettings.working_hours_end = uSettings.working_hours_end;
       }
     }
 
@@ -128,6 +132,27 @@ export async function GET(request: Request) {
             continue; // Pula se a resposta rápida estiver desativada para este atendente
           }
 
+          // Checar se estamos no horário comercial de Brasília
+          const brtDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+          const currentHour = brtDate.getHours();
+          const currentMinute = brtDate.getMinutes();
+          const currentTimeInMinutes = currentHour * 60 + currentMinute;
+          
+          const startStr = clientSettings.working_hours_start || '07:30';
+          const endStr = clientSettings.working_hours_end || '20:00';
+          
+          const [startHour, startMin] = startStr.split(':').map(Number);
+          const [endHour, endMin] = endStr.split(':').map(Number);
+          
+          const startInMinutes = (startHour * 60) + (startMin || 0);
+          const endInMinutes = (endHour * 60) + (endMin || 0);
+          
+          const isBusinessHours = currentTimeInMinutes >= startInMinutes && currentTimeInMinutes <= endInMinutes;
+
+          if (!isBusinessHours) {
+            continue; // Fora do horário comercial, não manda follow-up rápido
+          }
+
           const minutesWithoutResponse = clientSettings.minutes_without_response || 15;
 
           const { data: lastMessage } = await supabase
@@ -176,10 +201,22 @@ export async function GET(request: Request) {
     // LÓGICA 3: INSISTÊNCIA DA IA (HORÁRIO COMERCIAL E LIMITES)
     // ========================================================
     
-    // Checar se estamos no horário comercial de Brasília (08:00 às 17:00)
+    // Checar se estamos no horário comercial de Brasília
       const brtDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
       const currentHour = brtDate.getHours();
-      const isBusinessHours = currentHour >= 8 && currentHour < 17;
+      const currentMinute = brtDate.getMinutes();
+      const currentTimeInMinutes = currentHour * 60 + currentMinute;
+      
+      const startStr = fallbackSettings.working_hours_start || '07:30';
+      const endStr = fallbackSettings.working_hours_end || '20:00';
+      
+      const [startHour, startMin] = startStr.split(':').map(Number);
+      const [endHour, endMin] = endStr.split(':').map(Number);
+      
+      const startInMinutes = (startHour * 60) + (startMin || 0);
+      const endInMinutes = (endHour * 60) + (endMin || 0);
+      
+      const isBusinessHours = currentTimeInMinutes >= startInMinutes && currentTimeInMinutes <= endInMinutes;
 
       if (isBusinessHours) {
         const { data: clientesInsistencia, error: insistenciaError } = await supabase
