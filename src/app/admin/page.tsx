@@ -11,8 +11,10 @@ import { createClient } from '@/lib/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Attachment, CadenceStep } from '@/types';
 import { AdminWhatsAppManager } from '@/components/AdminWhatsAppManager';
+import { AdminSupervisao } from '@/components/AdminSupervisao';
 
 export default function AdminPage() {
+  const [showSupervisao, setShowSupervisao] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -535,18 +537,30 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col h-full bg-background relative overflow-y-auto">
+      {showSupervisao && (
+        <AdminSupervisao onClose={() => setShowSupervisao(false)} />
+      )}
       <header className="px-8 py-6 border-b border-surface-border bg-surface/50 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-white">Painel do Administrador</h1>
           <p className="text-sm text-gray-400 mt-1">Visão global de todos os vendedores e leads</p>
         </div>
-        <button 
-          onClick={() => { setIsAuthenticated(false); setPassword(''); }}
-          className="flex items-center space-x-2 px-4 py-2 bg-surface border border-surface-border text-white rounded-lg hover:bg-surface-hover transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Sair</span>
-        </button>
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={() => setShowSupervisao(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors font-semibold shadow-lg shadow-primary/20"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>Supervisão de Chats</span>
+          </button>
+          <button 
+            onClick={() => { setIsAuthenticated(false); setPassword(''); }}
+            className="flex items-center space-x-2 px-4 py-2 bg-surface border border-surface-border text-white rounded-lg hover:bg-surface-hover transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sair</span>
+          </button>
+        </div>
       </header>
 
       <div className="p-8 space-y-8">
