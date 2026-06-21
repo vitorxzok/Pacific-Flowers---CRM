@@ -35,20 +35,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: 'No connecting instances found', count: 0 });
     }
 
+    const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+    const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+
     // Remove do Evolution API tentando fazer logout, ignora erros pois elas provavelmente estão presas
     for (const instance of instances) {
       try {
-        await fetch(`${process.env.EVOLUTION_API_URL}/instance/logout/${instance.instance_name}`, {
+        await fetch(`${apiUrl}/instance/logout/${instance.instance_name}`, {
           method: 'DELETE',
           headers: {
-            'apikey': process.env.EVOLUTION_API_KEY!
+            'apikey': apiKey!
           }
         });
         
-        await fetch(`${process.env.EVOLUTION_API_URL}/instance/delete/${instance.instance_name}`, {
+        await fetch(`${apiUrl}/instance/delete/${instance.instance_name}`, {
           method: 'DELETE',
           headers: {
-            'apikey': process.env.EVOLUTION_API_KEY!
+            'apikey': apiKey!
           }
         });
       } catch (err) {
