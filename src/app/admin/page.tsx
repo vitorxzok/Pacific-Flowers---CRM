@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Attachment, CadenceStep } from '@/types';
 import { AdminWhatsAppManager } from '@/components/AdminWhatsAppManager';
 import { AdminSupervisao } from '@/components/AdminSupervisao';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function AdminPage() {
   const [showSupervisao, setShowSupervisao] = useState(false);
@@ -538,7 +539,9 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col h-full bg-background relative overflow-y-auto">
       {showSupervisao && (
-        <AdminSupervisao onClose={() => setShowSupervisao(false)} />
+        <ErrorBoundary>
+          <AdminSupervisao onClose={() => setShowSupervisao(false)} />
+        </ErrorBoundary>
       )}
       <header className="px-8 py-6 border-b border-surface-border bg-surface/50 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center">
         <div>
