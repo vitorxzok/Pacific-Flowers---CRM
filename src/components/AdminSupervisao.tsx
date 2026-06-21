@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useCRMStore } from '@/store/useCRMStore';
 import { Client } from '@/types';
-import { Send, FileText, Search, User, Phone, CheckCircle2, AlertCircle, RefreshCw, X, Bot } from 'lucide-react';
+import { Send, FileText, Search, User, Phone, CheckCircle2, AlertCircle, RefreshCw, X, Bot, MessageCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
