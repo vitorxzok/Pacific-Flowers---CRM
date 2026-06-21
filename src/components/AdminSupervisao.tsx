@@ -73,6 +73,10 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
     }
   }, [selectedClient?.messages, selectedClientId]);
 
+  const [isReactivating, setIsReactivating] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
+  const [reactivateDays, setReactivateDays] = useState('2');
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedClient) return;
@@ -83,6 +87,29 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
     }
   };
 
+  const handleReactivateLeads = async () => {
+    try {
+      setIsReactivating(true);
+      const pwd = localStorage.getItem('crm_admin_pwd') || '';
+      const response = await fetch('/api/admin/retroactive-cadence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pwd, daysAgo: parseInt(reactivateDays) }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(`Sucesso! ${data.reactivatedCount} leads reativados de um total de ${data.totalEvaluated} avaliados.`);
+      } else {
+        alert(`Erro: ${data.error}`);
+      }
+    } catch (err: any) {
+      alert(`Erro na requisição: ${err.message}`);
+    } finally {
+      setIsReactivating(false);
+      setShowReactivateModal(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex bg-background w-full h-full animate-in fade-in duration-200">
       
@@ -90,18 +117,61 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
       <div className="w-[400px] border-r border-surface-border bg-surface flex flex-col h-full flex-shrink-0">
         
         {/* Header Esquerdo */}
-        <div className="p-4 bg-surface-hover border-b border-surface-border flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-white">Supervisão de Chats</h2>
-            <span className="text-xs text-gray-400">Total: {filteredClients.length} leads</span>
+        <div className="p-4 bg-surface-hover border-b border-surface-border flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-white">Supervisão de Chats</h2>
+              <span className="text-xs text-gray-400">Total: {filteredClients.length} leads</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowReactivateModal(true)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-[#005c4b] text-white text-xs font-medium rounded-lg hover:bg-[#00705a] transition-colors"
+                title="Reativar leads que não responderam"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Reativar Vácuo</span>
+              </button>
+              <button 
+                onClick={onClose}
+                className="p-1.5 hover:bg-surface-border rounded-full text-gray-400 hover:text-white transition-colors border border-surface-border"
+                title="Sair da Supervisão"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-surface-border rounded-full text-gray-400 hover:text-white transition-colors border border-surface-border"
-            title="Sair da Supervisão"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          
+          {showReactivateModal && (
+            <div className="bg-surface border border-surface-border p-3 rounded-lg flex flex-col gap-2 mt-2">
+              <p className="text-xs text-white/80">Reativar leads ignorados dos últimos:</p>
+              <div className="flex items-center gap-2">
+                <select 
+                  value={reactivateDays}
+                  onChange={(e) => setReactivateDays(e.target.value)}
+                  className="bg-background text-white text-xs rounded border border-surface-border p-1"
+                >
+                  <option value="2">2 dias</option>
+                  <option value="5">5 dias</option>
+                  <option value="15">15 dias</option>
+                  <option value="30">30 dias</option>
+                </select>
+                <button 
+                  onClick={handleReactivateLeads}
+                  disabled={isReactivating}
+                  className="px-3 py-1 bg-primary text-white text-xs font-medium rounded hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {isReactivating ? 'Processando...' : 'Iniciar'}
+                </button>
+                <button 
+                  onClick={() => setShowReactivateModal(false)}
+                  className="px-3 py-1 bg-surface-border text-white text-xs font-medium rounded hover:bg-surface-border/80"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Filtros */}

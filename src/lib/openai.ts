@@ -165,6 +165,12 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
         role: 'system',
         content: `Atenção: O cliente parou de responder e você deve retomar o contato. Siga a seguinte instrução para esta etapa da cadência: "${customInstruction}". Responda de acordo com o histórico da conversa e mantenha o foco em levar o cliente ao fechamento do pedido.`
       });
+    } else if (contextOverride && contextOverride.startsWith('REACTIVATION|')) {
+      const days = contextOverride.split('|')[1];
+      openAiMessages.push({
+        role: 'system',
+        content: `Atenção: Este cliente não responde há ${days} dias. Sua missão é reativá-lo. Leia o contexto da última conversa e envie uma mensagem natural, amigável e descontraída, tentando puxar assunto de onde pararam. Não cobre uma resposta agressivamente, aja como se estivesse apenas acompanhando para ver se ele precisa de algo ou se conseguiu analisar a proposta. Mantenha sua identidade e regras de vendas.`
+      });
     }
 
     if (clientInfo && clientInfo.status) {
