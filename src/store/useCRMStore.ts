@@ -203,7 +203,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
 
   fetchAdminClients: async (password: string) => {
     try {
-      const response = await fetch(`/api/admin/clients?pwd=${password}`);
+      const response = await fetch(`/api/admin/clients?pwd=${password}&t=${Date.now()}`, { cache: 'no-store' });
       if (!response.ok) return false;
       
       const { clients } = await response.json();

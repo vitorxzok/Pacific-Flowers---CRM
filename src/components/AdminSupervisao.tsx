@@ -248,6 +248,12 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
                         "max-w-[70%] rounded-xl px-4 py-2 relative shadow-sm flex flex-col",
                         isAttendant ? "bg-[#005c4b] text-white rounded-tr-none" : "bg-[#202c33] text-white rounded-tl-none"
                       )}>
+                        <span className={clsx(
+                          "text-[11px] font-bold mb-1",
+                          isAttendant ? "text-[#4ade80]" : "text-[#60a5fa]"
+                        )}>
+                          {isAttendant ? (selectedClient.attendant || 'Admin/Vendedor') : (selectedClient.name || 'Cliente')}
+                        </span>
                         {msg.media_url ? (
                           <div className="flex flex-col gap-2">
                             <a href={msg.media_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">
@@ -260,7 +266,6 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
                           <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                         )}
                         <span className="text-[10px] text-white/60 self-end mt-1 flex items-center gap-1">
-                          {isAttendant && <span className="text-white/40 mr-1">(Admin/Vendedor)</span>}
                           {safeFormatDate(msg.timestamp, "HH:mm")}
                         </span>
                       </div>
