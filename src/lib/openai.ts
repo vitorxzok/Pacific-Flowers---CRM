@@ -180,9 +180,9 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
 Status atual no CRM: "${clientInfo.status}".
 Nome do cliente no CRM: "${clientInfo.name || 'Desconhecido'}".
 
-REGRA 1 - NOME: Se o nome for 'Desconhecido' ou começar com 'Lead WhatsApp', VOCÊ DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigável na sua resposta. NUNCA ignore isso. Se já souber o nome (diferente de Desconhecido ou Lead WhatsApp), chame-o pelo nome.
-REGRA 2 - CATÁLOGO: Assim que o cliente confirmar que é lojista e disser o nome, VOCÊ DEVE OBRIGATORIAMENTE chamar a ferramenta "sendAttachment" com o parâmetro triggerName igual a "CATALOGO" naquela mesma resposta. Não pergunte se ele quer receber, apenas envie chamando a ferramenta!
-REGRA 3 - STATUS: Se o status for "Em Qualificação", significa que você JÁ ABORDOU e JÁ ENVIOU o catálogo no passado. Foque no atendimento. MAS se ele PEDIR o catálogo novamente, envie usando a ferramenta.
+REGRA 1 - NOME: Se o nome for 'Desconhecido' ou começar com 'Lead WhatsApp', VOCÊ DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigável na sua resposta. Se já souber o nome, chame-o pelo nome.
+REGRA 2 - CATÁLOGO: Se o cliente disser a palavra "catálogo", pedir o catálogo, ou confirmar que é lojista, VOCÊ DEVE OBRIGATORIAMENTE E IMEDIATAMENTE chamar a ferramenta "sendAttachment" com o parâmetro triggerName igual a "CATALOGO". É ESTRITAMENTE PROIBIDO dizer "Aqui está o catálogo" e não chamar a ferramenta. Você tem que chamar a ferramenta!
+REGRA 3 - ORÇAMENTOS E QUANTIDADE: Se o cliente pedir um orçamento, listar produtos ou quiser fazer pedido, VOCÊ DEVE SEMPRE perguntar a QUANTIDADE exata de cada produto (lembrando que vendemos em múltiplos de 12). Nunca tente adivinhar ou fazer orçamento sem antes confirmar as quantidades com o cliente.
 REGRA 4 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
       });
     }
@@ -204,13 +204,13 @@ REGRA 4 - NUNCA assuma que já sabe o nome se o CRM diz que é Desconhecido.`
           type: 'function',
           function: {
             name: 'sendAttachment',
-            description: 'Envia um anexo (mÃ­dia, catÃ¡logo, foto de kit) para o cliente pelo WhatsApp com base em um gatilho configurado.',
+            description: 'ENVIA O CATÁLOGO OU ANEXO. Você DEVE e TEM A OBRIGAÇÃO de chamar esta função IMEDIATAMENTE sempre que o cliente pedir o catálogo, usar a palavra "catálogo" ou confirmar que é lojista.',
             parameters: {
               type: 'object',
               properties: {
                 triggerName: {
                   type: 'string',
-                  description: 'O nome exato do gatilho configurado pelo vendedor. Ex: "CATALOGO", "KIT_350", "KIT_850"'
+                  description: 'O nome exato do gatilho configurado pelo vendedor. Ex: "CATALOGO", "KIT_350"'
                 }
               },
               required: ['triggerName']
