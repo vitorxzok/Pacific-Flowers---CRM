@@ -43,8 +43,10 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
   const filteredClients = useMemo(() => {
     return clients
       .filter(c => {
-        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              c.phone.includes(searchTerm) ||
+        const name = c.name || '';
+        const phone = c.phone || '';
+        const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              phone.includes(searchTerm) ||
                               (c.storeName && c.storeName.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesAttendant = attendantFilter === 'all' || c.attendant === attendantFilter;
         const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
@@ -157,7 +159,7 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
                 )}
               >
                 <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-semibold text-white truncate max-w-[200px]">{client.name}</h3>
+                  <h3 className="font-semibold text-white truncate max-w-[200px]">{client?.name || 'Desconhecido'}</h3>
                   {lastMessage && (
                     <span className="text-[10px] text-gray-500 whitespace-nowrap">
                       {safeFormatDate(lastMessage.timestamp, "HH:mm")}
@@ -201,19 +203,19 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
             {/* Chat Header */}
             <div className="p-4 bg-[#202c33] border-b border-white/10 flex items-center justify-between z-10">
               <div className="flex items-center space-x-4">
-                {selectedClient.avatarUrl ? (
-                  <img src={selectedClient.avatarUrl} alt={selectedClient.name} className="w-10 h-10 rounded-full object-cover" />
+                {selectedClient?.avatarUrl ? (
+                  <img src={selectedClient.avatarUrl} alt={selectedClient?.name || ''} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-surface-hover flex items-center justify-center text-gray-400 font-bold">
-                    {selectedClient.name.charAt(0)}
+                    {(selectedClient?.name || '?').charAt(0)}
                   </div>
                 )}
                 <div>
-                  <h2 className="text-white font-semibold">{selectedClient.name}</h2>
+                  <h2 className="text-white font-semibold">{selectedClient?.name || 'Desconhecido'}</h2>
                   <div className="flex items-center space-x-3 text-xs text-gray-400 mt-1">
-                    <span className="flex items-center"><Phone className="w-3 h-3 mr-1" /> {selectedClient.phone}</span>
-                    <span className="flex items-center"><User className="w-3 h-3 mr-1" /> Vendedor: <span className="font-semibold text-white ml-1">{selectedClient.attendant || 'Sem Atendente'}</span></span>
-                    {selectedClient.needs_human && (
+                    <span className="flex items-center"><Phone className="w-3 h-3 mr-1" /> {selectedClient?.phone || ''}</span>
+                    <span className="flex items-center"><User className="w-3 h-3 mr-1" /> Vendedor: <span className="font-semibold text-white ml-1">{selectedClient?.attendant || 'Sem Atendente'}</span></span>
+                    {selectedClient?.needs_human && (
                       <span className="flex items-center text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded"><AlertCircle className="w-3 h-3 mr-1" /> Aguardando Humano</span>
                     )}
                   </div>
