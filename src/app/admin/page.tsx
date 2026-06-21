@@ -297,7 +297,8 @@ export default function AdminPage() {
           businessName: data.business_name || '',
           businessContext: data.business_context || '',
           productsCatalog: data.products_catalog || '',
-          attachments: data.attachments || []
+          attachments: data.attachments || [],
+          insistenciaCadences: data.insistencia_cadences || []
         });
       }
     } catch (e) {
