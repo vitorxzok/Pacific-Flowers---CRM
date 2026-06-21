@@ -50,6 +50,7 @@ export function Sidebar() {
   const navItems = [
     { name: 'Painel', href: '/', icon: LayoutDashboard },
     { name: 'Clientes', href: '/clientes', icon: Users },
+    { name: 'Chats', href: '/chats', icon: MessageSquare },
     { name: 'WhatsApp', href: '/whatsapp', icon: Smartphone },
     { name: 'Simulador IA', href: '/simulator', icon: MessageSquare },
     { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },

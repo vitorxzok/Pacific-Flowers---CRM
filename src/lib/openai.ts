@@ -43,10 +43,8 @@ Os produtos são vendidos em múltiplos de 12 unidades, ok.
 Você pode ver todos os produtos aqui e também pode montar seu pedido direto pelo link PedidoRápido:
 
 https://pacific-flowers.vercel.app
-
 [SEPARAR]
 "
-*Aviso interno: A tag [SEPARAR] serve apenas para o nosso sistema dividir a sua mensagem em duas partes para encaixar o arquivo no meio. Coloque-a no lugar onde o PDF deve aparecer. Não escreva "SEPARAR" em nenhum outro contexto.*
 </fluxo_principal>
 
 <pos_catalogo>
