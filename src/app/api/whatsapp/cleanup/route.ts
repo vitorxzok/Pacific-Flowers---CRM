@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       .from('whatsapp_instances')
       .select('*')
       .eq('user_id', user_id)
-      .eq('connection_status', 'connecting');
+      .eq('status', 'connecting');
 
     if (fetchError) {
       console.error('Error fetching connecting instances:', fetchError);
