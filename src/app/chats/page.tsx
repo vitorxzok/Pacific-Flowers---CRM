@@ -17,6 +17,8 @@ export default function ChatsPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [attendants, setAttendants] = useState<any[]>([]);
+  const [selectedAttendantId, setSelectedAttendantId] = useState<string>('ALL');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,7 +29,15 @@ export default function ChatsPage() {
         return;
       }
       setSession(session);
-      setIsAdmin(session.user.user_metadata?.role === 'admin');
+      if (session.user.user_metadata?.role !== 'admin') {
+        router.push('/');
+        return;
+      }
+      setIsAdmin(true);
+
+      // Buscar lista de atendentes
+      const { data: profiles } = await supabase.from('profiles').select('id, name');
+      if (profiles) setAttendants(profiles);
     };
     fetchSession();
   }, [router, supabase]);
@@ -42,9 +52,11 @@ export default function ChatsPage() {
           .select('*')
           .order('updated_at', { ascending: false });
 
-        // If not admin, only show clients assigned to this user
-        if (!isAdmin) {
-          query = query.eq('attendant_id', session.user.id);
+        // Apply attendant filter
+        if (selectedAttendantId === 'null') {
+          query = query.is('attendant_id', null);
+        } else if (selectedAttendantId !== 'ALL') {
+          query = query.eq('attendant_id', selectedAttendantId);
         }
 
         const { data, error } = await query;
@@ -70,7 +82,7 @@ export default function ChatsPage() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [session, isAdmin, supabase]);
+  }, [session, isAdmin, selectedAttendantId, supabase]);
 
   useEffect(() => {
     if (!selectedClient) return;
@@ -168,16 +180,29 @@ export default function ChatsPage() {
         </div>
 
         {/* Search */}
-        <div className="p-3 border-b border-surface-border">
+        <div className="p-3 border-b border-surface-border space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input 
               type="text" 
-              placeholder="Pesquisar ou começar uma nova conversa" 
+              placeholder="Pesquisar conversa" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-background border border-surface-border rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
             />
+          </div>
+          <div className="flex flex-col">
+            <select
+              value={selectedAttendantId}
+              onChange={(e) => setSelectedAttendantId(e.target.value)}
+              className="bg-background border border-surface-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/50"
+            >
+              <option value="ALL">Todos os Vendedores/Números</option>
+              {attendants.map(a => (
+                <option key={a.id} value={a.id}>{a.name} (Vendedor)</option>
+              ))}
+              <option value="null">Robô (Sem vendedor atribuído)</option>
+            </select>
           </div>
         </div>
 

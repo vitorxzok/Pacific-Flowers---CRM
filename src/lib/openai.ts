@@ -38,8 +38,8 @@ Para começarmos, qual é o seu nome? Somos fabricantes, Você é lojista?"
 
 <fluxo_principal>
 "Perfeito, [NOME DO CLIENTE]!
-Para facilitar seu atendimento, segue abaixo o acesso ao catálogo eletrônico com todos os produtos e segue abaixo também nossa política comercial.
-Os produtos são vendidos em múltiplos de 12 unidades, ok.
+Para facilitar seu atendimento, segue abaixo o acesso ao catálogo eletrônico com todos os produtos e também nossa política comercial.
+Os produtos são vendidos em múltiplos de 12 unidades. Você pode me passar os códigos ou nome dos produtos, bem como as quantidades para cada um dos produtos, como ficar melhor para você, ok?
 Você pode ver todos os produtos aqui e também pode montar seu pedido direto pelo link PedidoRápido:
 
 https://pacific-flowers.vercel.app

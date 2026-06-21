@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     if (!deleteResponse.ok) {
       const data = await deleteResponse.json();
-      return NextResponse.json({ error: data.response?.message || 'Erro ao deletar instância na API' }, { status: deleteResponse.status });
+      console.warn('Erro ao deletar instância na API Evolution, forçando limpeza no banco:', data.response?.message || 'Unknown');
     }
 
     // Update the database to set status as disconnected
