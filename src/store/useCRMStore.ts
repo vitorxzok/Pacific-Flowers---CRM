@@ -37,6 +37,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     followUpIntervalHours: 24,
     insistenciaMaxRepetitions: 3,
     insistenciaDaysInterval: 2,
+    insistenciaCadences: [],
     reposicao_days_global: 30,
     kanbanColumns: ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
     kanbanColumnNames: {},
@@ -63,6 +64,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           followup_interval_hours: merged.followUpIntervalHours,
           insistencia_max_repetitions: merged.insistenciaMaxRepetitions,
           insistencia_days_interval: merged.insistenciaDaysInterval,
+          insistencia_cadences: merged.insistenciaCadences,
           reposicao_days_global: merged.reposicao_days_global,
           kanban_columns: merged.kanbanColumns,
           kanban_column_names: merged.kanbanColumnNames,
@@ -90,6 +92,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           followUpIntervalHours: data.followup_interval_hours ?? data.followUpIntervalHours ?? 24,
           insistenciaMaxRepetitions: data.insistencia_max_repetitions ?? data.insistenciaMaxRepetitions ?? 3,
           insistenciaDaysInterval: data.insistencia_days_interval ?? data.insistenciaDaysInterval ?? 2,
+          insistenciaCadences: data.insistencia_cadences ?? data.insistenciaCadences ?? [],
           reposicao_days_global: data.reposicao_days_global ?? 30,
           kanbanColumns: data.kanban_columns ?? data.kanbanColumns ?? ['Novo', 'Contato Feito', 'Em Qualificação', 'Proposta Enviada', 'Finalizado', 'Reposição', 'Perdido'],
           kanbanColumnNames: data.kanban_column_names ?? data.kanbanColumnNames ?? {},
@@ -99,7 +102,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
           attachments: data.attachments || [],
           workingHoursStart: data.working_hours_start ?? data.workingHoursStart ?? '07:30',
           workingHoursEnd: data.working_hours_end ?? data.workingHoursEnd ?? '20:00'
-        }});
+        } });
       }
     } catch (error) {
       console.error("Erro ao buscar configuracoes:", error);

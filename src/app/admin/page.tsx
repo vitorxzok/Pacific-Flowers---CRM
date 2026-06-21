@@ -9,7 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import Papa from 'papaparse';
 import { createClient } from '@/lib/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { Attachment } from '@/types';
+import { Attachment, CadenceStep } from '@/types';
 import { AdminWhatsAppManager } from '@/components/AdminWhatsAppManager';
 
 export default function AdminPage() {
@@ -102,6 +102,31 @@ export default function AdminPage() {
   const handleRemoveAttachment = (id: string) => {
     const updated = (localSettings?.attachments || []).filter((a: Attachment) => a.id !== id);
     setLocalSettings({ ...localSettings, attachments: updated });
+  };
+
+  const handleAddCadence = () => {
+    const newCadence: CadenceStep = { id: uuidv4(), text: '', waitHours: 24 };
+    const current = localSettings?.insistenciaCadences || [];
+    if (current.length >= 10) {
+      toast.error('Limite máximo de 10 cadências atingido.');
+      return;
+    }
+    setLocalSettings({
+      ...localSettings,
+      insistenciaCadences: [...current, newCadence]
+    });
+  };
+
+  const handleUpdateCadence = (id: string, field: keyof CadenceStep, value: string | number) => {
+    const updated = (localSettings?.insistenciaCadences || []).map((c: CadenceStep) => 
+      c.id === id ? { ...c, [field]: value } : c
+    );
+    setLocalSettings({ ...localSettings, insistenciaCadences: updated });
+  };
+
+  const handleRemoveCadence = (id: string) => {
+    const updated = (localSettings?.insistenciaCadences || []).filter((c: CadenceStep) => c.id !== id);
+    setLocalSettings({ ...localSettings, insistenciaCadences: updated });
   };
 
   const handleUploadAttachment = async (event: React.ChangeEvent<HTMLInputElement>, id: string) => {
@@ -955,6 +980,71 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                       />
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Cadências de Insistência Personalizadas */}
+              <div className="flex flex-col border-b border-surface-border pb-8 mb-4 border-t pt-8">
+                <div className="mb-6 flex justify-between items-start sm:items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5 text-primary" /> Cadências de Insistência da IA
+                    </h3>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Configure até 10 mensagens sequenciais para enviar a clientes inativos. A IA usará este texto na ordem correta.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleAddCadence}
+                    className="flex items-center gap-2 px-3 py-2 bg-surface-hover hover:bg-surface-border text-white text-sm font-medium rounded-lg transition-colors border border-surface-border"
+                  >
+                    <Plus className="w-4 h-4" /> Nova Cadência
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {(localSettings?.insistenciaCadences || []).length === 0 ? (
+                    <div className="text-center py-6 bg-surface rounded-lg border border-surface-border border-dashed">
+                      <p className="text-gray-400 text-sm">Nenhuma cadência configurada. A IA usará o comportamento padrão com base nas horas globais.</p>
+                    </div>
+                  ) : (
+                    (localSettings?.insistenciaCadences || []).map((cadence: CadenceStep, index: number) => (
+                      <div key={cadence.id} className="flex flex-col sm:flex-row gap-4 p-4 bg-surface rounded-lg border border-surface-border items-start">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
+                          {index + 1}
+                        </div>
+                        <div className="flex-[3]">
+                          <label className="block text-xs font-medium text-gray-400 mb-1">Mensagem exata que a IA deve enviar</label>
+                          <textarea 
+                            value={cadence.text}
+                            onChange={(e) => handleUpdateCadence(cadence.id, 'text', e.target.value)}
+                            placeholder="Olá! Conseguiu ver o catálogo que te mandei?"
+                            rows={2}
+                            className="w-full bg-background border border-surface-border rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-400 mb-1">Tempo de Espera</label>
+                          <div className="flex items-center">
+                            <input 
+                              type="number" min="1" max="720"
+                              value={cadence.waitHours}
+                              onChange={(e) => handleUpdateCadence(cadence.id, 'waitHours', e.target.value === '' ? 1 : parseInt(e.target.value))}
+                              className="w-20 bg-background border border-surface-border rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-center"
+                            />
+                            <span className="ml-2 text-gray-400 text-xs">horas</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveCadence(cadence.id)}
+                          className="mt-6 p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
+                          title="Remover cadência"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

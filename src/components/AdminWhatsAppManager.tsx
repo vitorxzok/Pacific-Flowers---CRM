@@ -103,6 +103,29 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, onClose
     }
   };
 
+  const handleCleanupConnecting = async () => {
+    const confirm = window.confirm(`Deseja realmente limpar TODOS os slots em status "conectando" para ${userName}?`);
+    if (!confirm) return;
+
+    try {
+      const res = await fetch('/api/whatsapp/cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: targetUserId })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        toast.success(`Foram limpos ${data.count} slots com status "conectando".`);
+        fetchStatus();
+      } else {
+        toast.error(`Erro ao limpar slots: ${data.error}`);
+      }
+    } catch (err) {
+      toast.error('Erro de conexão ao limpar slots.');
+    }
+  };
+
   const renderSlot = (slotId: number) => {
     const instance = instances.find(inst => inst.slotId === slotId);
     const isLoading = loadingSlots[slotId];
@@ -186,17 +209,28 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, onClose
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-background border border-surface-border rounded-xl shadow-2xl w-full max-w-6xl my-8 relative flex flex-col max-h-[90vh]">
-        <div className="p-6 border-b border-surface-border flex items-center justify-between sticky top-0 bg-background z-20 rounded-t-xl">
+        <div className="flex justify-between items-center p-6 border-b border-surface-border">
           <div>
-            <h2 className="text-xl font-bold text-white">Gerenciar WhatsApp - {userName}</h2>
-            <p className="text-sm text-gray-400 mt-1">Conecte ou desconecte instâncias no Evolution API em nome deste vendedor.</p>
+            <h2 className="text-xl font-bold text-white">Gerenciamento de WhatsApp</h2>
+            <p className="text-sm text-gray-400 mt-1">
+              Conecte ou desconecte números para <strong>{userName}</strong>. Máximo {MAX_SLOTS} números.
+            </p>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white bg-surface rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleCleanupConnecting}
+              className="flex items-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors border border-red-500/20 text-sm font-medium"
+            >
+              <RefreshCw className="w-4 h-4" /> Limpar "Conectando"
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 bg-surface hover:bg-surface-border text-gray-400 hover:text-white rounded-lg transition-colors border border-surface-border"
+              title="Fechar painel"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
         
         <div className="p-6 overflow-y-auto flex-1">

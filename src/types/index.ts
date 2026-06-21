@@ -50,12 +50,19 @@ export interface Attachment {
   type: string; // 'document', 'image', etc.
 }
 
+export interface CadenceStep {
+  id: string;
+  text: string;
+  waitHours: number;
+}
+
 export interface Settings {
   autoReplyEnabled: boolean;
   minutesWithoutResponse: number;
   followUpIntervalHours: number;
   insistenciaMaxRepetitions?: number;
   insistenciaDaysInterval?: number;
+  insistenciaCadences?: CadenceStep[];
   reposicao_days_global?: number;
   kanbanColumns: string[];
   kanbanColumnNames?: Record<string, string>;

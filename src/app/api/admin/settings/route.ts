@@ -33,6 +33,7 @@ export async function POST(request: Request) {
             followup_interval_hours: settings.followUpIntervalHours,
             insistencia_max_repetitions: settings.insistenciaMaxRepetitions,
             insistencia_days_interval: settings.insistenciaDaysInterval,
+            insistencia_cadences: settings.insistenciaCadences,
             reposicao_days_global: settings.reposicao_days_global
           }
         }

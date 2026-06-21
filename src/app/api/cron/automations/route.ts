@@ -256,22 +256,45 @@ export async function GET(request: Request) {
                 const diffDays = diffHours / 24;
 
                 let shouldInsist = false;
-
-                if (currentInsistenciaCount < maxRepetitions) {
-                  // Usa o intervalo em horas
-                  if (diffHours >= followUpIntervalHours) {
-                    shouldInsist = true;
+                let aiResponseText = '';
+                
+                const cadences = clientSettings.insistencia_cadences || [];
+                
+                if (cadences.length > 0) {
+                  // Custom cadences logic
+                  if (currentInsistenciaCount < cadences.length) {
+                    const currentCadence = cadences[currentInsistenciaCount];
+                    if (diffHours >= (currentCadence.waitHours || 24)) {
+                      shouldInsist = true;
+                      aiResponseText = currentCadence.text; // Use exact configured text
+                    }
+                  } else {
+                    // Exhausted custom cadences, fallback to days
+                    if (diffDays >= daysInterval) {
+                      shouldInsist = true;
+                    }
                   }
                 } else {
-                  // Limite atingido: usa o intervalo em dias
-                  if (diffDays >= daysInterval) {
-                    shouldInsist = true;
+                  // Original global hours logic
+                  if (currentInsistenciaCount < maxRepetitions) {
+                    if (diffHours >= followUpIntervalHours) {
+                      shouldInsist = true;
+                    }
+                  } else {
+                    if (diffDays >= daysInterval) {
+                      shouldInsist = true;
+                    }
                   }
                 }
 
                 if (shouldInsist) {
-                  // Chama a IA com contexto de insistência e passa as configurações do cliente para usar o prompt global correto
-                  const aiResponseText = await generateAIResponse(client.id, supabase, "INSISTENCIA_HORAS", clientSettings);
+                  // If we don't have exact text from a cadence, ask the AI to generate it
+                  if (!aiResponseText) {
+                    const generatedText = await generateAIResponse(client.id, supabase, "INSISTENCIA_HORAS", clientSettings);
+                    if (generatedText) {
+                      aiResponseText = generatedText;
+                    }
+                  }
 
                   if (aiResponseText) {
                     await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
