@@ -107,6 +107,27 @@ export async function POST(request: Request) {
       } else {
         clientId = clients[0].id;
         
+        // Se for de atendente (isFromMe), verifica se é eco da IA ou se é o vendedor humano
+        let isAiEcho = false;
+        if (isFromMe) {
+          // Tenta achar uma mensagem idêntica enviada há menos de 10 segundos
+          const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
+          const { data: recentAiMsg } = await supabase
+            .from('mensagens')
+            .select('id')
+            .eq('client_id', clientId)
+            .eq('text', text)
+            .eq('sender', 'attendant')
+            .gte('timestamp', tenSecondsAgo)
+            .limit(1);
+
+          if (recentAiMsg && recentAiMsg.length > 0) {
+            isAiEcho = true;
+            console.log(`[Webhook] Eco de mensagem da IA detectado. Ignorando duplicação.`);
+            return NextResponse.json({ success: true, message: 'Echo da IA ignorado.' });
+          }
+        }
+
         // Se a mensagem for do cliente, atualizamos followup_sent e resetamos a insistencia
         if (!isFromMe) {
           const updateData: any = { 
@@ -148,11 +169,19 @@ export async function POST(request: Request) {
             console.error('Erro ao atualizar cliente:', updateError);
           }
         } else {
-          // Se for do vendedor, significa que o humano assumiu o controle ou respondeu, então tiramos o alerta de needs_human
+          // Se for do vendedor (e não for eco da IA), significa que o humano assumiu o controle!
+          // Desativamos a IA e atualizamos o status.
           await supabase
             .from('clientes')
-            .update({ needs_human: false, updated_at: new Date().toISOString() })
+            .update({ 
+              needs_human: false, 
+              ai_enabled: false, 
+              status: 'Atendimento Humano',
+              updated_at: new Date().toISOString() 
+            })
             .eq('id', clientId);
+          
+          console.log(`[Webhook] Humano assumiu a conversa do cliente ${clientId}. IA desativada.`);
         }
       }
 

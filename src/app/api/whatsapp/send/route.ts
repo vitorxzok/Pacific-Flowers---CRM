@@ -77,6 +77,14 @@ export async function POST(request: Request) {
       // Não retornamos erro porque no WhatsApp já foi.
     }
 
+    // Se o humano mandou uma mensagem pelo painel, vamos desativar a IA e mudar o status para Atendimento Humano
+    await supabase.from('clientes').update({ 
+      ai_enabled: false, 
+      needs_human: false,
+      status: 'Atendimento Humano',
+      updated_at: new Date().toISOString()
+    }).eq('id', clientId);
+
     return NextResponse.json({ success: true, message: 'Mensagem enviada com sucesso!' });
 
   } catch (error: any) {
