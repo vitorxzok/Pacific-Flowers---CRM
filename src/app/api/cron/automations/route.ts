@@ -170,10 +170,12 @@ export async function GET(request: Request) {
 
             if (diffMinutes >= minutesWithoutResponse) {
               await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
-              const aiResponseText = await generateAIResponse(client.id, supabase, "FOLLOW_UP_INATIVIDADE");
+              const aiResponse = await generateAIResponse(client.id, supabase, "FOLLOW_UP_INATIVIDADE");
+              const aiResponseText = aiResponse?.text;
 
               if (aiResponseText) {
-                await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+                const cleanText = aiResponseText.replace(/\[SEPARAR\]/g, '').trim();
+                await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
 
                 const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
                 const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
@@ -184,7 +186,7 @@ export async function GET(request: Request) {
                   await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                    body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
+                    body: JSON.stringify({ number: cleanedPhone, text: cleanText }),
                   });
                 }
                 results.followUpsEnviados++;
