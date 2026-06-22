@@ -290,10 +290,13 @@ export async function GET(request: Request) {
                 }
 
                 if (shouldInsist) {
-                  const generatedText = await generateAIResponse(client.id, supabase, aiContextOverride, clientSettings);
+                  const aiResponse = await generateAIResponse(client.id, supabase, aiContextOverride, clientSettings);
+                  const generatedText = aiResponse?.text;
 
                   if (generatedText) {
-                    await supabase.from('mensagens').insert({ client_id: client.id, text: generatedText, sender: 'attendant', read: true });
+                    const cleanText = generatedText.replace(/\[SEPARAR\]/g, '').trim();
+
+                    await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
 
                     // Incrementa o contador de insistência
                     await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount + 1, updated_at: new Date().toISOString() }).eq('id', client.id);
@@ -307,7 +310,7 @@ export async function GET(request: Request) {
                       await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                        body: JSON.stringify({ number: cleanedPhone, text: generatedText }),
+                        body: JSON.stringify({ number: cleanedPhone, text: cleanText }),
                       });
                     }
                     results.followUpsEnviados++;
