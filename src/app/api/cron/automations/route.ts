@@ -255,6 +255,7 @@ export async function GET(request: Request) {
                 const messageTime = new Date(lastMessage.timestamp).getTime();
                 const now = new Date().getTime();
                 const diffHours = (now - messageTime) / (1000 * 60 * 60);
+                const diffMinutes = (now - messageTime) / (1000 * 60);
                 const diffDays = diffHours / 24;
 
                 let shouldInsist = false;
@@ -266,7 +267,8 @@ export async function GET(request: Request) {
                   // Custom cadences logic
                   if (currentInsistenciaCount < cadences.length) {
                     const currentCadence = cadences[currentInsistenciaCount];
-                    if (diffHours >= (currentCadence.waitHours || 24)) {
+                    // waitHours is now treated as MINUTES according to new requirements
+                    if (diffMinutes >= (currentCadence.waitHours || 60)) {
                       shouldInsist = true;
                       if (currentCadence.text && currentCadence.text.trim()) {
                         aiContextOverride = `INSISTENCIA_CUSTOM|${currentCadence.text.trim()}`;
@@ -279,12 +281,13 @@ export async function GET(request: Request) {
                     }
                   }
                 } else {
-                  // Original global hours logic
+                  // Original global logic (now in minutes)
                   if (currentInsistenciaCount < maxRepetitions) {
-                    if (diffHours >= followUpIntervalHours) {
+                    if (diffMinutes >= followUpIntervalHours) {
                       shouldInsist = true;
                     }
                   } else {
+                    // Após atingir o limite em minutos, passa a insistir por dias
                     if (diffDays >= daysInterval) {
                       shouldInsist = true;
                     }

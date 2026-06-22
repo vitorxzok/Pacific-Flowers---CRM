@@ -886,17 +886,17 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
               {/* Insistência da IA */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
                 <div className="mb-2 sm:mb-0 pr-4">
-                  <h3 className="text-base font-semibold text-white">Insistência da IA</h3>
-                  <p className="text-sm text-gray-400">Tempo em horas para a IA enviar automaticamente nova mensagem.</p>
+                  <h3 className="text-base font-semibold text-white">Insistência da IA (Global)</h3>
+                  <p className="text-sm text-gray-400">Tempo em minutos para a IA enviar automaticamente nova mensagem.</p>
                 </div>
                 <div className="flex items-center flex-shrink-0">
                   <input 
-                    type="number" min="1" max="72"
+                    type="number" min="1" max="1440"
                     value={localSettings?.followUpIntervalHours || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, followUpIntervalHours: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                     className="w-24 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
-                  <span className="ml-3 text-gray-400 text-sm">horas</span>
+                  <span className="ml-3 text-gray-400 text-sm">min</span>
                 </div>
               </div>
 
@@ -949,7 +949,7 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
                 <div className="mb-2 sm:mb-0 pr-4">
                   <h3 className="text-base font-semibold text-white">Limite de Repetições (Insistência)</h3>
-                  <p className="text-sm text-gray-400">Quantidade máxima de vezes para retomar contato em horas.</p>
+                  <p className="text-sm text-gray-400">Quantidade máxima de vezes para retomar contato (Insistência Padrão).</p>
                 </div>
                 <div className="flex items-center flex-shrink-0">
                   <input 
@@ -1045,12 +1045,12 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                           <label className="block text-xs font-medium text-gray-400 mb-1">Tempo de Espera</label>
                           <div className="flex items-center">
                             <input 
-                              type="number" min="1" max="720"
+                              type="number" min="1" max="14400"
                               value={cadence.waitHours}
                               onChange={(e) => handleUpdateCadence(cadence.id, 'waitHours', e.target.value === '' ? 1 : parseInt(e.target.value))}
                               className="w-20 bg-background border border-surface-border rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-center"
                             />
-                            <span className="ml-2 text-gray-400 text-xs">horas</span>
+                            <span className="ml-2 text-gray-400 text-xs">minutos</span>
                           </div>
                         </div>
                         <button
