@@ -77,13 +77,23 @@ export async function POST(request: Request) {
       // Não retornamos erro porque no WhatsApp já foi.
     }
 
-    // Se o humano mandou uma mensagem pelo painel, vamos desativar a IA e mudar o status para Atendimento Humano
-    await supabase.from('clientes').update({ 
-      ai_enabled: false, 
-      needs_human: false,
-      status: 'Atendimento Humano',
-      updated_at: new Date().toISOString()
-    }).eq('id', clientId);
+    // Se o humano mandou uma mensagem pelo painel, vamos verificar se ele quer reativar a IA
+    const textTrimmed = text.trim();
+    if (textTrimmed.endsWith('..') && !textTrimmed.endsWith('...')) {
+      await supabase.from('clientes').update({ 
+        ai_enabled: true, 
+        needs_human: false,
+        status: 'Novo', // Mantém ou volta para a IA
+        updated_at: new Date().toISOString()
+      }).eq('id', clientId);
+    } else {
+      await supabase.from('clientes').update({ 
+        ai_enabled: false, 
+        needs_human: false,
+        status: 'Atendimento Humano',
+        updated_at: new Date().toISOString()
+      }).eq('id', clientId);
+    }
 
     return NextResponse.json({ success: true, message: 'Mensagem enviada com sucesso!' });
 

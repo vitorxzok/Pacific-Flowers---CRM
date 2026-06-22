@@ -170,18 +170,35 @@ export async function POST(request: Request) {
           }
         } else {
           // Se for do vendedor (e não for eco da IA), significa que o humano assumiu o controle!
-          // Desativamos a IA e atualizamos o status.
-          await supabase
-            .from('clientes')
-            .update({ 
-              needs_human: false, 
-              ai_enabled: false, 
-              status: 'Atendimento Humano',
-              updated_at: new Date().toISOString() 
-            })
-            .eq('id', clientId);
-          
-          console.log(`[Webhook] Humano assumiu a conversa do cliente ${clientId}. IA desativada.`);
+          // VERIFICAR CÓDIGO SECRETO ".."
+          const textTrimmed = text.trim();
+          if (textTrimmed.endsWith('..') && !textTrimmed.endsWith('...')) {
+            // Humano usou o código secreto para reativar a IA!
+            await supabase
+              .from('clientes')
+              .update({ 
+                needs_human: false, 
+                ai_enabled: true, 
+                status: 'Novo', // Volta o status para que a IA possa conduzir o fluxo
+                updated_at: new Date().toISOString() 
+              })
+              .eq('id', clientId);
+            
+            console.log(`[Webhook] Humano usou código secreto "..". IA REATIVADA para o cliente ${clientId}.`);
+          } else {
+            // Comportamento normal: Desativamos a IA e atualizamos o status.
+            await supabase
+              .from('clientes')
+              .update({ 
+                needs_human: false, 
+                ai_enabled: false, 
+                status: 'Atendimento Humano',
+                updated_at: new Date().toISOString() 
+              })
+              .eq('id', clientId);
+            
+            console.log(`[Webhook] Humano assumiu a conversa do cliente ${clientId}. IA desativada.`);
+          }
         }
       }
 
