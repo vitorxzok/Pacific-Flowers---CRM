@@ -77,12 +77,15 @@ export async function POST(request: Request) {
             const clientSettings = settingsByAttendant[client.attendant_id] || {};
             const contextOverride = `REACTIVATION|${days}`;
             
-            const aiResponseText = await generateAIResponse(client.id, supabase, contextOverride, clientSettings);
+            const aiResponse = await generateAIResponse(client.id, supabase, contextOverride, clientSettings);
+            const aiReply = aiResponse?.text;
 
-            if (aiResponseText) {
+            if (aiReply) {
+              const cleanText = aiReply.replace(/\[SEPARAR\]/g, '').trim();
+
               await supabase.from('mensagens').insert({
                 client_id: client.id,
-                text: aiResponseText,
+                text: cleanText,
                 sender: 'attendant',
                 read: true
               });
@@ -101,7 +104,7 @@ export async function POST(request: Request) {
                     'Content-Type': 'application/json',
                     'apikey': apiKey,
                   },
-                  body: JSON.stringify({ number: cleanedPhone, text: aiResponseText }),
+                  body: JSON.stringify({ number: cleanedPhone, text: cleanText }),
                 });
               }
               
