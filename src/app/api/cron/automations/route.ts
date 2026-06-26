@@ -41,6 +41,9 @@ export async function GET(request: Request) {
         if (uSettings.insistencia_days_interval) fallbackSettings.insistencia_days_interval = uSettings.insistencia_days_interval;
         if (uSettings.working_hours_start) fallbackSettings.working_hours_start = uSettings.working_hours_start;
         if (uSettings.working_hours_end) fallbackSettings.working_hours_end = uSettings.working_hours_end;
+        if (uSettings.insistencia_cadences && uSettings.insistencia_cadences.length > 0) {
+          fallbackSettings.insistencia_cadences = uSettings.insistencia_cadences;
+        }
       }
     }
 
