@@ -283,6 +283,28 @@ export default function AdminPage() {
     }
   };
 
+  const [isResettingClientsAI, setIsResettingClientsAI] = useState(false);
+  
+  const handleResetClientsAI = async () => {
+    if (!confirm('Isso vai reativar a IA de TODOS os clientes cadastrados. Tem certeza?')) return;
+    
+    setIsResettingClientsAI(true);
+    const toastId = toast.loading('Reativando IA para todos os clientes...');
+    try {
+      const res = await fetch('/api/admin/reset-clients-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (!res.ok) throw new Error('Falha');
+      toast.success('A IA foi reativada para todos os clientes do banco de dados!', { id: toastId });
+    } catch (err) {
+      toast.error('Erro ao reativar IA dos clientes.', { id: toastId });
+    } finally {
+      setIsResettingClientsAI(false);
+    }
+  };
+
   const fetchAdminGlobalSettings = async (pwd: string) => {
     try {
       const res = await fetch(`/api/admin/settings?pwd=${pwd}`);
@@ -806,6 +828,20 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
               </button>
             </div>
             
+            <div className="border-t border-surface-border/50 pt-6 mt-2 mb-4">
+              <h3 className="text-md font-semibold text-white mb-2">Reativação em Massa de Clientes</h3>
+              <p className="text-sm text-gray-400 mb-4">
+                Se a IA foi desativada por engano para muitos clientes (por exemplo, devido a um bug ou intervenção manual), você pode forçar a reativação de todos de uma vez.
+              </p>
+              <button
+                onClick={handleResetClientsAI}
+                disabled={isResettingClientsAI}
+                className="px-6 py-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/30 font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isResettingClientsAI ? 'Reativando...' : 'Reativar IA para TODOS os Clientes (Ignorar Bloqueios)'}
+              </button>
+            </div>
+
             <div className="border-t border-surface-border/50 pt-6 mt-2">
               <h3 className="text-md font-semibold text-white mb-4">Controle Individual por Vendedor</h3>
               {isLoadingUsers ? (
