@@ -110,15 +110,15 @@ export async function POST(request: Request) {
         // Se for de atendente (isFromMe), verifica se é eco da IA ou se é o vendedor humano
         let isAiEcho = false;
         if (isFromMe) {
-          // Tenta achar uma mensagem idêntica enviada há menos de 10 segundos
-          const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
+          // Tenta achar uma mensagem idêntica enviada há menos de 60 segundos
+          const recentWindow = new Date(Date.now() - 60000).toISOString();
           const { data: recentAiMsg } = await supabase
             .from('mensagens')
             .select('id')
             .eq('client_id', clientId)
             .eq('text', text)
             .eq('sender', 'attendant')
-            .gte('timestamp', tenSecondsAgo)
+            .gte('timestamp', recentWindow)
             .limit(1);
 
           if (recentAiMsg && recentAiMsg.length > 0) {

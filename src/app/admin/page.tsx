@@ -1023,7 +1023,7 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                 <div className="space-y-4">
                   {(localSettings?.insistenciaCadences || []).length === 0 ? (
                     <div className="text-center py-6 bg-surface rounded-lg border border-surface-border border-dashed">
-                      <p className="text-gray-400 text-sm">Nenhuma cadência configurada. A IA usará o comportamento padrão com base nas horas globais.</p>
+                      <p className="text-gray-400 text-sm">Nenhuma cadência configurada. A IA usará o comportamento padrão com base nos minutos globais.</p>
                     </div>
                   ) : (
                     (localSettings?.insistenciaCadences || []).map((cadence: CadenceStep, index: number) => (
