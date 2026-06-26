@@ -144,6 +144,30 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
       { role: 'system', content: getSystemPrompt(settings) }
     ];
 
+    // 1.5. Injetar a lista de produtos ativos no contexto
+    const { data: produtos, error: produtosError } = await supabase
+      .from('produtos')
+      .select('name, price, code')
+      .eq('active', true);
+      
+    if (!produtosError && produtos && produtos.length > 0) {
+      const listaProdutos = produtos.map((p: any) => 
+        `- ${p.code ? `[${p.code}] ` : ''}${p.name}: R$ ${Number(p.price).toFixed(2).replace('.', ',')}`
+      ).join('\n');
+      
+      openAiMessages.push({
+        role: 'system',
+        content: `[BASE DE DADOS DE PRODUTOS E PREÇOS OBRIGATÓRIA]
+Abaixo está a lista atualizada de produtos disponíveis e seus preços. 
+VOCÊ DEVE USAR EXCLUSIVAMENTE ESTES PRODUTOS E PREÇOS ao montar orçamentos ou responder dúvidas de clientes.
+Se um cliente pedir um orçamento, calcule o valor total baseando-se nos preços abaixo e na quantidade solicitada (lembrando que vendemos em múltiplos de 12, se aplicável, ou conforme a negociação do cliente). Mostre os cálculos de forma clara e amigável.
+
+PRODUTOS DISPONÍVEIS:
+${listaProdutos}
+`
+      });
+    }
+
     if (contextOverride === 'REPOSICAO_25_DIAS') {
       openAiMessages.push({
         role: 'system',
