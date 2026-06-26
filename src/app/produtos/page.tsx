@@ -157,65 +157,90 @@ export default function ProdutosPage() {
     }
   };
 
+  const processData = async (rows: any[]) => {
+    const validProducts = rows.map(row => {
+      // Flexible mapping based on common column names
+      const code = row['código'] || row['codigo'] || row['code'] || row['cod'] || row['Código'] || row['Codigo'] || null;
+      let name = row['descrição'] || row['descricao'] || row['nome'] || row['name'] || row['description'] || row['Descrição'] || row['Descricao'] || row['Nome'] || '';
+      
+      const formato = row['formato'] || row['Formato'] || '';
+      if (formato && name) {
+        name = `${name} (${formato})`;
+      }
+
+      const rawPrice = row['preço unitário'] || row['preco unitario'] || row['preço'] || row['preco'] || row['price'] || row['Preço Unitário'] || row['Preco Unitario'] || row['Preço'] || row['Preco'] || '0';
+      const priceStr = String(rawPrice).replace('R$', '').trim().replace(',', '.');
+      const price = parseFloat(priceStr) || 0;
+      const rawMin = row['quantidade mínima'] || row['quantidade minima'] || row['qtd'] || row['quantidade'] || row['min'] || row['Minimo'] || row['minimo'] || row['Quantidade Mínima'] || row['Quantidade Minima'] || row['Qtd Mínima'] || '1';
+      const minQuantity = parseInt(String(rawMin), 10) || 1;
+
+      return {
+        code,
+        name,
+        price,
+        min_quantity: minQuantity,
+        active: true
+      };
+    }).filter(p => p.name && p.price > 0);
+
+    if (validProducts.length === 0) {
+      toast.error('Nenhum produto válido encontrado. Verifique se a planilha tem cabeçalhos como: Código, Descrição, Quantidade Mínima, Preço.');
+      return;
+    }
+
+    const toastId = toast.loading(`Importando ${validProducts.length} produtos...`);
+    try {
+      const { data, error } = await supabase.from('produtos').insert(validProducts).select();
+      if (error) throw error;
+      
+      toast.success(`${validProducts.length} produtos importados com sucesso!`, { id: toastId });
+      setProdutos([...produtos, ...(data || [])].sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (error: any) {
+      toast.error('Erro ao importar. Verifique se o formato está correto.', { id: toastId });
+      console.error(error);
+    }
+    
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        const rows = results.data as any[];
-        const validProducts = rows.map(row => {
-          // Flexible mapping based on common column names
-          const code = row['código'] || row['codigo'] || row['code'] || row['cod'] || row['Código'] || row['Codigo'] || null;
-          let name = row['descrição'] || row['descricao'] || row['nome'] || row['name'] || row['description'] || row['Descrição'] || row['Descricao'] || row['Nome'] || '';
-          
-          const formato = row['formato'] || row['Formato'] || '';
-          if (formato && name) {
-            name = `${name} (${formato})`;
-          }
+    const isExcel = file.name.endsWith('.xls') || file.name.endsWith('.xlsx');
 
-          const rawPrice = row['preço unitário'] || row['preco unitario'] || row['preço'] || row['preco'] || row['price'] || row['Preço Unitário'] || row['Preco Unitario'] || row['Preço'] || row['Preco'] || '0';
-          const priceStr = String(rawPrice).replace('R$', '').trim().replace(',', '.');
-          const price = parseFloat(priceStr) || 0;
-          const rawMin = row['quantidade mínima'] || row['quantidade minima'] || row['qtd'] || row['quantidade'] || row['min'] || row['Minimo'] || row['minimo'] || row['Quantidade Mínima'] || row['Quantidade Minima'] || row['Qtd Mínima'] || '1';
-          const minQuantity = parseInt(String(rawMin), 10) || 1;
-
-          return {
-            code,
-            name,
-            price,
-            min_quantity: minQuantity,
-            active: true
-          };
-        }).filter(p => p.name && p.price > 0);
-
-        if (validProducts.length === 0) {
-          toast.error('Nenhum produto válido encontrado. Verifique se a planilha tem cabeçalhos como: Código, Descrição, Quantidade Mínima, Preço.');
-          return;
-        }
-
-        const toastId = toast.loading(`Importando ${validProducts.length} produtos...`);
+    if (isExcel) {
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
         try {
-          const { data, error } = await supabase.from('produtos').insert(validProducts).select();
-          if (error) throw error;
+          const bstr = evt.target?.result;
+          const XLSX = await import('xlsx');
+          const workbook = XLSX.read(bstr, { type: 'binary' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
           
-          toast.success(`${validProducts.length} produtos importados com sucesso!`, { id: toastId });
-          setProdutos([...produtos, ...(data || [])].sort((a, b) => a.name.localeCompare(b.name)));
-        } catch (error: any) {
-          toast.error('Erro ao importar. Verifique se o formato está correto.', { id: toastId });
+          processData(rows);
+        } catch (error) {
+          toast.error('Erro ao processar arquivo Excel. Tente salvar como CSV.');
           console.error(error);
         }
-        
-        // Reset input
-        if (fileInputRef.current) fileInputRef.current.value = '';
-      },
-      error: (error) => {
-        toast.error('Erro ao ler arquivo CSV');
-        console.error(error);
-      }
-    });
+      };
+      reader.readAsBinaryString(file);
+    } else {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          processData(results.data as any[]);
+        },
+        error: (error) => {
+          toast.error('Erro ao ler arquivo CSV');
+          console.error(error);
+        }
+      });
+    }
   };
 
   if (!mounted) return null;
@@ -233,7 +258,7 @@ export default function ProdutosPage() {
         <div className="flex gap-3">
           <input
             type="file"
-            accept=".csv"
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             ref={fileInputRef}
             className="hidden"
             onChange={handleFileUpload}
@@ -243,7 +268,7 @@ export default function ProdutosPage() {
             className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-hover text-white rounded-lg transition-colors font-medium border border-surface-border"
           >
             <Upload className="w-5 h-5" />
-            Importar CSV
+            Importar Excel/CSV
           </button>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
