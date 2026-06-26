@@ -219,7 +219,49 @@ export default function ProdutosPage() {
           const workbook = XLSX.read(bstr, { type: 'binary' });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+          const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+          
+          let headerRowIndex = 0;
+          let headers: string[] = [];
+          
+          // Encontra a linha que tem os cabeçalhos reais (CÓDIGO, DESCRIÇÃO, PREÇO)
+          for (let i = 0; i < aoa.length; i++) {
+            const row = aoa[i];
+            if (Array.isArray(row)) {
+              const hasKeyCol = row.some(col => {
+                const str = String(col).toLowerCase().trim();
+                return str === 'código' || str === 'codigo' || str === 'descrição' || str === 'descricao' || str === 'nome' || str === 'preço' || str === 'preco' || str === 'preço unitário';
+              });
+              if (hasKeyCol) {
+                headerRowIndex = i;
+                headers = row.map(c => String(c || '').trim());
+                break;
+              }
+            }
+          }
+
+          if (headers.length === 0) {
+            toast.error('Não foi possível identificar o cabeçalho (CÓDIGO, DESCRIÇÃO, PREÇO) na planilha Excel.');
+            return;
+          }
+
+          const rows = [];
+          for (let i = headerRowIndex + 1; i < aoa.length; i++) {
+            const rowArr = aoa[i];
+            if (!Array.isArray(rowArr) || rowArr.length === 0) continue;
+            
+            // Ignora linhas totalmente vazias
+            const isEmpty = rowArr.every(col => col === undefined || col === null || col === '');
+            if (isEmpty) continue;
+
+            const rowObj: any = {};
+            for (let j = 0; j < headers.length; j++) {
+              if (headers[j]) {
+                rowObj[headers[j]] = rowArr[j] ?? '';
+              }
+            }
+            rows.push(rowObj);
+          }
           
           processData(rows);
         } catch (error) {
