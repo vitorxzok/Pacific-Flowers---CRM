@@ -202,6 +202,24 @@ export async function POST(request: Request) {
         }
       }
 
+      // 1.5. Deduplicar mensagens recebidas (evitar webhooks duplicados em curto intervalo)
+      if (!isFromMe) {
+        const recentClientWindow = new Date(Date.now() - 15000).toISOString();
+        const { data: recentClientMsg } = await supabase
+          .from('mensagens')
+          .select('id')
+          .eq('client_id', clientId)
+          .eq('text', text)
+          .eq('sender', 'client')
+          .gte('timestamp', recentClientWindow)
+          .limit(1);
+
+        if (recentClientMsg && recentClientMsg.length > 0) {
+          console.log(`[Webhook] Mensagem idêntica do cliente ${clientId} detectada (duplicação de webhook). Ignorando.`);
+          return NextResponse.json({ success: true, message: 'Mensagem duplicada ignorada.' });
+        }
+      }
+
       // 2. Inserir a mensagem na tabela `mensagens`
       const { error: insertError } = await supabase
         .from('mensagens')
