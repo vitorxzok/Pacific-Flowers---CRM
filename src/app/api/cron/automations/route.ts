@@ -5,6 +5,9 @@ import { generateAIResponse } from '@/lib/openai';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Essa rota pode ser chamada por um CRON Job (ex: cron-job.org ou Vercel Cron) a cada 1 minuto
 export async function GET(request: Request) {
   try {

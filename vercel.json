@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/automations",
-      "schedule": "*/5 * * * *"
+      "schedule": "* * * * *"
     },
     {
       "path": "/api/cron/restart-instances",
