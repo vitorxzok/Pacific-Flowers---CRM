@@ -159,19 +159,25 @@ export default function ProdutosPage() {
 
   const processData = async (rows: any[]) => {
     const validProducts = rows.map(row => {
-      // Flexible mapping based on common column names
-      const code = row['código'] || row['codigo'] || row['code'] || row['cod'] || row['Código'] || row['Codigo'] || null;
-      let name = row['descrição'] || row['descricao'] || row['nome'] || row['name'] || row['description'] || row['Descrição'] || row['Descricao'] || row['Nome'] || '';
+      // Normalize all keys to lowercase to avoid case-sensitivity issues
+      const lowerRow: any = {};
+      for (const key of Object.keys(row)) {
+        lowerRow[key.toLowerCase().trim()] = row[key];
+      }
+
+      const code = lowerRow['código'] || lowerRow['codigo'] || lowerRow['code'] || lowerRow['cod'] || null;
+      let name = lowerRow['descrição'] || lowerRow['descricao'] || lowerRow['nome'] || lowerRow['name'] || lowerRow['description'] || '';
       
-      const formato = row['formato'] || row['Formato'] || '';
+      const formato = lowerRow['formato'] || '';
       if (formato && name) {
         name = `${name} (${formato})`;
       }
 
-      const rawPrice = row['preço unitário'] || row['preco unitario'] || row['preço'] || row['preco'] || row['price'] || row['Preço Unitário'] || row['Preco Unitario'] || row['Preço'] || row['Preco'] || '0';
+      const rawPrice = lowerRow['preço unitário'] || lowerRow['preco unitario'] || lowerRow['preço'] || lowerRow['preco'] || lowerRow['price'] || '0';
       const priceStr = String(rawPrice).replace('R$', '').trim().replace(',', '.');
       const price = parseFloat(priceStr) || 0;
-      const rawMin = row['quantidade mínima'] || row['quantidade minima'] || row['qtd'] || row['quantidade'] || row['min'] || row['Minimo'] || row['minimo'] || row['Quantidade Mínima'] || row['Quantidade Minima'] || row['Qtd Mínima'] || '1';
+      
+      const rawMin = lowerRow['quantidade mínima'] || lowerRow['quantidade minima'] || lowerRow['qtd'] || lowerRow['quantidade'] || lowerRow['min'] || lowerRow['minimo'] || lowerRow['qtd mínima'] || '1';
       const minQuantity = parseInt(String(rawMin), 10) || 1;
 
       return {
