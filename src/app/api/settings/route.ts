@@ -51,7 +51,11 @@ export async function POST(request: Request) {
     const { error } = await adminClient.auth.admin.updateUserById(session.user.id, {
       user_metadata: {
         ...userData.user.user_metadata,
-        crm_settings: body
+        crm_settings: {
+          ...userData.user.user_metadata?.crm_settings,
+          ...body,
+          use_global_insistence_strategy: body.use_global_insistence_strategy
+        }
       }
     });
 

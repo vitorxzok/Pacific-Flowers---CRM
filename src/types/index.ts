@@ -62,6 +62,7 @@ export interface Settings {
   followUpIntervalHours: number;
   insistenciaMaxRepetitions?: number;
   insistenciaDaysInterval?: number;
+  useGlobalInsistenceStrategy?: boolean;
   insistenciaCadences?: CadenceStep[];
   reposicao_days_global?: number;
   kanbanColumns: string[];

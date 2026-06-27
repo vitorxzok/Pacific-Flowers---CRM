@@ -265,8 +265,9 @@ export async function GET(request: Request) {
                 let aiContextOverride = 'INSISTENCIA_HORAS';
                 
                 const cadences = clientSettings.insistencia_cadences || [];
+                const useGlobalStrategy = clientSettings.use_global_insistence_strategy || false;
                 
-                if (cadences.length > 0) {
+                if (cadences.length > 0 && !useGlobalStrategy) {
                   // Custom cadences logic
                   if (currentInsistenciaCount < cadences.length) {
                     const currentCadence = cadences[currentInsistenciaCount];
