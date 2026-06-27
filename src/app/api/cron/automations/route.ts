@@ -130,7 +130,9 @@ export async function GET(request: Request) {
       .eq('ai_enabled', true);
 
     if (clientesInativos && clientesInativos.length > 0) {
+      let processedInativos = 0;
       for (const client of clientesInativos) {
+        if (processedInativos >= 5) break; // Evitar Rate Limit da OpenAI
         try {
           const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
           
@@ -175,11 +177,12 @@ export async function GET(request: Request) {
             const diffMinutes = (now - messageTime) / (1000 * 60);
 
             if (diffMinutes >= minutesWithoutResponse) {
-              await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
               const aiResponse = await generateAIResponse(client.id, supabase, "FOLLOW_UP_INATIVIDADE");
               const aiResponseText = aiResponse?.text;
 
               if (aiResponseText) {
+                processedInativos++;
+                await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
                 const cleanText = aiResponseText.replace(/\[SEPARAR\]/g, '').trim();
                 await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
 
@@ -234,7 +237,9 @@ export async function GET(request: Request) {
           .eq('ai_enabled', true);
 
         if (clientesInsistencia && clientesInsistencia.length > 0) {
+          let processedInsistencia = 0;
           for (const client of clientesInsistencia) {
+            if (processedInsistencia >= 5) break;
             try {
               const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
               
@@ -321,6 +326,7 @@ export async function GET(request: Request) {
                 }
 
                 if (shouldInsist) {
+                  processedInsistencia++;
                   const aiResponse = await generateAIResponse(client.id, supabase, aiContextOverride, clientSettings);
                   const generatedText = aiResponse?.text;
 
@@ -365,7 +371,9 @@ export async function GET(request: Request) {
         .eq('ai_enabled', true);
 
       if (clientesFinalizados && clientesFinalizados.length > 0) {
+        let processedFinalizados = 0;
         for (const client of clientesFinalizados) {
+          if (processedFinalizados >= 5) break;
           try {
             const clientSettings = settingsByAttendant[client.attendant_id] || { reposicao_days_global: 30 };
             const reposicaoDays = clientSettings.reposicao_days_global || 30;
@@ -427,6 +435,7 @@ export async function GET(request: Request) {
                 }
 
                 // Injeta contexto pra IA e manda mensagem de reposição
+                processedFinalizados++;
                 const aiResponseText = await generateAIResponse(client.id, supabase, "REPOSICAO");
 
                 if (aiResponseText) {
