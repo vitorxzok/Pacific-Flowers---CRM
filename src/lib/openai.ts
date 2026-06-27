@@ -147,20 +147,25 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     // 1.5. Injetar a lista de produtos ativos no contexto
     const { data: produtos, error: produtosError } = await supabase
       .from('produtos')
-      .select('name, price, code')
+      .select('name, price, code, min_quantity')
       .eq('active', true);
       
     if (!produtosError && produtos && produtos.length > 0) {
       const listaProdutos = produtos.map((p: any) => 
-        `- ${p.code ? `[${p.code}] ` : ''}${p.name}: R$ ${Number(p.price).toFixed(2).replace('.', ',')}`
+        `- ${p.code ? `[${p.code}] ` : ''}${p.name}: R$ ${Number(p.price).toFixed(2).replace('.', ',')} (Quantidade Mínima OBRIGATÓRIA: ${p.min_quantity || 1} un)`
       ).join('\n');
       
       openAiMessages.push({
         role: 'system',
         content: `[BASE DE DADOS DE PRODUTOS E PREÇOS OBRIGATÓRIA]
-Abaixo está a lista atualizada de produtos disponíveis e seus preços. 
+Abaixo está a lista atualizada de produtos disponíveis, seus preços e suas respectivas QUANTIDADES MÍNIMAS DE COMPRA. 
 VOCÊ DEVE USAR EXCLUSIVAMENTE ESTES PRODUTOS E PREÇOS ao montar orçamentos ou responder dúvidas de clientes.
-Se um cliente pedir um orçamento, calcule o valor total baseando-se nos preços abaixo e na quantidade solicitada (lembrando que vendemos em múltiplos de 12, se aplicável, ou conforme a negociação do cliente). Mostre os cálculos de forma clara e amigável.
+Se um cliente pedir um orçamento, calcule o valor total baseando-se nos preços abaixo e na quantidade solicitada. 
+
+REGRAS DE QUANTIDADE MÍNIMA:
+Você NUNCA deve aceitar um pedido com quantidade inferior à "Quantidade Mínima OBRIGATÓRIA" informada ao lado de cada produto!
+Se o cliente pedir uma quantidade menor que o mínimo, informe educadamente que o produto possui quantidade mínima e corrija a quantidade no orçamento.
+Mostre os cálculos de forma clara e amigável.
 
 PRODUTOS DISPONÍVEIS:
 ${listaProdutos}
@@ -207,7 +212,7 @@ NOME DO CLIENTE REGISTRADO NO SISTEMA: "${clientInfo.name || 'Desconhecido'}".
 
 REGRA 1 - NOME: Se o NOME DO CLIENTE for 'Desconhecido', 'Lead WhatsApp' ou se parecer com o nome da loja/vendedor, VOCÊ DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigável na sua resposta. Se o cliente se apresentar com outro nome durante a conversa, passe a chamá-lo exclusivamente pelo novo nome que ele informou. É ESTRITAMENTE PROIBIDO chamar o cliente pelo seu próprio nome de vendedor.
 REGRA 2 - CATÁLOGO: Se o cliente disser a palavra "catálogo", pedir o catálogo, ou confirmar que é lojista, VOCÊ DEVE OBRIGATORIAMENTE E IMEDIATAMENTE chamar a ferramenta "sendAttachment" com o parâmetro triggerName igual a "CATALOGO". É ESTRITAMENTE PROIBIDO dizer "Aqui está o catálogo" e não chamar a ferramenta. Você tem que chamar a ferramenta!
-REGRA 3 - ORÇAMENTOS E QUANTIDADE: Se o cliente pedir um orçamento, listar produtos ou quiser fazer pedido, VOCÊ DEVE SEMPRE perguntar a QUANTIDADE exata de cada produto (lembrando que vendemos em múltiplos de 12). Nunca faça um orçamento sem antes confirmar as quantidades. QUANDO APRESENTAR O ORÇAMENTO, USE EXATAMENTE ESTE FORMATO VISUAL OBRIGATÓRIO:
+REGRA 3 - ORÇAMENTOS E QUANTIDADE: Se o cliente pedir um orçamento, listar produtos ou quiser fazer pedido, VOCÊ DEVE SEMPRE perguntar a QUANTIDADE exata de cada produto e RESPEITAR a quantidade mínima informada na lista de produtos. Nunca faça um orçamento sem antes confirmar as quantidades. QUANDO APRESENTAR O ORÇAMENTO, USE EXATAMENTE ESTE FORMATO VISUAL OBRIGATÓRIO:
 
 *🧾 ORÇAMENTO - PACIFIC FLOWERS*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
