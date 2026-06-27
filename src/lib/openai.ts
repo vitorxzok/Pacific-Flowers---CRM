@@ -112,7 +112,7 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
   }
 
   if (settings && settings.businessName && settings.businessName.trim() !== '') {
-    prompt += `\n\n--- INFORMAÃ‡ÃƒO IMPORTANTE ---\nVocÃª Ã© o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
+    prompt += `\n\n--- INFORMAÇÃO IMPORTANTE ---\nVocê Ã© o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
   }
   
   return prompt;
@@ -123,7 +123,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
   try {
     const { data: clientInfo } = await supabase.from('clientes').select('name, phone, attendant_id, status').eq('id', clientId).single();
 
-    // 1. Obter o histÃ³rico de mensagens
+    // 1. Obter o histórico de mensagens
     const { data: recentMessages, error: messagesError } = await supabase
       .from('mensagens')
       .select('text, sender, timestamp')
@@ -133,10 +133,10 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
 
     if (messagesError) throw messagesError;
 
-    // Se nÃ£o houver mensagens (estranho, pois o webhook acabou de inserir), nÃ£o faz nada
+    // Se não houver mensagens (estranho, pois o webhook acabou de inserir), não faz nada
     if (!recentMessages || recentMessages.length === 0) return null;
 
-    // Inverter para ficar na ordem cronolÃ³gica correta (mais antigas primeiro)
+    // Inverter para ficar na ordem cronológica correta (mais antigas primeiro)
     const messages = recentMessages.reverse();
 
     // Converter para o formato da OpenAI
@@ -212,7 +212,12 @@ NOME DO CLIENTE REGISTRADO NO SISTEMA: "${clientInfo.name || 'Desconhecido'}".
 
 REGRA 1 - NOME: Se o NOME DO CLIENTE for 'Desconhecido', 'Lead WhatsApp' ou se parecer com o nome da loja/vendedor, VOCÊ DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigável na sua resposta. Se o cliente se apresentar com outro nome durante a conversa, passe a chamá-lo exclusivamente pelo novo nome que ele informou. É ESTRITAMENTE PROIBIDO chamar o cliente pelo seu próprio nome de vendedor.
 REGRA 2 - CATÁLOGO: Se o cliente disser a palavra "catálogo", pedir o catálogo, ou confirmar que é lojista, VOCÊ DEVE OBRIGATORIAMENTE E IMEDIATAMENTE chamar a ferramenta "sendAttachment" com o parâmetro triggerName igual a "CATALOGO". É ESTRITAMENTE PROIBIDO dizer "Aqui está o catálogo" e não chamar a ferramenta. Você tem que chamar a ferramenta!
-REGRA 3 - ORÇAMENTOS E QUANTIDADE: Se o cliente pedir um orçamento, listar produtos ou quiser fazer pedido, VOCÊ DEVE SEMPRE perguntar a QUANTIDADE exata de cada produto e RESPEITAR a quantidade mínima informada na lista de produtos. Nunca faça um orçamento sem antes confirmar as quantidades. QUANDO APRESENTAR O ORÇAMENTO, USE EXATAMENTE ESTE FORMATO VISUAL OBRIGATÓRIO:
+REGRA 3 - ORÇAMENTOS E QUANTIDADE (CRÍTICA): 
+- Cada produto tem uma (Quantidade Mínima OBRIGATÓRIA: X un).
+- Você É PROIBIDO de aceitar quantidades menores que X.
+- Se o cliente pedir menos, você DEVE corrigir a quantidade para a mínima permitida e avisá-lo de forma educada: "Como a quantidade mínima para o [Produto] é de X unidades, ajustei para você, tudo bem?"
+- Nunca faça um orçamento sem antes confirmar as quantidades.
+QUANDO APRESENTAR O ORÇAMENTO, USE EXATAMENTE ESTE FORMATO VISUAL OBRIGATÓRIO:
 
 *🧾 ORÇAMENTO - PACIFIC FLOWERS*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -291,7 +296,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
           type: 'function',
           function: {
             name: 'transferToHuman',
-            description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, enviar pedido ou pedir sugestÃ£o.',
+            description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, enviar pedido ou pedir sugestão.',
             parameters: {
               type: 'object',
               properties: {
@@ -301,7 +306,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
                 },
                 target_status: {
                   type: 'string',
-                  description: 'O status exato para onde o cliente deve ir ao ser transferido (ex: "Proposta Enviada", "Em QualificaÃ§Ã£o").'
+                  description: 'O status exato para onde o cliente deve ir ao ser transferido (ex: "Proposta Enviada", "Em Qualificação").'
                 }
               },
               required: ['summary', 'target_status']
@@ -312,13 +317,13 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
           type: 'function',
           function: {
             name: 'changeClientStatus',
-            description: 'Altera a etapa do funil do cliente com base no andamento do atendimento (Ex: Contato Feito, Em QualificaÃ§Ã£o, Proposta Enviada, ReposiÃ§Ã£o). Use quando o cliente avanÃ§ar naturalmente na conversa.',
+            description: 'Altera a etapa do funil do cliente com base no andamento do atendimento (Ex: Contato Feito, Em Qualificação, Proposta Enviada, Reposição). Use quando o cliente avançar naturalmente na conversa.',
             parameters: {
               type: 'object',
               properties: {
                 status: {
                   type: 'string',
-                  description: 'O novo status do cliente no Kanban. OpÃ§Ãµes vÃ¡lidas: "Contato Feito", "Em QualificaÃ§Ã£o", "Proposta Enviada", "Qualificado", "ReposiÃ§Ã£o"'
+                  description: 'O novo status do cliente no Kanban. Opções válidas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado", "Reposição"'
                 }
               },
               required: ['status']
@@ -392,11 +397,11 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
                 toolResult = `Faltam configuraÃ§Ãµes de API para enviar o anexo.`;
               }
             } else {
-              toolResult = `NÃ£o foi possÃ­vel identificar o telefone ou instÃ¢ncia do cliente.`;
+              toolResult = `Não foi possÃ­vel identificar o telefone ou instÃ¢ncia do cliente.`;
             }
           } else {
-            console.log(`[AI TOOL] Gatilho '${args.triggerName}' nÃ£o encontrado nas configuraÃ§Ãµes do vendedor.`);
-            toolResult = `O gatilho '${args.triggerName}' nÃ£o estÃ¡ configurado. Diga ao cliente que houve um erro ao buscar o arquivo.`;
+            console.log(`[AI TOOL] Gatilho '${args.triggerName}' não encontrado nas configuraÃ§Ãµes do vendedor.`);
+            toolResult = `O gatilho '${args.triggerName}' não estÃ¡ configurado. Diga ao cliente que houve um erro ao buscar o arquivo.`;
           }
         } else if (toolCall.function.name === 'updateClientName') {
           console.log(`[AI TOOL] Atualizando nome do cliente para: ${args.name}`);
@@ -408,7 +413,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
         } else if (toolCall.function.name === 'changeClientStatus') {
           console.log(`[AI TOOL] Alterando status do cliente para: ${args.status}`);
           
-          if (args.status === 'Em QualificaÃ§Ã£o' || args.status === 'Qualificado') {
+          if (args.status === 'Em Qualificação' || args.status === 'Qualificado') {
             const { data: msgs } = await supabase
               .from('mensagens')
               .select('text')
@@ -418,14 +423,14 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
             const alreadySent = msgs && msgs.length > 0;
             
             if (!alreadySent && !catalogSentThisTurn) {
-              toolResult = "ERRO DE SEGURANÃ‡A: O catÃ¡logo ainda nÃ£o foi enviado. VocÃª Ã© OBRIGADO a enviar o catÃ¡logo para o cliente (usando a ferramenta sendAttachment com trigger 'CATALOGO') ANTES de alterar o status para 'Em QualificaÃ§Ã£o'. Explique isso ao cliente ou envie o catÃ¡logo agora.";
+              toolResult = "ERRO DE SEGURANÇA: O catálogo ainda não foi enviado. Você Ã© OBRIGADO a enviar o catálogo para o cliente (usando a ferramenta sendAttachment com trigger 'CATALOGO') ANTES de alterar o status para 'Em Qualificação'. Explique isso ao cliente ou envie o catálogo agora.";
               openAiMessages.push({
                 role: 'tool',
                 tool_call_id: toolCall.id,
                 content: toolResult
               } as any);
-              console.log("[AI TOOL] Bloqueada mudanÃ§a de status: CatÃ¡logo nÃ£o enviado.");
-              continue; // Interrompe a alteraÃ§Ã£o no BD e no histÃ³rico
+              console.log("[AI TOOL] Bloqueada mudanÃ§a de status: Catálogo não enviado.");
+              continue; // Interrompe a alteraÃ§Ã£o no BD e no histórico
             }
           }
           
@@ -467,14 +472,14 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
             .update({ status: statusToSet, needs_human: true, notes: newNotes })
             .eq('id', clientId);
 
-          // Inserir um evento no histÃ³rico com o resumo da IA
+          // Inserir um evento no histórico com o resumo da IA
           await supabase
             .from('history_events')
             .insert({
               client_id: clientId,
               type: 'status_change',
               description: `A IA Clara encerrou o atendimento e repassou o lead. Resumo: ${args.summary}`,
-              from_status: 'Em QualificaÃ§Ã£o',
+              from_status: 'Em Qualificação',
               to_status: 'Qualificado'
             });
 
@@ -503,7 +508,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
               if (apiUrl && apiKey) {
                 const sellerPhone = profile.whatsapp_number.replace(/\D/g, '');
                 const instanceName = clientData.connected_instance || `user_${clientData.attendant_id}_1`;
-                const alertMessage = `âš ï¸� *Lead Qualificado!*\nO lead *${clientData.name || 'Sem Nome'}* (${clientData.phone}) foi qualificado pela IA e estÃ¡ pronto para receber o catÃ¡logo e atendimento humano.\n\n*Resumo da IA:* ${args.summary}`;
+                const alertMessage = `âš ï¸� *Lead Qualificado!*\nO lead *${clientData.name || 'Sem Nome'}* (${clientData.phone}) foi qualificado pela IA e estÃ¡ pronto para receber o catálogo e atendimento humano.\n\n*Resumo da IA:* ${args.summary}`;
 
                 fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                   method: 'POST',
@@ -545,12 +550,12 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
     // Retorna o texto gerado pela IA (pode ser a despedida ou uma resposta normal)
     if (responseMessage.content || finalContent) {
       if (catalogSentThisTurn) {
-        // AvanÃ§ar o lead para QualificaÃ§Ã£o quando receber o catÃ¡logo, conforme solicitado pelo cliente (Tarefa 9)
-        await supabase.from('clientes').update({ status: 'Em QualificaÃ§Ã£o' }).eq('id', clientId);
+        // Avançar o lead para QualificaÃ§Ã£o quando receber o catálogo, conforme solicitado pelo cliente (Tarefa 9)
+        await supabase.from('clientes').update({ status: 'Em Qualificação' }).eq('id', clientId);
         await supabase.from('history_events').insert({
           client_id: clientId,
           type: 'status_change',
-          description: 'A IA Clara enviou o catÃ¡logo e avanÃ§ou o status para Em QualificaÃ§Ã£o.',
+          description: 'A IA Clara enviou o catálogo e avanÃ§ou o status para Em Qualificação.',
         });
       }
       return { text: (responseMessage.content || '') + finalContent, mediaToSend };
@@ -564,7 +569,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
 
 /**
  * AnÃ¡lise Silenciosa:
- * LÃª o histÃ³rico recente da conversa (focado nas falas do atendente humano e do cliente)
+ * LÃª o histórico recente da conversa (focado nas falas do atendente humano e do cliente)
  * e avalia em qual etapa do funil o lead se encontra. Se houver mudanÃ§a clara, atualiza.
  */
 export async function analyzeConversationAndMoveStatus(clientId: string, supabase: any) {
@@ -578,13 +583,13 @@ export async function analyzeConversationAndMoveStatus(clientId: string, supabas
 
     if (!clientData) return;
 
-    // Etapas que a IA auto-reply atua (se estiver aqui, a auto-reply cuida, entÃ£o nÃ£o mexemos)
-    const initialStages = ['Novo', 'Contato Feito', 'Em QualificaÃ§Ã£o'];
+    // Etapas que a IA auto-reply atua (se estiver aqui, a auto-reply cuida, entÃ£o não mexemos)
+    const initialStages = ['Novo', 'Contato Feito', 'Em Qualificação'];
     // Etapas finais
-    const finalStages = ['Finalizado', 'Perdido', 'ReposiÃ§Ã£o'];
+    const finalStages = ['Finalizado', 'Perdido', 'Reposição'];
 
     if (initialStages.includes(clientData.status) || finalStages.includes(clientData.status)) {
-      return; // NÃ£o analisa silenciosamente nestes estados
+      return; // Não analisa silenciosamente nestes estados
     }
 
     // 2. Buscar Ãºltimas 15 mensagens para contexto
@@ -597,27 +602,27 @@ export async function analyzeConversationAndMoveStatus(clientId: string, supabas
 
     if (!mensagens || mensagens.length === 0) return;
 
-    // Inverter para ordem cronolÃ³gica
+    // Inverter para ordem cronológica
     const contextMessages = mensagens.reverse().map((m: any) => {
       const isSeller = m.sender === 'attendant';
       return `${isSeller ? 'VENDEDOR' : 'CLIENTE'}: ${m.text}`;
     }).join('\n');
 
-    const SILENT_SYSTEM_PROMPT = `VocÃª Ã© um supervisor silencioso de um funil de vendas.
-Sua Ãºnica funÃ§Ã£o Ã© ler o histÃ³rico recente da conversa e determinar se o lead avanÃ§ou ou retrocedeu de etapa.
+    const SILENT_SYSTEM_PROMPT = `Você Ã© um supervisor silencioso de um funil de vendas.
+Sua Ãºnica funÃ§Ã£o Ã© ler o histórico recente da conversa e determinar se o lead avanÃ§ou ou retrocedeu de etapa.
 Status atual do lead: "${clientData.status}"
 Nome do lead: "${clientData.name || 'Desconhecido'}"
 
-Etapas permitidas para vocÃª mover:
+Etapas permitidas para você mover:
 - "Proposta Enviada": O vendedor enviou um orÃ§amento, preÃ§o ou proposta clara.
 - "Finalizado": O cliente comprou, pagou ou o negÃ³cio foi fechado com sucesso.
-- "ReposiÃ§Ã£o": O cliente precisa voltar a comprar no futuro (recorrente) ou pediu para avisar depois.
-- "Perdido": O cliente disse nÃ£o, achou caro, nÃ£o tem interesse ou parou de responder definitivamente.
+- "Reposição": O cliente precisa voltar a comprar no futuro (recorrente) ou pediu para avisar depois.
+- "Perdido": O cliente disse não, achou caro, não tem interesse ou parou de responder definitivamente.
 
 Regras:
-1. SÃ“ chame a ferramenta \`updateStatus\` se vocÃª tiver absoluta certeza de que a conversa avanÃ§ou para um novo status DIFERENTE do atual.
-2. Se a conversa ainda estÃ¡ no status atual, NÃƒO FAÃ‡A NADA. Apenas nÃ£o chame a ferramenta.
-3. NÃ£o retorne nenhum texto de resposta para o cliente.`;
+1. SÃ“ chame a ferramenta \`updateStatus\` se você tiver absoluta certeza de que a conversa avanÃ§ou para um novo status DIFERENTE do atual.
+2. Se a conversa ainda estÃ¡ no status atual, NÃƒO FAÃ‡A NADA. Apenas não chame a ferramenta.
+3. Não retorne nenhum texto de resposta para o cliente.`;
 
     const openAiMessages = [
       { role: 'system', content: SILENT_SYSTEM_PROMPT },
@@ -639,7 +644,7 @@ Regras:
               properties: {
                 newStatus: {
                   type: 'string',
-                  enum: ['Proposta Enviada', 'Finalizado', 'Perdido', 'ReposiÃ§Ã£o'],
+                  enum: ['Proposta Enviada', 'Finalizado', 'Perdido', 'Reposição'],
                   description: 'A nova etapa do funil'
                 },
                 reason: {
