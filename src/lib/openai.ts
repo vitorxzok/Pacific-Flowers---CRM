@@ -176,29 +176,29 @@ ${listaProdutos}
     if (contextOverride === 'REPOSICAO_25_DIAS') {
       openAiMessages.push({
         role: 'system',
-        content: "AtenÃ§Ã£o: JÃ¡ se passaram 25 dias desde a Ãºltima compra deste cliente. Mande uma mensagem amigÃ¡vel, seguindo suas diretrizes de vendas e personalidade, para sugerir a reposiÃ§Ã£o de estoque."
+        content: "Atenção: Já se passaram 25 dias desde a última compra deste cliente. Mande uma mensagem amigável, seguindo suas diretrizes de vendas e personalidade, para sugerir a reposição de estoque."
       });
     } else if (contextOverride === 'FOLLOW_UP_INATIVIDADE') {
       openAiMessages.push({
         role: 'system',
-        content: "AtenÃ§Ã£o: O cliente parou de responder hÃ¡ alguns minutos. Mande uma mensagem de acompanhamento curta e amigÃ¡vel para retomar a conversa, mantendo estritamente as regras e a personalidade do seu prompt principal."
+        content: "Atenção: O cliente visualizou ou recebeu sua mensagem, mas não respondeu há alguns minutos. Mande uma mensagem de acompanhamento curta e super amigável para retomar a conversa. IMPORTANTE: NUNCA REPITA uma mensagem que você já enviou. Tente uma abordagem nova, descontraída (ex: 'Sei que a correria é grande...', 'Passando só pra ver se conseguiu ver a mensagem acima...'). Não seja robótico."
       });
     } else if (contextOverride === 'INSISTENCIA_HORAS') {
       openAiMessages.push({
         role: 'system',
-        content: "Atenção: Já se passaram algumas horas sem resposta. Sua missão agora é tentar retomar a conversa de forma natural e amigável, seguindo rigorosamente sua identidade e regras do prompt principal."
+        content: "Atenção: Já se passaram várias horas sem resposta do cliente. Sua missão agora é tentar retomar a conversa de forma natural, amigável e humana. IMPORTANTE: SOB HIPÓTESE ALGUMA repita as mesmas palavras ou frases que você já disse antes. Varie o texto! Mande algo curto perguntando se ele teve tempo de ver a proposta ou se tem alguma dúvida que você possa ajudar agora."
       });
     } else if (contextOverride && contextOverride.startsWith('INSISTENCIA_CUSTOM|')) {
       const customInstruction = contextOverride.split('|')[1];
       openAiMessages.push({
         role: 'system',
-        content: `Atenção: O cliente parou de responder e você deve retomar o contato. Siga a seguinte instrução para esta etapa da cadência: "${customInstruction}". Responda de acordo com o histórico da conversa e mantenha o foco em levar o cliente ao fechamento do pedido.`
+        content: `Atenção: O cliente parou de responder e você deve retomar o contato. Siga a seguinte instrução para esta etapa da cadência: "${customInstruction}". Responda de acordo com o histórico da conversa e mantenha o foco em levar o cliente ao fechamento do pedido. IMPORTANTE: Leia o histórico e NUNCA repita o que já foi dito. Seja original e persuasivo.`
       });
     } else if (contextOverride && contextOverride.startsWith('REACTIVATION|')) {
       const days = contextOverride.split('|')[1];
       openAiMessages.push({
         role: 'system',
-        content: `Atenção: Este cliente não responde há ${days} dias. Sua missão é reativá-lo. Leia o contexto da última conversa e envie uma mensagem natural, amigável e descontraída, tentando puxar assunto de onde pararam. Não cobre uma resposta agressivamente, aja como se estivesse apenas acompanhando para ver se ele precisa de algo ou se conseguiu analisar a proposta. Mantenha sua identidade e regras de vendas.`
+        content: `Atenção: Este cliente não responde há ${days} dias. Sua missão é reativá-lo. Leia o contexto da última conversa e envie uma mensagem natural, amigável e descontraída, tentando puxar assunto de onde pararam. Não cobre uma resposta agressivamente, aja como se estivesse apenas acompanhando para ver se ele precisa de algo ou se conseguiu analisar a proposta. Mantenha sua identidade e regras de vendas. REGRA DE OURO: Não repita textos anteriores.`
       });
     }
 
