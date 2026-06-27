@@ -285,15 +285,34 @@ export async function GET(request: Request) {
                     }
                   }
                 } else {
-                  // Original global logic (now in minutes)
+                  // Original global logic (now with fallback to cadences)
                   if (currentInsistenciaCount < maxRepetitions) {
                     if (diffMinutes >= followUpIntervalHours) {
                       shouldInsist = true;
                     }
                   } else {
-                    // Após atingir o limite em minutos, passa a insistir por dias
-                    if (diffDays >= daysInterval) {
-                      shouldInsist = true;
+                    // Após atingir o limite global, entra nas cadências personalizadas (se existirem)
+                    if (cadences.length > 0) {
+                      const cadenceIndex = currentInsistenciaCount - maxRepetitions;
+                      if (cadenceIndex < cadences.length) {
+                        const currentCadence = cadences[cadenceIndex];
+                        if (diffMinutes >= (currentCadence.waitHours || 60)) {
+                          shouldInsist = true;
+                          if (currentCadence.text && currentCadence.text.trim()) {
+                            aiContextOverride = `INSISTENCIA_CUSTOM|${currentCadence.text.trim()}`;
+                          }
+                        }
+                      } else {
+                        // Se esgotar as cadências personalizadas também, cai nos dias
+                        if (diffDays >= daysInterval) {
+                          shouldInsist = true;
+                        }
+                      }
+                    } else {
+                      // Após atingir o limite em minutos e sem cadências, passa a insistir por dias
+                      if (diffDays >= daysInterval) {
+                        shouldInsist = true;
+                      }
                     }
                   }
                 }

@@ -1040,10 +1040,10 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
               {/* Alternância de Estratégia de Insistência */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-8 mb-4 border-b border-surface-border/50">
                 <div className="mb-2 sm:mb-0 pr-4">
-                  <h3 className="text-base font-semibold text-white">Usar Estratégia de Insistência Global</h3>
+                  <h3 className="text-base font-semibold text-white">Usar Estratégia de Insistência Global + Personalizadas</h3>
                   <p className="text-sm text-gray-400">
-                    Se ativado, a IA ignorará as 10 Cadências Personalizadas abaixo e usará apenas o Tempo (Global) e o Limite de Repetições. 
-                    Se desativado, o sistema retoma as cadências personalizadas do ponto onde parou.
+                    Se ativado, a IA primeiro usará o Tempo Global até atingir o Limite de Repetições. 
+                    Após esgotar o Limite Global, ela passará automaticamente a usar as suas 10 Cadências Personalizadas.
                   </p>
                 </div>
                 <div className="flex items-center flex-shrink-0">
@@ -1063,7 +1063,7 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
               </div>
 
               {/* Cadências de Insistência Personalizadas */}
-              <div className={`flex flex-col border-b border-surface-border pb-8 mb-4 border-t pt-8 transition-opacity ${localSettings?.useGlobalInsistenceStrategy ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="flex flex-col border-b border-surface-border pb-8 mb-4 border-t pt-8">
                 <div className="mb-6 flex justify-between items-start sm:items-center">
                   <div>
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
