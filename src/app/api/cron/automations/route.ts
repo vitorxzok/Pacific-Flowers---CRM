@@ -182,9 +182,17 @@ export async function GET(request: Request) {
 
               if (aiResponseText) {
                 processedInativos++;
-                await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
+                const { error: updateError } = await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
+                if (updateError) {
+                  console.error(`Erro ao atualizar followup_sent para cliente ${client.id}:`, updateError);
+                  continue; // Pula o envio se o DB falhar
+                }
                 const cleanText = aiResponseText.replace(/\[SEPARAR\]/g, '').trim();
-                await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
+                const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
+                if (msgError) {
+                  console.error(`Erro ao salvar mensagem de inatividade para cliente ${client.id}:`, msgError);
+                  continue; // Pula o envio se o DB falhar
+                }
 
                 const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
                 const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
@@ -333,10 +341,18 @@ export async function GET(request: Request) {
                   if (generatedText) {
                     const cleanText = generatedText.replace(/\[SEPARAR\]/g, '').trim();
 
-                    await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
+                    const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
+                    if (msgError) {
+                      console.error(`Erro ao salvar mensagem de insistencia para cliente ${client.id}:`, msgError);
+                      continue; // Pula se o DB falhar
+                    }
 
                     // Incrementa o contador de insistência
-                    await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount + 1, updated_at: new Date().toISOString() }).eq('id', client.id);
+                    const { error: updateError } = await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount + 1, updated_at: new Date().toISOString() }).eq('id', client.id);
+                    if (updateError) {
+                      console.error(`Erro ao atualizar insistencia_count para cliente ${client.id}:`, updateError);
+                      continue; // Pula se o DB falhar
+                    }
 
                     const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
                     const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
@@ -439,10 +455,18 @@ export async function GET(request: Request) {
                 const aiResponseText = await generateAIResponse(client.id, supabase, "REPOSICAO");
 
                 if (aiResponseText) {
-                  await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+                  const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: aiResponseText, sender: 'attendant', read: true });
+                  if (msgError) {
+                    console.error(`Erro ao salvar reposicao para cliente ${client.id}:`, msgError);
+                    continue; // Pula se o DB falhar
+                  }
 
                   // Limpa a data de custom_reposicao_date para não disparar todo dia (o vendedor precisa remarcar se quiser)
-                  await supabase.from('clientes').update({ custom_reposicao_date: null, updated_at: new Date().toISOString() }).eq('id', client.id);
+                  const { error: updateError } = await supabase.from('clientes').update({ custom_reposicao_date: null, updated_at: new Date().toISOString() }).eq('id', client.id);
+                  if (updateError) {
+                    console.error(`Erro ao atualizar custom_reposicao_date para cliente ${client.id}:`, updateError);
+                    continue; // Pula se o DB falhar
+                  }
 
                   const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
                   const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;

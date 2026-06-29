@@ -181,24 +181,24 @@ ${listaProdutos}
     } else if (contextOverride === 'FOLLOW_UP_INATIVIDADE') {
       openAiMessages.push({
         role: 'system',
-        content: "Atenção: O cliente visualizou ou recebeu sua mensagem, mas não respondeu há alguns minutos. Mande uma mensagem de acompanhamento curta e super amigável para retomar a conversa. IMPORTANTE: NUNCA REPITA uma mensagem que você já enviou. Tente uma abordagem nova, descontraída (ex: 'Sei que a correria é grande...', 'Passando só pra ver se conseguiu ver a mensagem acima...'). Não seja robótico."
+        content: "Atenção: O cliente parou de responder há alguns minutos. Mande uma mensagem de acompanhamento curta, estratégica e super amigável para retomar a conversa.\nREGRAS OBRIGATÓRIAS:\n1. LEIA O HISTÓRICO RECENTE: Analise o contexto exato de onde a conversa parou. Se você acabou de enviar a tabela, pergunte o que ele achou. Se estava tirando dúvidas, pergunte se restou alguma. Nunca mande um 'olá' genérico ignorando o contexto!\n2. NUNCA REPITA uma mensagem que você já enviou.\n3. FOCO NO FECHAMENTO: Direcione a conversa de forma inteligente para que o cliente se sinta seguro em fechar o pedido.\nSeja descontraído e aja como um humano prestativo."
       });
     } else if (contextOverride === 'INSISTENCIA_HORAS') {
       openAiMessages.push({
         role: 'system',
-        content: "Atenção: Já se passaram várias horas sem resposta do cliente. Sua missão agora é tentar retomar a conversa de forma natural, amigável e humana. IMPORTANTE: SOB HIPÓTESE ALGUMA repita as mesmas palavras ou frases que você já disse antes. Varie o texto! Mande algo curto perguntando se ele teve tempo de ver a proposta ou se tem alguma dúvida que você possa ajudar agora."
+        content: "Atenção: Já se passaram várias horas sem resposta do cliente. Sua missão agora é retomar a conversa de forma inteligente, natural e humana.\nREGRAS OBRIGATÓRIAS:\n1. CONTEXTO É REI: Leia o que estava sendo discutido. Faça uma pergunta relacionada ao último assunto (ex: 'Conseguiu dar uma olhada na proposta?' ou 'Ficou alguma dúvida sobre os itens que te passei?').\n2. NUNCA REPITA as mesmas frases que você já usou. Seja criativo e original!\n3. GATILHO DE FECHAMENTO: Tente mostrar facilidade, ofereça ajuda para montar o pedido ideal e incentive o fechamento da venda de forma consultiva e sem parecer desesperado."
       });
     } else if (contextOverride && contextOverride.startsWith('INSISTENCIA_CUSTOM|')) {
       const customInstruction = contextOverride.split('|')[1];
       openAiMessages.push({
         role: 'system',
-        content: `Atenção: O cliente parou de responder e você deve retomar o contato. Siga a seguinte instrução para esta etapa da cadência: "${customInstruction}". Responda de acordo com o histórico da conversa e mantenha o foco em levar o cliente ao fechamento do pedido. IMPORTANTE: Leia o histórico e NUNCA repita o que já foi dito. Seja original e persuasivo.`
+        content: `Atenção: O cliente está em cadência de insistência. Instrução específica para esta etapa: "${customInstruction}".\nREGRAS OBRIGATÓRIAS:\n1. INTEGRE AO CONTEXTO: Junte essa instrução com o contexto real do que estava sendo conversado antes do sumiço do cliente.\n2. NUNCA repita o que já foi dito anteriormente.\n3. OBJETIVO: Sua resposta deve ser inteligente, persuasiva e projetada exclusivamente para contornar objeções ocultas e levar o lead ao FECHAMENTO DO PEDIDO.\nComporte-se como o melhor vendedor da equipe.`
       });
     } else if (contextOverride && contextOverride.startsWith('REACTIVATION|')) {
       const days = contextOverride.split('|')[1];
       openAiMessages.push({
         role: 'system',
-        content: `Atenção: Este cliente não responde há ${days} dias. Sua missão é reativá-lo. Leia o contexto da última conversa e envie uma mensagem natural, amigável e descontraída, tentando puxar assunto de onde pararam. Não cobre uma resposta agressivamente, aja como se estivesse apenas acompanhando para ver se ele precisa de algo ou se conseguiu analisar a proposta. Mantenha sua identidade e regras de vendas. REGRA DE OURO: Não repita textos anteriores.`
+        content: `Atenção: Este cliente não responde há ${days} dias. Sua missão é reativá-lo.\nREGRAS OBRIGATÓRIAS:\n1. RESGATE O ASSUNTO: Analise as últimas interações. Mande uma mensagem natural e descontraída mencionando sutilmente onde pararam (ex: 'Oi! Passando só pra saber se conseguiu decidir sobre X...').\n2. NÃO SEJA AGRESSIVO: Aja como se estivesse apenas acompanhando para ver se ele precisa de algo.\n3. FOCO EM VENDER: O objetivo final é engajar para fechar negócio, ofereça facilidade para fechar o pedido hoje.\n4. NUNCA REPITA mensagens anteriores.`
       });
     }
 
