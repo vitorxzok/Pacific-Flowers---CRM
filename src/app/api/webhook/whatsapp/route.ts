@@ -170,9 +170,9 @@ export async function POST(request: Request) {
           }
         } else {
           // Se for do vendedor (e não for eco da IA), significa que o humano assumiu o controle!
-          // VERIFICAR CÓDIGO SECRETO ".."
+          // VERIFICAR CÓDIGO SECRETO ".." OU "/ia"
           const textTrimmed = text.trim();
-          if (textTrimmed.endsWith('..') && !textTrimmed.endsWith('...')) {
+          if (textTrimmed === '/ia' || (textTrimmed.endsWith('..') && !textTrimmed.endsWith('...'))) {
             // Humano usou o código secreto para reativar a IA!
             await supabase
               .from('clientes')
