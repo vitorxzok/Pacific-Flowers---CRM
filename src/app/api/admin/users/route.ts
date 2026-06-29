@@ -33,6 +33,7 @@ export async function GET(request: Request) {
         name: u.user_metadata?.name || 'Vendedor Sem Nome',
         email: u.email,
         auto_reply_enabled: crmSettings.auto_reply_enabled || false,
+        recovery_enabled: crmSettings.recovery_enabled || false,
         instances: userInstances.map(i => ({
           name: i.instance_name,
           phone: i.phone_number,
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
     const supabaseServer = await createServerClient();
     const { data: { session } } = await supabaseServer.auth.getSession();
     
-    const { userId, enabled } = await request.json();
+    const { userId, enabled, recovery_enabled } = await request.json();
     
     if (!userId) {
        return NextResponse.json({ error: 'UserId required' }, { status: 400 });
@@ -73,14 +74,15 @@ export async function POST(request: Request) {
         ...currentMeta,
         crm_settings: {
           ...currentSettings,
-          auto_reply_enabled: enabled
+          ...(enabled !== undefined && { auto_reply_enabled: enabled }),
+          ...(recovery_enabled !== undefined && { recovery_enabled: recovery_enabled })
         }
       }
     });
 
     if (updateError) throw updateError;
     
-    return NextResponse.json({ success: true, userId, enabled });
+    return NextResponse.json({ success: true, userId });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

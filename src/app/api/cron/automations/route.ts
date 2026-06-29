@@ -56,6 +56,39 @@ export async function GET(request: Request) {
       followUpsEnviados: 0
     };
 
+        // Mapa de instâncias abertas na Evolution API
+    let openInstancesMap: Record<string, string> = {};
+    let activeInternalPhones: string[] = [];
+    try {
+      const evoApiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+      const evoApiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+      if (evoApiUrl && evoApiKey) {
+        const res = await fetch(`${evoApiUrl}/instance/fetchInstances`, { headers: { 'apikey': evoApiKey } });
+        if (res.ok) {
+          const instances = await res.json();
+          instances.forEach((inst: any) => {
+            if (inst.connectionStatus === 'open' && inst.name) {
+              const baseName = inst.name.split('_').slice(0, 2).join('_'); // Extrai 'user_xxxx' de 'user_xxxx_1'
+              openInstancesMap[baseName] = inst.name;
+              
+              if (inst.ownerJid) {
+                const phone = inst.ownerJid.split('@')[0];
+                activeInternalPhones.push(phone);
+                // Mapeia variações com e sem ddd 9 para garantir que ignoramos
+                if (phone.length === 13) { // 55 + 2 DDD + 9 + 8 digitos
+                  activeInternalPhones.push(phone.slice(0, 4) + phone.slice(5)); // Remove o 9
+                } else if (phone.length === 12) {
+                  activeInternalPhones.push(phone.slice(0, 4) + '9' + phone.slice(4)); // Adiciona o 9
+                }
+              }
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao buscar instancias:', e);
+    }
+
     // ========================================================
     // LÓGICA 1: REPOSIÇÃO DE ESTOQUE (25 DIAS)
     // ========================================================
@@ -72,6 +105,8 @@ export async function GET(request: Request) {
 
     if (clientesReposicao && clientesReposicao.length > 0) {
       for (const client of clientesReposicao) {
+        const cleanedClientPhone = client.phone ? client.phone.replace(/\D/g, '') : '';
+        if (cleanedClientPhone && activeInternalPhones.includes(cleanedClientPhone)) continue; // Ignora números internos
         try {
           // Muda o status para 'Em Qualificação' primeiro para evitar disparos duplicados se der timeout
           await supabase
@@ -97,7 +132,9 @@ export async function GET(request: Request) {
             
             if (apiUrl && apiKey && client.phone) {
               const cleanedPhone = client.phone.replace(/\D/g, '');
-              const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+              const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+              const instanceName = openInstancesMap[baseInstance];
+              if (!instanceName) continue;
               
               await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                 method: 'POST',
@@ -133,11 +170,13 @@ export async function GET(request: Request) {
       let processedInativos = 0;
       for (const client of clientesInativos) {
         if (processedInativos >= 5) break; // Evitar Rate Limit da OpenAI
+        const cleanedClientPhone = client.phone ? client.phone.replace(/\D/g, '') : '';
+        if (cleanedClientPhone && activeInternalPhones.includes(cleanedClientPhone)) continue; // Ignora números internos
         try {
           const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
           
-          if (!clientSettings.auto_reply_enabled) {
-            continue; // Pula se a resposta rápida estiver desativada para este atendente
+          if (!clientSettings.recovery_enabled) {
+            continue; // Pula se a recuperação estiver desativada para este atendente
           }
 
           // Checar se estamos no horário comercial de Brasília
@@ -199,7 +238,9 @@ export async function GET(request: Request) {
                 
                 if (apiUrl && apiKey && client.phone) {
                   const cleanedPhone = client.phone.replace(/\D/g, '');
-                  const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+                  const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+              const instanceName = openInstancesMap[baseInstance];
+              if (!instanceName) continue;
                   await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
@@ -248,11 +289,13 @@ export async function GET(request: Request) {
           let processedInsistencia = 0;
           for (const client of clientesInsistencia) {
             if (processedInsistencia >= 5) break;
+            const cleanedClientPhone = client.phone ? client.phone.replace(/\D/g, '') : '';
+            if (cleanedClientPhone && activeInternalPhones.includes(cleanedClientPhone)) continue; // Ignora números internos
             try {
               const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
               
-              if (!clientSettings.auto_reply_enabled) {
-                continue; // Pula se a resposta rápida/insistência estiver desativada
+              if (!clientSettings.recovery_enabled) {
+                continue; // Pula se a recuperação/insistência estiver desativada
               }
 
               const followUpIntervalHours = clientSettings.followup_interval_hours || 24;
@@ -359,7 +402,9 @@ export async function GET(request: Request) {
                     
                     if (apiUrl && apiKey && client.phone) {
                       const cleanedPhone = client.phone.replace(/\D/g, '');
-                      const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+                      const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+              const instanceName = openInstancesMap[baseInstance];
+              if (!instanceName) continue;
                       await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
@@ -390,6 +435,8 @@ export async function GET(request: Request) {
         let processedFinalizados = 0;
         for (const client of clientesFinalizados) {
           if (processedFinalizados >= 5) break;
+          const cleanedClientPhone = client.phone ? client.phone.replace(/\D/g, '') : '';
+          if (cleanedClientPhone && activeInternalPhones.includes(cleanedClientPhone)) continue; // Ignora números internos
           try {
             const clientSettings = settingsByAttendant[client.attendant_id] || { reposicao_days_global: 30 };
             const reposicaoDays = clientSettings.reposicao_days_global || 30;
@@ -473,7 +520,9 @@ export async function GET(request: Request) {
                   
                   if (apiUrl && apiKey && client.phone) {
                     const cleanedPhone = client.phone.replace(/\D/g, '');
-                    const instanceName = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+                    const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+              const instanceName = openInstancesMap[baseInstance];
+              if (!instanceName) continue;
                     await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', 'apikey': apiKey },

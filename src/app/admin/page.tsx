@@ -87,6 +87,28 @@ export default function AdminPage() {
     }
   };
 
+  const handleToggleRecovery = async (userId: string, currentEnabled: boolean) => {
+    const newEnabled = !currentEnabled;
+    const toastId = toast.loading(newEnabled ? 'Ativando Recuperação para vendedor...' : 'Desativando Recuperação para vendedor...');
+    
+    // Update locally instantly for better UX
+    setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, recovery_enabled: newEnabled } : u));
+    
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, recovery_enabled: newEnabled })
+      });
+      if (!res.ok) throw new Error('Falha ao atualizar');
+      toast.success(`Recuperação ${newEnabled ? 'ativada' : 'desativada'} com sucesso!`, { id: toastId });
+    } catch (err) {
+      // Revert on error
+      setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, recovery_enabled: currentEnabled } : u));
+      toast.error('Erro ao atualizar Recuperação.', { id: toastId });
+    }
+  };
+
   const handleAddAttachment = () => {
     const newAttachment: Attachment = { id: uuidv4(), trigger: '', url: '', name: '', type: 'document' };
     setLocalSettings({
@@ -875,14 +897,31 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                         >
                           Gerenciar WhatsApp
                         </button>
-                        <button
-                          onClick={() => handleToggleUserAI(user.id, user.auto_reply_enabled)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${user.auto_reply_enabled ? 'bg-green-500' : 'bg-surface-border'}`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.auto_reply_enabled ? 'translate-x-6' : 'translate-x-1'}`}
-                          />
-                        </button>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[10px] text-gray-400 uppercase font-semibold">Atender (IA)</span>
+                          <button
+                            onClick={() => handleToggleUserAI(user.id, user.auto_reply_enabled)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${user.auto_reply_enabled ? 'bg-green-500' : 'bg-surface-border'}`}
+                            title="Ativar/Desativar IA para conversas ativas"
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.auto_reply_enabled ? 'translate-x-6' : 'translate-x-1'}`}
+                            />
+                          </button>
+                        </div>
+                        
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[10px] text-gray-400 uppercase font-semibold">Recuperar Antigos</span>
+                          <button
+                            onClick={() => handleToggleRecovery(user.id, user.recovery_enabled)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${user.recovery_enabled ? 'bg-blue-500' : 'bg-surface-border'}`}
+                            title="Ativar/Desativar disparo de recuperação para clientes inativos"
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.recovery_enabled ? 'translate-x-6' : 'translate-x-1'}`}
+                            />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
