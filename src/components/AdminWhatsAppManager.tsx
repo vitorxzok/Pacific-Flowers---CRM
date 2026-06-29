@@ -17,10 +17,12 @@ interface AdminWhatsAppManagerProps {
   targetUserId: string;
   adminPwd: string;
   userName: string;
+  recoveryInstances?: string[];
+  onToggleRecovery?: (instanceName: string, currentState: boolean) => void;
   onClose: () => void;
 }
 
-export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, onClose }: AdminWhatsAppManagerProps) {
+export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, recoveryInstances = [], onToggleRecovery, onClose }: AdminWhatsAppManagerProps) {
   const [instances, setInstances] = useState<InstanceState[]>([]);
   const [qrCodes, setQrCodes] = useState<Record<number, string | null>>({});
   const [loadingSlots, setLoadingSlots] = useState<Record<number, boolean>>({});
@@ -171,9 +173,22 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, onClose
           </h2>
           
           {isConnected && instance?.phoneNumber && (
-            <p className="text-sm font-medium text-green-400 bg-green-500/10 px-3 py-1 rounded-full mb-4">
-              +{instance.phoneNumber}
-            </p>
+            <div className="flex flex-col items-center gap-2 mb-4">
+              <p className="text-sm font-medium text-green-400 bg-green-500/10 px-3 py-1 rounded-full">
+                +{instance.phoneNumber}
+              </p>
+              
+              <div className="flex items-center gap-2 bg-surface/50 px-2 py-1.5 rounded-md border border-surface-border mt-2">
+                <span className="text-[10px] text-gray-400 uppercase font-semibold">Recuperar Antigos</span>
+                <button
+                  onClick={() => onToggleRecovery && onToggleRecovery(instance.instanceName, recoveryInstances.includes(instance.instanceName))}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${recoveryInstances.includes(instance.instanceName) ? 'bg-blue-500' : 'bg-surface-border'}`}
+                  title={`Ativar/Desativar recuperação automática apenas para este número`}
+                >
+                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${recoveryInstances.includes(instance.instanceName) ? 'translate-x-5' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            </div>
           )}
 
           {!isConnected && !isConnecting && (
