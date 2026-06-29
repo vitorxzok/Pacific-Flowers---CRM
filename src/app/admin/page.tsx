@@ -1446,6 +1446,8 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
           targetUserId={selectedAdminUserId}
           userName={selectedAdminUserName}
           adminPwd={password}
+          recoveryInstances={adminUsers.find(u => u.id === selectedAdminUserId)?.recovery_instances || []}
+          onToggleRecovery={(instanceName, currentState) => handleToggleRecoveryInstance(selectedAdminUserId, instanceName, currentState)}
           onClose={() => {
             setSelectedAdminUserId(null);
             fetchAdminUsers(); // Refresh the instances list
