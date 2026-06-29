@@ -230,20 +230,31 @@ export async function GET(request: Request) {
             const diffMinutes = (now - messageTime) / (1000 * 60);
 
             if (diffMinutes >= minutesWithoutResponse) {
+              // 1. Lock Optimista para prevenir disparos concorrentes (timeout retry)
+              const { data: lockClient, error: lockError } = await supabase
+                .from('clientes')
+                .update({ followup_sent: true })
+                .eq('id', client.id)
+                .eq('followup_sent', false)
+                .select('id');
+
+              if (lockError || !lockClient || lockClient.length === 0) {
+                console.log(`[Follow-up] Concorrência evitada para cliente ${client.id}`);
+                continue;
+              }
+
               const aiResponse = await generateAIResponse(client.id, supabase, "FOLLOW_UP_INATIVIDADE");
               const aiResponseText = aiResponse?.text;
 
               if (aiResponseText) {
                 processedInativos++;
-                const { error: updateError } = await supabase.from('clientes').update({ followup_sent: true }).eq('id', client.id);
-                if (updateError) {
-                  console.error(`Erro ao atualizar followup_sent para cliente ${client.id}:`, updateError);
-                  continue; // Pula o envio se o DB falhar
-                }
+
                 const cleanText = aiResponseText.replace(/\[SEPARAR\]/g, '').trim();
                 const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
                 if (msgError) {
                   console.error(`Erro ao salvar mensagem de inatividade para cliente ${client.id}:`, msgError);
+                  // Rollback lock
+                  await supabase.from('clientes').update({ followup_sent: false }).eq('id', client.id);
                   continue; // Pula o envio se o DB falhar
                 }
 
@@ -259,6 +270,9 @@ export async function GET(request: Request) {
                   });
                 }
                 results.followUpsEnviados++;
+              } else {
+                // Rollback lock se a IA falhou em gerar texto
+                await supabase.from('clientes').update({ followup_sent: false }).eq('id', client.id);
               }
             }
           }
@@ -398,6 +412,19 @@ export async function GET(request: Request) {
                 }
 
                 if (shouldInsist) {
+                  // 1. Lock Optimista para prevenir disparos concorrentes
+                  const { data: lockClient, error: lockError } = await supabase
+                    .from('clientes')
+                    .update({ insistencia_count: currentInsistenciaCount + 1, updated_at: new Date().toISOString() })
+                    .eq('id', client.id)
+                    .eq('insistencia_count', currentInsistenciaCount)
+                    .select('id');
+
+                  if (lockError || !lockClient || lockClient.length === 0) {
+                    console.log(`[Insistencia] Concorrência evitada para cliente ${client.id}`);
+                    continue;
+                  }
+
                   processedInsistencia++;
                   const aiResponse = await generateAIResponse(client.id, supabase, aiContextOverride, clientSettings);
                   const generatedText = aiResponse?.text;
@@ -408,13 +435,8 @@ export async function GET(request: Request) {
                     const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
                     if (msgError) {
                       console.error(`Erro ao salvar mensagem de insistencia para cliente ${client.id}:`, msgError);
-                      continue; // Pula se o DB falhar
-                    }
-
-                    // Incrementa o contador de insistência
-                    const { error: updateError } = await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount + 1, updated_at: new Date().toISOString() }).eq('id', client.id);
-                    if (updateError) {
-                      console.error(`Erro ao atualizar insistencia_count para cliente ${client.id}:`, updateError);
+                      // Rollback lock
+                      await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount, updated_at: new Date().toISOString() }).eq('id', client.id);
                       continue; // Pula se o DB falhar
                     }
 
@@ -430,6 +452,9 @@ export async function GET(request: Request) {
                       });
                     }
                     results.followUpsEnviados++;
+                  } else {
+                    // Rollback lock se IA falhou
+                    await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount, updated_at: new Date().toISOString() }).eq('id', client.id);
                   }
                 }
               }
