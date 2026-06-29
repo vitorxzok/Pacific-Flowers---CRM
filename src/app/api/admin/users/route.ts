@@ -34,6 +34,7 @@ export async function GET(request: Request) {
         email: u.email,
         auto_reply_enabled: crmSettings.auto_reply_enabled || false,
         recovery_enabled: crmSettings.recovery_enabled || false,
+        recovery_instances: crmSettings.recovery_instances || [],
         instances: userInstances.map(i => ({
           name: i.instance_name,
           phone: i.phone_number,
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
     const supabaseServer = await createServerClient();
     const { data: { session } } = await supabaseServer.auth.getSession();
     
-    const { userId, enabled, recovery_enabled } = await request.json();
+    const { userId, enabled, recovery_enabled, toggle_recovery_instance } = await request.json();
     
     if (!userId) {
        return NextResponse.json({ error: 'UserId required' }, { status: 400 });
@@ -69,13 +70,26 @@ export async function POST(request: Request) {
     const currentMeta = userData.user.user_metadata || {};
     const currentSettings = currentMeta.crm_settings || {};
     
+    let newRecoveryInstances = currentSettings.recovery_instances || [];
+    if (toggle_recovery_instance) {
+      const { instanceName, enabled: instanceEnabled } = toggle_recovery_instance;
+      if (instanceEnabled) {
+        if (!newRecoveryInstances.includes(instanceName)) {
+          newRecoveryInstances.push(instanceName);
+        }
+      } else {
+        newRecoveryInstances = newRecoveryInstances.filter((name: string) => name !== instanceName);
+      }
+    }
+    
     const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, {
       user_metadata: {
         ...currentMeta,
         crm_settings: {
           ...currentSettings,
           ...(enabled !== undefined && { auto_reply_enabled: enabled }),
-          ...(recovery_enabled !== undefined && { recovery_enabled: recovery_enabled })
+          ...(recovery_enabled !== undefined && { recovery_enabled: recovery_enabled }),
+          ...(toggle_recovery_instance && { recovery_instances: newRecoveryInstances })
         }
       }
     });

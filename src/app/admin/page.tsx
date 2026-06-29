@@ -109,6 +109,50 @@ export default function AdminPage() {
     }
   };
 
+  const handleToggleRecoveryInstance = async (userId: string, instanceName: string, isCurrentlyEnabled: boolean) => {
+    const newEnabled = !isCurrentlyEnabled;
+    const toastId = toast.loading(newEnabled ? `Ativando Recuperação para ${instanceName}...` : `Desativando Recuperação para ${instanceName}...`);
+    
+    // Update locally instantly for better UX
+    setAdminUsers(prev => prev.map(u => {
+      if (u.id === userId) {
+        const currentInstances = u.recovery_instances || [];
+        const newInstances = newEnabled 
+          ? [...currentInstances, instanceName]
+          : currentInstances.filter((name: string) => name !== instanceName);
+        return { ...u, recovery_instances: newInstances };
+      }
+      return u;
+    }));
+    
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId, 
+          toggle_recovery_instance: { instanceName, enabled: newEnabled }
+        })
+      });
+      if (!res.ok) throw new Error('Falha ao atualizar');
+      toast.success(`Recuperação ${newEnabled ? 'ativada' : 'desativada'} para o número com sucesso!`, { id: toastId });
+    } catch (err) {
+      // Revert on error
+      setAdminUsers(prev => prev.map(u => {
+        if (u.id === userId) {
+          const currentInstances = u.recovery_instances || [];
+          const revertedInstances = isCurrentlyEnabled 
+            ? [...currentInstances, instanceName]
+            : currentInstances.filter((name: string) => name !== instanceName);
+          return { ...u, recovery_instances: revertedInstances };
+        }
+        return u;
+      }));
+      toast.error('Erro ao atualizar Recuperação para o número.', { id: toastId });
+    }
+  };
+
+
   const handleAddAttachment = () => {
     const newAttachment: Attachment = { id: uuidv4(), trigger: '', url: '', name: '', type: 'document' };
     setLocalSettings({
@@ -871,57 +915,61 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
               ) : (
                 <div className="space-y-3">
                   {adminUsers.map(user => (
-                    <div key={user.id} className="flex items-center justify-between p-4 bg-background/50 border border-surface-border rounded-lg">
-                      <div>
+                    <div key={user.id} className="flex flex-col sm:flex-row sm:items-start justify-between p-4 bg-background/50 border border-surface-border rounded-lg gap-4">
+                      <div className="flex-1">
                         <p className="text-sm font-medium text-white">{user.name}</p>
-                        <p className="text-xs text-gray-400 mb-1">{user.email}</p>
+                        <p className="text-xs text-gray-400 mb-2">{user.email}</p>
                         {user.instances && user.instances.length > 0 ? (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {user.instances.filter((inst: any) => /_\d+$/.test(inst.name)).map((inst: any, idx: number) => (
-                              <span key={idx} className={`px-2 py-1 rounded text-xs font-medium border ${inst.status === 'open' ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'}`}>
-                                Slot {inst.name.split('_').pop()} • {inst.phone || (inst.status === 'open' ? 'Conectado' : 'Conectando...')}
-                              </span>
-                            ))}
+                          <div className="flex flex-col gap-2 mt-2">
+                            {user.instances.filter((inst: any) => /_\d+$/.test(inst.name)).map((inst: any, idx: number) => {
+                              const isRecoveryEnabled = (user.recovery_instances || []).includes(inst.name);
+                              return (
+                                <div key={idx} className="flex items-center flex-wrap gap-3">
+                                  <span className={`px-2 py-1 rounded text-xs font-medium border ${inst.status === 'open' ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'}`}>
+                                    Slot {inst.name.split('_').pop()} • {inst.phone || (inst.status === 'open' ? 'Conectado' : 'Conectando...')}
+                                  </span>
+                                  
+                                  <div className="flex items-center gap-2 bg-surface/50 px-2 py-1 rounded-md border border-surface-border">
+                                    <span className="text-[10px] text-gray-400 uppercase font-semibold">Recuperar Antigos</span>
+                                    <button
+                                      onClick={() => handleToggleRecoveryInstance(user.id, inst.name, isRecoveryEnabled)}
+                                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isRecoveryEnabled ? 'bg-blue-500' : 'bg-surface-border'}`}
+                                      title={`Ativar/Desativar recuperação automática apenas para este número`}
+                                    >
+                                      <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isRecoveryEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <span className="text-xs text-red-400 mt-2 block">Nenhum WhatsApp conectado</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => {
-                            setSelectedAdminUserId(user.id);
-                            setSelectedAdminUserName(user.name);
-                          }}
-                          className="px-3 py-1.5 bg-surface hover:bg-surface-border border border-surface-border rounded-lg text-xs font-medium text-white transition-colors"
-                        >
-                          Gerenciar WhatsApp
-                        </button>
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-[10px] text-gray-400 uppercase font-semibold">Atender (IA)</span>
+                      <div className="flex items-center gap-4 mt-4 sm:mt-0">
+                        <div className="flex flex-col items-center gap-1 bg-surface/30 p-2 rounded-lg border border-surface-border/50">
+                          <span className="text-[10px] text-gray-400 uppercase font-semibold text-center leading-tight">Atender (IA)<br/>Global</span>
                           <button
                             onClick={() => handleToggleUserAI(user.id, user.auto_reply_enabled)}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${user.auto_reply_enabled ? 'bg-green-500' : 'bg-surface-border'}`}
-                            title="Ativar/Desativar IA para conversas ativas"
+                            title="Ativar/Desativar IA para conversas ativas em todas as instâncias"
                           >
                             <span
                               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.auto_reply_enabled ? 'translate-x-6' : 'translate-x-1'}`}
                             />
                           </button>
                         </div>
-                        
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-[10px] text-gray-400 uppercase font-semibold">Recuperar Antigos</span>
-                          <button
-                            onClick={() => handleToggleRecovery(user.id, user.recovery_enabled)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${user.recovery_enabled ? 'bg-blue-500' : 'bg-surface-border'}`}
-                            title="Ativar/Desativar disparo de recuperação para clientes inativos"
-                          >
-                            <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.recovery_enabled ? 'translate-x-6' : 'translate-x-1'}`}
-                            />
-                          </button>
-                        </div>
+
+                        <button
+                          onClick={() => {
+                            setSelectedAdminUserId(user.id);
+                            setSelectedAdminUserName(user.name);
+                          }}
+                          className="px-3 py-1.5 bg-surface hover:bg-surface-border border border-surface-border rounded-lg text-xs font-medium text-white transition-colors h-fit"
+                        >
+                          Gerenciar WhatsApp
+                        </button>
                       </div>
                     </div>
                   ))}

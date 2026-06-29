@@ -47,6 +47,7 @@ export async function GET(request: Request) {
         if (uSettings.insistencia_cadences && uSettings.insistencia_cadences.length > 0) {
           fallbackSettings.insistencia_cadences = uSettings.insistencia_cadences;
         }
+        if (uSettings.recovery_instances) fallbackSettings.recovery_instances = uSettings.recovery_instances;
       }
     }
 
@@ -70,6 +71,7 @@ export async function GET(request: Request) {
             if (inst.connectionStatus === 'open' && inst.name) {
               const baseName = inst.name.split('_').slice(0, 2).join('_'); // Extrai 'user_xxxx' de 'user_xxxx_1'
               openInstancesMap[baseName] = inst.name;
+              openInstancesMap[inst.name] = inst.name;
               
               if (inst.ownerJid) {
                 const phone = inst.ownerJid.split('@')[0];
@@ -99,7 +101,7 @@ export async function GET(request: Request) {
 
     const { data: clientesReposicao, error: reposicaoError } = await supabase
       .from('clientes')
-      .select('id, name, phone, attendant_id')
+      .select('id, name, phone, attendant_id, connected_instance')
       .eq('status', 'Reposição')
       .lte('updated_at', iso25DaysAgo);
 
@@ -133,7 +135,9 @@ export async function GET(request: Request) {
             if (apiUrl && apiKey && client.phone) {
               const cleanedPhone = client.phone.replace(/\D/g, '');
               const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
-              const instanceName = openInstancesMap[baseInstance];
+              const instanceName = (client.connected_instance && openInstancesMap[client.connected_instance]) 
+                ? client.connected_instance 
+                : openInstancesMap[baseInstance];
               if (!instanceName) continue;
               
               await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
@@ -161,7 +165,7 @@ export async function GET(request: Request) {
     // 1. Buscar clientes que estão em status ativos e ainda NÃO receberam o follow-up rápido
     const { data: clientesInativos, error: inativosError } = await supabase
       .from('clientes')
-      .select('id, name, phone, attendant_id, status')
+      .select('id, name, phone, attendant_id, status, connected_instance')
       .in('status', autoReplyStatuses)
       .eq('followup_sent', false)
       .eq('ai_enabled', true);
@@ -175,8 +179,18 @@ export async function GET(request: Request) {
         try {
           const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
           
-          if (!clientSettings.recovery_enabled) {
-            continue; // Pula se a recuperação estiver desativada para este atendente
+          const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+          const instanceName = (client.connected_instance && openInstancesMap[client.connected_instance]) 
+            ? client.connected_instance 
+            : openInstancesMap[baseInstance];
+
+          if (!instanceName) continue; // Instância não está online
+
+          const allowedInstances = clientSettings.recovery_instances || [];
+          const isRecoveryEnabled = allowedInstances.includes(instanceName);
+
+          if (!isRecoveryEnabled) {
+            continue; // Pula se a recuperação estiver desativada para a instância na qual o lead chegou
           }
 
           // Checar se estamos no horário comercial de Brasília
@@ -238,9 +252,6 @@ export async function GET(request: Request) {
                 
                 if (apiUrl && apiKey && client.phone) {
                   const cleanedPhone = client.phone.replace(/\D/g, '');
-                  const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
-              const instanceName = openInstancesMap[baseInstance];
-              if (!instanceName) continue;
                   await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
@@ -281,7 +292,7 @@ export async function GET(request: Request) {
       if (isBusinessHours) {
         const { data: clientesInsistencia, error: insistenciaError } = await supabase
           .from('clientes')
-          .select('id, name, phone, attendant_id, status, insistencia_count')
+          .select('id, name, phone, attendant_id, status, insistencia_count, connected_instance')
           .in('status', autoReplyStatuses)
           .eq('ai_enabled', true);
 
@@ -294,8 +305,18 @@ export async function GET(request: Request) {
             try {
               const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
               
-              if (!clientSettings.recovery_enabled) {
-                continue; // Pula se a recuperação/insistência estiver desativada
+              const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
+              const instanceName = (client.connected_instance && openInstancesMap[client.connected_instance]) 
+                ? client.connected_instance 
+                : openInstancesMap[baseInstance];
+
+              if (!instanceName) continue; // Instância não está online
+
+              const allowedInstances = clientSettings.recovery_instances || [];
+              const isRecoveryEnabled = allowedInstances.includes(instanceName);
+              
+              if (!isRecoveryEnabled) {
+                continue; // Pula se a recuperação/insistência estiver desativada para esta instância
               }
 
               const followUpIntervalHours = clientSettings.followup_interval_hours || 24;
@@ -402,9 +423,6 @@ export async function GET(request: Request) {
                     
                     if (apiUrl && apiKey && client.phone) {
                       const cleanedPhone = client.phone.replace(/\D/g, '');
-                      const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
-              const instanceName = openInstancesMap[baseInstance];
-              if (!instanceName) continue;
                       await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
@@ -427,7 +445,7 @@ export async function GET(request: Request) {
       // ========================================================
       const { data: clientesFinalizados, error: finalizadosError } = await supabase
         .from('clientes')
-        .select('id, name, phone, attendant_id, status, purchase_date, custom_reposicao_date, ai_enabled')
+        .select('id, name, phone, attendant_id, status, purchase_date, custom_reposicao_date, ai_enabled, connected_instance')
         .in('status', ['Finalizado', 'Reposição'])
         .eq('ai_enabled', true);
 
@@ -521,8 +539,11 @@ export async function GET(request: Request) {
                   if (apiUrl && apiKey && client.phone) {
                     const cleanedPhone = client.phone.replace(/\D/g, '');
                     const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
-              const instanceName = openInstancesMap[baseInstance];
-              if (!instanceName) continue;
+                    const instanceName = (client.connected_instance && openInstancesMap[client.connected_instance]) 
+                      ? client.connected_instance 
+                      : openInstancesMap[baseInstance];
+                    if (!instanceName) continue;
+                    
                     await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
