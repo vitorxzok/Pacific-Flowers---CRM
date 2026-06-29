@@ -172,11 +172,13 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, recover
              'Desconectado'}
           </h2>
           
-          {isConnected && instance?.phoneNumber && (
+          {isConnected && (
             <div className="flex flex-col items-center gap-2 mb-4">
-              <p className="text-sm font-medium text-green-400 bg-green-500/10 px-3 py-1 rounded-full">
-                +{instance.phoneNumber}
-              </p>
+              {instance?.phoneNumber && (
+                <p className="text-sm font-medium text-green-400 bg-green-500/10 px-3 py-1 rounded-full">
+                  +{instance.phoneNumber}
+                </p>
+              )}
               
               <div className="flex items-center gap-2 bg-surface/50 px-2 py-1.5 rounded-md border border-surface-border mt-2">
                 <span className="text-[10px] text-gray-400 uppercase font-semibold">Recuperar Antigos</span>

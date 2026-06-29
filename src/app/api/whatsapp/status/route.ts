@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     // Mapear para um formato fácil de usar no frontend
     const instancesData = await Promise.all(userInstances.map(async (inst: any) => {
       let state = 'unknown';
-      let owner = inst.owner || '';
+      let owner = inst.ownerJid || inst.owner || '';
 
       // Tentar pegar o state via connectionState endpoint, porque fetchInstances nem sempre retorna 'open'/'connecting' claramente, ou apenas status 'open'
       // Na v2 da Evolution API, status já vem no objeto como `status: "open"` ou `connectionStatus: "OPEN"`
