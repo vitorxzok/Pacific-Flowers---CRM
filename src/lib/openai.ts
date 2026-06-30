@@ -153,6 +153,9 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     // Inverter para ficar na ordem cronológica correta (mais antigas primeiro)
     const messages = recentMessages.reverse();
 
+    // Pegar a última mensagem do assistente para forçar a não repetição
+    const lastAssistantMessage = messages.slice().reverse().find((m: any) => m.sender === 'attendant')?.text || '';
+
     // Converter para o formato da OpenAI
     let openAiMessages = [
       { role: 'system', content: getSystemPrompt(settings) }
@@ -214,6 +217,15 @@ ${listaProdutos}
         role: 'system',
         content: `Atenção: Este cliente não responde há ${days} dias. Sua missão é reativá-lo.\nREGRAS OBRIGATÓRIAS:\n1. RESGATE O ASSUNTO: Analise as últimas interações. Mande uma mensagem natural e descontraída mencionando sutilmente onde pararam (ex: 'Oi! Passando só pra saber se conseguiu decidir sobre X...').\n2. NÃO SEJA AGRESSIVO: Aja como se estivesse apenas acompanhando para ver se ele precisa de algo.\n3. FOCO EM VENDER: O objetivo final é engajar para fechar negócio, ofereça facilidade para fechar o pedido hoje.\n4. NUNCA REPITA mensagens anteriores.`
       });
+    }
+
+    if (contextOverride && (contextOverride.startsWith('INSISTENCIA') || contextOverride.startsWith('REACTIVATION') || contextOverride === 'FOLLOW_UP_INATIVIDADE')) {
+      if (lastAssistantMessage) {
+        openAiMessages.push({
+           role: 'system',
+           content: `REGRA DE OURO CONTRA REPETIÇÃO: A sua última mensagem enviada foi EXATAMENTE esta:\n"${lastAssistantMessage}"\n\nVocê está ESTRITAMENTE PROIBIDO de repetir as mesmas frases, a mesma estrutura ou fazer a mesma pergunta novamente. Mude completamente a abordagem, seja criativo, ofereça uma alternativa diferente ou vá direto ao ponto para não parecer um robô repetitivo.`
+        });
+      }
     }
 
     if (clientInfo && clientInfo.status) {
