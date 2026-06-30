@@ -82,7 +82,7 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, recover
     }
   };
 
-  const handleDisconnect = async (slotId: number) => {
+  const handleDisconnect = async (slotId: number, instanceName: string) => {
     const confirm = window.confirm(`Deseja realmente desconectar o WhatsApp do slot ${slotId} para ${userName}?`);
     if (!confirm) return;
 
@@ -90,7 +90,7 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, recover
       const res = await fetch('/api/whatsapp/disconnect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slotId, targetUserId, pwd: adminPwd })
+        body: JSON.stringify({ slotId, instanceName, targetUserId, pwd: adminPwd })
       });
       
       if (res.ok) {
@@ -146,7 +146,7 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, recover
         
         {(isConnected || isConnecting) && (
           <button 
-            onClick={() => handleDisconnect(slotId)}
+            onClick={() => handleDisconnect(slotId, instance?.instanceName || '')}
             className="absolute top-2 right-2 p-1.5 bg-red-500/10 text-red-400 rounded-md hover:bg-red-500/20 transition-colors"
             title="Desconectar"
           >

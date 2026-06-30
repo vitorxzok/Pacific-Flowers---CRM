@@ -22,7 +22,8 @@ export async function POST(request: Request) {
     }
 
     const slotId = body.slotId || 1;
-    const instanceName = `user_${userId}_${slotId}`;
+    // Usa o instanceName exato se enviado do frontend (para suportar instâncias antigas sem _slotId)
+    const instanceName = body.instanceName || `user_${userId}_${slotId}`;
 
     const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
     const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
