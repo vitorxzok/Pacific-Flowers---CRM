@@ -256,7 +256,7 @@ QUANDO APRESENTAR O ORÇAMENTO, USE EXATAMENTE ESTE FORMATO VISUAL OBRIGATÓRIO:
 *🧾 ORÇAMENTO - PACIFIC FLOWERS*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 *Cliente:* [Nome do Cliente]
-*Data:* [Data Atual]
+*Data:* ${new Date().toLocaleDateString('pt-BR')}
 
 *PRODUTOS:*
 1. [NOME EXATO E COMPLETO DO PRODUTO CONFORME O CATÁLOGO, SEM RESUMIR]
