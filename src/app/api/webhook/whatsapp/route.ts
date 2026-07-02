@@ -304,7 +304,7 @@ export async function POST(request: Request) {
       // DEBUG MESSAGE
       console.log(`[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, att_id: ${clientData?.attendant_id}`);
 
-      if (!isFromMe && autoReplyEnabled && isAIEnabled) {
+      if ((!isFromMe || aiReactivated) && autoReplyEnabled && isAIEnabled) {
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
         const aiResponse = await generateAIResponse(clientId, supabase, undefined, crmSettings);
@@ -423,19 +423,6 @@ export async function POST(request: Request) {
         analyzeConversationAndMoveStatus(clientId, supabase).catch(err => {
           console.error('[AI Silent] Erro na análise silenciosa:', err);
         });
-      } else if (isFromMe) {
-        if (aiReactivated && autoReplyEnabled) {
-          console.log('[Webhook] IA foi reativada pelo humano. Forçando geração de resposta imediata...');
-          try {
-            const result = await generateAIResponse(clientId, supabase, undefined, crmSettings);
-            if (result && (result.text || result.content)) {
-              const { sendAIMessage } = await import('@/lib/openai');
-              await sendAIMessage(clientId, result, instanceName, phone, sellerId, supabase);
-            }
-          } catch (err) {
-            console.error('[Webhook] Erro ao forçar IA após reativação:', err);
-          }
-        }
       }
 
       return NextResponse.json({ success: true, message: 'Mensagem processada com sucesso!' });
