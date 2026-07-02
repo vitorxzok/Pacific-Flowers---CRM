@@ -185,6 +185,7 @@ export async function POST(request: Request) {
               .eq('id', clientId);
             
             console.log(`[Webhook] Humano usou código secreto "..". IA REATIVADA para o cliente ${clientId}.`);
+            (request as any).aiReactivated = true;
           } else {
             // Comportamento normal: Desativamos a IA e atualizamos o status.
             await supabase
@@ -421,6 +422,16 @@ export async function POST(request: Request) {
         analyzeConversationAndMoveStatus(clientId, supabase).catch(err => {
           console.error('[AI Silent] Erro na análise silenciosa:', err);
         });
+      } else if (isFromMe) {
+        if ((request as any).aiReactivated && autoReplyEnabled) {
+          console.log('[Webhook] IA foi reativada pelo humano. Forçando geração de resposta imediata...');
+          generateAIResponse(clientId, supabase, undefined, crmSettings).then(async (result) => {
+            if (result && (result.text || result.content)) {
+              const { sendAIMessage } = await import('@/lib/openai');
+              await sendAIMessage(clientId, result, instanceName, phone, sellerId, supabase);
+            }
+          }).catch(err => console.error('[Webhook] Erro ao forçar IA após reativação:', err));
+        }
       }
 
       return NextResponse.json({ success: true, message: 'Mensagem processada com sucesso!' });
