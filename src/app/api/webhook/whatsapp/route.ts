@@ -9,6 +9,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(request: Request) {
   try {
+    let aiReactivated = false;
     const body = await request.json();
     console.log('Webhook WhatsApp recebido:', JSON.stringify(body, null, 2));
 
@@ -185,7 +186,7 @@ export async function POST(request: Request) {
               .eq('id', clientId);
             
             console.log(`[Webhook] Humano usou código secreto "..". IA REATIVADA para o cliente ${clientId}.`);
-            (request as any).aiReactivated = true;
+            aiReactivated = true;
           } else {
             // Comportamento normal: Desativamos a IA e atualizamos o status.
             await supabase
@@ -423,7 +424,7 @@ export async function POST(request: Request) {
           console.error('[AI Silent] Erro na análise silenciosa:', err);
         });
       } else if (isFromMe) {
-        if ((request as any).aiReactivated && autoReplyEnabled) {
+        if (aiReactivated && autoReplyEnabled) {
           console.log('[Webhook] IA foi reativada pelo humano. Forçando geração de resposta imediata...');
           try {
             const result = await generateAIResponse(clientId, supabase, undefined, crmSettings);
