@@ -425,12 +425,15 @@ export async function POST(request: Request) {
       } else if (isFromMe) {
         if ((request as any).aiReactivated && autoReplyEnabled) {
           console.log('[Webhook] IA foi reativada pelo humano. Forçando geração de resposta imediata...');
-          generateAIResponse(clientId, supabase, undefined, crmSettings).then(async (result) => {
+          try {
+            const result = await generateAIResponse(clientId, supabase, undefined, crmSettings);
             if (result && (result.text || result.content)) {
               const { sendAIMessage } = await import('@/lib/openai');
               await sendAIMessage(clientId, result, instanceName, phone, sellerId, supabase);
             }
-          }).catch(err => console.error('[Webhook] Erro ao forçar IA após reativação:', err));
+          } catch (err) {
+            console.error('[Webhook] Erro ao forçar IA após reativação:', err);
+          }
         }
       }
 
