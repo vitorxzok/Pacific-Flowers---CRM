@@ -223,14 +223,16 @@ export async function POST(request: Request) {
       }
 
       // 2. Inserir a mensagem na tabela `mensagens`
-      const { error: insertError } = await supabase
+      const { data: insertedMsg, error: insertError } = await supabase
         .from('mensagens')
         .insert({
           client_id: clientId,
           text: text,
           sender: isFromMe ? 'attendant' : 'client',
           read: isFromMe
-        });
+        })
+        .select('id, timestamp')
+        .single();
 
       if (insertError) {
         console.error('Erro ao salvar mensagem no banco:', insertError);
@@ -305,6 +307,25 @@ export async function POST(request: Request) {
       console.log(`[DEBUG] isFromMe: ${isFromMe}, autoReplyEnabled: ${autoReplyEnabled}, isAIEnabled: ${isAIEnabled}, att_id: ${clientData?.attendant_id}`);
 
       if ((!isFromMe || aiReactivated) && autoReplyEnabled && isAIEnabled) {
+        // --- DEBOUNCE PARA MENSAGENS SEGUIDAS ---
+        // Aguarda 3 segundos para garantir que o cliente não enviou outras mensagens / imagens em lote
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        if (insertedMsg?.timestamp) {
+          const { data: newerMessages } = await supabase
+            .from('mensagens')
+            .select('id')
+            .eq('client_id', clientId)
+            .eq('sender', 'client')
+            .gt('timestamp', insertedMsg.timestamp)
+            .limit(1);
+
+          if (newerMessages && newerMessages.length > 0) {
+            console.log(`[Webhook] Nova mensagem do cliente chegou durante o debounce. Abortando a IA desta chamada para evitar respostas duplicadas.`);
+            return NextResponse.json({ success: true, message: 'Processo da IA abortado em favor da mensagem mais recente.' });
+          }
+        }
+
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
         const aiResponse = await generateAIResponse(clientId, supabase, undefined, crmSettings);
