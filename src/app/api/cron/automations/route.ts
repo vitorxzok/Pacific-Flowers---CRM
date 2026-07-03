@@ -186,8 +186,8 @@ export async function GET(request: Request) {
 
           if (!instanceName) continue; // Instância não está online
 
-          const allowedInstances = clientSettings.recovery_instances || [];
-          const isRecoveryEnabled = allowedInstances.includes(instanceName);
+          const allowedInstances = clientSettings.recovery_instances;
+          const isRecoveryEnabled = !allowedInstances || allowedInstances.length === 0 || allowedInstances.includes(instanceName);
 
           if (!isRecoveryEnabled) {
             continue; // Pula se a recuperação estiver desativada para a instância na qual o lead chegou
@@ -326,8 +326,8 @@ export async function GET(request: Request) {
 
               if (!instanceName) continue; // Instância não está online
 
-              const allowedInstances = clientSettings.recovery_instances || [];
-              const isRecoveryEnabled = allowedInstances.includes(instanceName);
+              const allowedInstances = clientSettings.recovery_instances;
+              const isRecoveryEnabled = !allowedInstances || allowedInstances.length === 0 || allowedInstances.includes(instanceName);
               
               if (!isRecoveryEnabled) {
                 continue; // Pula se a recuperação/insistência estiver desativada para esta instância
