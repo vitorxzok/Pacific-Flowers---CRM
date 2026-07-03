@@ -225,8 +225,8 @@ export default function ChatsPage() {
                 <div className="ml-3 flex-1 overflow-hidden">
                   <div className="flex items-center justify-between">
                     <h3 className="text-white font-medium truncate">{client.name || client.phone}</h3>
-                    <span className="text-xs text-gray-400">
-                      {new Date(client.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <span className="text-xs text-white/40">
+                      {new Date(client.updated_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-1">
@@ -299,7 +299,7 @@ export default function ChatsPage() {
 
                         <div className="flex items-center justify-end gap-1 mt-1">
                           <span className="text-[10px] text-white/60">
-                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(msg.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {isMe && (
                             <span className="text-white/60">
