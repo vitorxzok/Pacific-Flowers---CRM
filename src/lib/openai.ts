@@ -524,15 +524,8 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
               to_status: 'Qualificado'
             });
 
-          // Inserir uma mensagem de sistema no chat para alertar o atendente
-          await supabase
-            .from('mensagens')
-            .insert({
-              client_id: clientId,
-              sender: 'attendant',
-              text: `[SISTEMA] ⚠️ A IA encerrou o atendimento e transferiu para humano.\nResumo: ${args.summary}`,
-              read: true
-            });
+          // O resumo da IA é adicionado nas notas do cliente e enviado para o WhatsApp do vendedor.
+          // Foi removida a inserção dessa mensagem no histórico do chat (mensagens) para não sujar o visual.
 
           if (clientData && clientData.attendant_id) {
             // Recuperar o nÃºmero de WhatsApp do vendedor
