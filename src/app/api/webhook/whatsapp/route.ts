@@ -380,17 +380,21 @@ export async function POST(request: Request) {
         const aiResponse = await generateAIResponse(clientId, supabase, undefined, crmSettings);
         const aiReply = aiResponse?.text;
         const mediaToSend = aiResponse?.mediaToSend || [];
+        const audioTranscript = (aiResponse as any)?.audioTranscript || '';
 
-        if (aiReply) {
+        if (aiReply || mediaToSend.length > 0 || audioTranscript) {
           // Remove [SEPARAR] do texto antes de salvar no banco para ficar limpo no CRM
-          const cleanText = aiReply.replace(/\[SEPARAR\]/g, '').trim();
+          const cleanText = (aiReply || '').replace(/\[SEPARAR\]/g, '').trim();
+          const fullTextToSave = (cleanText + (audioTranscript ? `\n${audioTranscript}` : '')).trim();
           
-          await supabase.from('mensagens').insert({
-            client_id: clientId,
-            text: cleanText,
-            sender: 'attendant',
-            read: true
-          });
+          if (fullTextToSave) {
+            await supabase.from('mensagens').insert({
+              client_id: clientId,
+              text: fullTextToSave,
+              sender: 'attendant',
+              read: true
+            });
+          }
 
           // Se houver mídia, salva também no banco para aparecer no CRM
           if (mediaToSend && mediaToSend.length > 0) {
@@ -423,7 +427,7 @@ export async function POST(request: Request) {
               }).catch(() => {});
 
               // Divide a mensagem se houver a tag [SEPARAR]
-              const aiReplyParts = aiReply.split('[SEPARAR]').map(p => p.trim()).filter(p => p.length > 0);
+              const aiReplyParts = (aiReply || '').split('[SEPARAR]').map(p => p.trim()).filter(p => p.length > 0);
               
               if (aiReplyParts.length > 0) {
                 if (aiReplyParts[0].trim()) {

@@ -405,7 +405,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
       });
     }
 
-    // 2. Chamar a OpenAI com suporte a chamadas de funÃ§Ã£o
+    // 2. Chamar a OpenAI com suporte a chamadas de função
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: openAiMessages as any,
@@ -416,6 +416,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
 
     let responseMessage = response.choices[0].message;
     let finalContent = '';
+    let audioTranscript = '';
     let catalogSentThisTurn = false;
 
     // Processar Chamadas de Ferramenta (Tool Calls)
@@ -426,7 +427,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
       for (const tC of responseMessage.tool_calls) {
         const toolCall = tC as any;
         const args = JSON.parse(toolCall.function.arguments);
-        let toolResult = "OperaÃ§Ã£o realizada com sucesso.";
+        let toolResult = "Operação realizada com sucesso.";
         
         if (toolCall.function.name === 'sendAttachment') {
           console.log(`[AI TOOL] Solicitado envio do anexo com gatilho: ${args.triggerName}`);
@@ -447,7 +448,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
               
               if (apiUrl && apiKey && instanceName) {
                 try {
-                  console.log(`[AI TOOL] Preparando mÃ­dia para ${phone} via Evolution API`);
+                  console.log(`[AI TOOL] Preparando mídia para ${phone} via Evolution API`);
                   
                   // Evolution API endpoint: /message/sendMedia/:instance
                   const mediaPayload = {
@@ -480,8 +481,8 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
               toolResult = 'Erro: Faltam informações do cliente (phone/attendant_id).';
             }
           } else {
-            console.log(`[AI TOOL] Gatilho '${args.triggerName}' não encontrado nas configuraÃ§Ãµes do vendedor.`);
-            toolResult = `O gatilho '${args.triggerName}' não estÃ¡ configurado. Diga ao cliente que houve um erro ao buscar o arquivo.`;
+            console.log(`[AI TOOL] Gatilho '${args.triggerName}' não encontrado nas configurações do vendedor.`);
+            toolResult = `O gatilho '${args.triggerName}' não está configurado. Diga ao cliente que houve um erro ao buscar o arquivo.`;
           }
         } else if (toolCall.function.name === 'sendVoiceNote') {
           console.log(`[AI TOOL] Solicitado envio de Voice Note: ${args.textToSpeak}`);
@@ -514,7 +515,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
                   }).catch(e => console.error('[AI TOOL] Erro no envio de Voice Note via fetch:', e));
                   
                   toolResult = `Áudio gerado e enviado com sucesso com o texto: "${args.textToSpeak}"`;
-                  finalContent += `\n[ÁUDIO ENVIADO] ${args.textToSpeak}`;
+                  audioTranscript = `\n[ÁUDIO ENVIADO] ${args.textToSpeak}`;
                 } else {
                   toolResult = `Erro ao gerar o áudio TTS.`;
                 }
@@ -546,14 +547,14 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
             const alreadySent = msgs && msgs.length > 0;
             
             if (!alreadySent && !catalogSentThisTurn) {
-              toolResult = "ERRO DE SEGURANÇA: O catálogo ainda não foi enviado. Você Ã© OBRIGADO a enviar o catálogo para o cliente (usando a ferramenta sendAttachment com trigger 'CATALOGO') ANTES de alterar o status para 'Em Qualificação'. Explique isso ao cliente ou envie o catálogo agora.";
+              toolResult = "ERRO DE SEGURANÇA: O catálogo ainda não foi enviado. Você é OBRIGADO a enviar o catálogo para o cliente (usando a ferramenta sendAttachment com trigger 'CATALOGO') ANTES de alterar o status para 'Em Qualificação'. Explique isso ao cliente ou envie o catálogo agora.";
               openAiMessages.push({
                 role: 'tool',
                 tool_call_id: toolCall.id,
                 content: toolResult
               } as any);
-              console.log("[AI TOOL] Bloqueada mudanÃ§a de status: Catálogo não enviado.");
-              continue; // Interrompe a alteraÃ§Ã£o no BD e no histórico
+              console.log("[AI TOOL] Bloqueada mudança de status: Catálogo não enviado.");
+              continue; // Interrompe a alteração no BD e no histórico
             }
           }
           
@@ -663,23 +664,29 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
       responseMessage = secondResponse.choices[0].message;
     }
 
+    // Se a IA enviou áudio, suprimimos qualquer texto gerado para evitar envio duplo no WhatsApp
+    if (audioTranscript) {
+       responseMessage.content = '';
+       finalContent = '';
+    }
+
     // Retorna o texto gerado pela IA (pode ser a despedida ou uma resposta normal)
-    if (responseMessage.content || finalContent) {
+    if (responseMessage.content || finalContent || audioTranscript) {
       if (catalogSentThisTurn) {
-        // Avançar o lead para QualificaÃ§Ã£o quando receber o catálogo, conforme solicitado pelo cliente (Tarefa 9)
+        // Avançar o lead para Qualificação quando receber o catálogo, conforme solicitado pelo cliente (Tarefa 9)
         await supabase.from('clientes').update({ status: 'Em Qualificação' }).eq('id', clientId);
         await supabase.from('history_events').insert({
           client_id: clientId,
           type: 'status_change',
-          description: 'A IA Clara enviou o catálogo e avanÃ§ou o status para Em Qualificação.',
+          description: 'A IA Clara enviou o catálogo e avançou o status para Em Qualificação.',
         });
       }
-      return { text: (responseMessage.content || '') + finalContent, mediaToSend };
+      return { text: (responseMessage.content || '') + finalContent, mediaToSend, audioTranscript };
     }
 
   } catch (error: any) {
     console.error('Erro na IA:', error);
-    return { text: null, mediaToSend: [] };
+    return { text: null, mediaToSend: [], audioTranscript: null };
   }
 }
 
