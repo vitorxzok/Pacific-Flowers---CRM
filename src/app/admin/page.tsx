@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useCRMStore } from '@/store/useCRMStore';
-import { Lock, Users, MessageCircle, DollarSign, LogOut, BrainCircuit, Activity, Upload, Download, Paperclip, Trash2, Plus, UploadCloud } from 'lucide-react';
+import { Lock, Users, MessageCircle, DollarSign, LogOut, BrainCircuit, Activity, Upload, Download, Paperclip, Trash2, Plus, UploadCloud, Mic } from 'lucide-react';
 import { ClientModal } from '@/components/ClientModal';
+import { AudioProspectModal } from '@/components/AudioProspectModal';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import Papa from 'papaparse';
@@ -16,6 +17,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function AdminPage() {
   const [showSupervisao, setShowSupervisao] = useState(false);
+  const [isAudioProspectOpen, setIsAudioProspectOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1326,6 +1328,14 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
             <h2 className="text-lg font-bold text-white">Todos os Leads</h2>
             
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsAudioProspectOpen(true)}
+                disabled={filteredClients.length === 0}
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 border border-blue-500 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                <Mic className="w-4 h-4" />
+                <span>Prospectar com Áudio</span>
+              </button>
               <input
                 type="file"
                 accept=".csv"
@@ -1437,6 +1447,15 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
         <ClientModal
           client={clients.find(c => c.id === selectedClientId)!}
           onClose={() => setSelectedClientId(null)}
+        />
+      )}
+
+      {/* Modal de Prospecção em Áudio */}
+      {isAudioProspectOpen && (
+        <AudioProspectModal
+          filteredClientIds={filteredClients.map(c => c.id)}
+          totalFiltered={filteredClients.length}
+          onClose={() => setIsAudioProspectOpen(false)}
         />
       )}
 

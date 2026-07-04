@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useCRMStore } from '@/store/useCRMStore';
-import { Search, User, Phone, Calendar, ArrowLeft, ArrowRight, Filter, Mic } from 'lucide-react';
+import { Search, User, Phone, Calendar, ArrowLeft, ArrowRight, Filter } from 'lucide-react';
 import { ClientModal } from '@/components/ClientModal';
-import { AudioProspectModal } from '@/components/AudioProspectModal';
 import { Client } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -17,7 +16,6 @@ export default function ClientesPage() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isAudioProspectOpen, setIsAudioProspectOpen] = useState(false);
   const [newlyAddedIds, setNewlyAddedIds] = useState<Set<string>>(new Set());
   const [newlyUpdatedIds, setNewlyUpdatedIds] = useState<Set<string>>(new Set());
   const itemsPerPage = 10;
@@ -186,16 +184,6 @@ export default function ClientesPage() {
               <Filter className="w-4 h-4 text-gray-400" />
               <span>Total: {filteredClients.length} leads</span>
             </div>
-            
-            <button
-              onClick={() => setIsAudioProspectOpen(true)}
-              disabled={filteredClients.length === 0}
-              className="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center space-x-2 text-sm font-medium transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              <Mic className="w-4 h-4" />
-              <span className="hidden md:inline">Prospectar com Áudio</span>
-              <span className="md:hidden">Prospectar</span>
-            </button>
           </div>
         </div>
 
@@ -302,15 +290,6 @@ export default function ClientesPage() {
           <ClientModal
             client={activeClientInModal}
             onClose={() => setSelectedClient(null)}
-          />
-        )}
-
-        {/* Modal de Prospecção em Áudio */}
-        {isAudioProspectOpen && (
-          <AudioProspectModal
-            filteredClientIds={filteredClients.map(c => c.id)}
-            totalFiltered={filteredClients.length}
-            onClose={() => setIsAudioProspectOpen(false)}
           />
         )}
       </div>
