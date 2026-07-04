@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { transcribeAudio } from '@/lib/openai-audio';
 
 // Usamos o supabase-js diretamente aqui para poder injetar a SERVICE_ROLE_KEY se disponível,
 // pois webhooks não possuem cookies de sessão do usuário (bypassa RLS).
@@ -37,7 +38,49 @@ export async function POST(request: Request) {
 
       if (!text) {
         if (messageObj?.imageMessage) text = `[IMAGEM] ${messageObj.imageMessage.caption || ''}`.trim();
-        else if (messageObj?.audioMessage) text = '[ÁUDIO]';
+        else if (messageObj?.audioMessage) {
+          text = '[ÁUDIO]'; // Fallback initial
+          
+          try {
+            const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+            const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+            
+            if (apiUrl && apiKey && instanceName) {
+              // Buscar o base64 da mídia via Evolution API
+              const b64Response = await fetch(`${apiUrl}/chat/getBase64FromMediaMessage/${instanceName}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'apikey': apiKey
+                },
+                body: JSON.stringify({ message: data }) // O Evolution precisa do objeto 'data' inteiro do webhook
+              });
+              
+              if (b64Response.ok) {
+                const b64Data = await b64Response.json();
+                let base64String = b64Data.base64;
+                
+                // Remover prefixo "data:audio/ogg;base64," se houver
+                if (base64String && base64String.includes(',')) {
+                  base64String = base64String.split(',')[1];
+                }
+                
+                if (base64String) {
+                  const mimetype = messageObj.audioMessage.mimetype || 'audio/ogg';
+                  const transcribedText = await transcribeAudio(base64String, mimetype);
+                  if (transcribedText) {
+                    text = `[ÁUDIO TRANSCRITO] ${transcribedText}`;
+                    console.log(`[Webhook] Áudio transcrito com sucesso: ${text}`);
+                  }
+                }
+              } else {
+                console.error(`[Webhook] Erro ao buscar base64 do áudio na Evolution:`, await b64Response.text());
+              }
+            }
+          } catch (audioErr) {
+            console.error('[Webhook] Erro no processamento/transcrição do áudio:', audioErr);
+          }
+        }
         else if (messageObj?.videoMessage) text = `[VÍDEO] ${messageObj.videoMessage.caption || ''}`.trim();
         else if (messageObj?.documentMessage) text = `[ARQUIVO RECEBIDO: ${messageObj.documentMessage.fileName || 'Documento em anexo'}]`;
         else if (messageObj?.stickerMessage) text = '[Figurinha]';

@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import { generateAudio } from '@/lib/openai-audio';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'missing-key',
@@ -385,6 +386,23 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
               required: ['status']
             }
           }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'sendVoiceNote',
+            description: 'Gera e envia um áudio (Voice Note) para o cliente. Use esta função apenas quando quiser enviar uma mensagem de voz em vez de texto (por exemplo, quando o cliente mandar um áudio ou pedir uma mensagem de voz). O conteúdo do áudio deve ser humanizado.',
+            parameters: {
+              type: 'object',
+              properties: {
+                textToSpeak: {
+                  type: 'string',
+                  description: 'O texto exato que será falado no áudio.'
+                }
+              },
+              required: ['textToSpeak']
+            }
+          }
         }
       ],
       tool_choice: 'auto'
@@ -450,14 +468,57 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
                   toolResult = `Erro ao tentar enviar o anexo: ${args.triggerName}`;
                 }
               } else {
-                toolResult = `Faltam configuraÃ§Ãµes de API para enviar o anexo.`;
+                toolResult = 'Erro: Credenciais da Evolution API ausentes.';
               }
             } else {
-              toolResult = `Não foi possÃ­vel identificar o telefone ou instÃ¢ncia do cliente.`;
+              toolResult = 'Erro: Faltam informações do cliente (phone/attendant_id).';
             }
           } else {
             console.log(`[AI TOOL] Gatilho '${args.triggerName}' não encontrado nas configuraÃ§Ãµes do vendedor.`);
             toolResult = `O gatilho '${args.triggerName}' não estÃ¡ configurado. Diga ao cliente que houve um erro ao buscar o arquivo.`;
+          }
+        } else if (toolCall.function.name === 'sendVoiceNote') {
+          console.log(`[AI TOOL] Solicitado envio de Voice Note: ${args.textToSpeak}`);
+          
+          if (clientInfo && clientInfo.phone && clientInfo.attendant_id) {
+            const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL || '';
+            const apiKey = process.env.EVOLUTION_API_KEY || process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || '';
+            const instanceName = `user_${clientInfo.attendant_id}`;
+            const phone = clientInfo.phone;
+            
+            if (apiUrl && apiKey && instanceName) {
+              try {
+                // 1. Gera o áudio TTS
+                const base64Audio = await generateAudio(args.textToSpeak);
+                if (base64Audio) {
+                  // 2. Prepara o payload do áudio PTT
+                  const sendUrl = `${apiUrl}/message/sendWhatsAppAudio/${instanceName}`;
+                  const evoPayload = {
+                    number: phone,
+                    audio: `data:audio/ogg;base64,${base64Audio}`,
+                    delay: 1200,
+                    encoding: true
+                  };
+                  
+                  // Executa a requisição assincronamente
+                  fetch(sendUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                    body: JSON.stringify(evoPayload)
+                  }).catch(e => console.error('[AI TOOL] Erro no envio de Voice Note via fetch:', e));
+                  
+                  toolResult = `Áudio gerado e enviado com sucesso com o texto: "${args.textToSpeak}"`;
+                  finalContent += `\n[ÁUDIO ENVIADO] ${args.textToSpeak}`;
+                } else {
+                  toolResult = `Erro ao gerar o áudio TTS.`;
+                }
+              } catch (err) {
+                console.error('[AI TOOL] Erro ao enviar Voice Note:', err);
+                toolResult = `Erro interno ao enviar Voice Note.`;
+              }
+            } else {
+              toolResult = 'Erro: Credenciais da Evolution API ausentes para Voice Note.';
+            }
           }
         } else if (toolCall.function.name === 'updateClientName') {
           console.log(`[AI TOOL] Atualizando nome do cliente para: ${args.name}`);
