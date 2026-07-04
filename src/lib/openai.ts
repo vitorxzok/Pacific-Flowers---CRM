@@ -122,13 +122,14 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
 - Toda vez que chamar 'sendAttachment', coloque a tag secreta [SEPARAR] no meio do seu texto no momento em que a imagem/PDF deve aparecer. O sistema apagará a tag e enviará o arquivo.
 - Quando o cliente disser o nome dele, chame a função 'updateClientName'.
 - Altere o status do cliente chamando 'changeClientStatus' sempre que a conversa avançar.
-- MÍDIAS RECEBIDAS: Se o cliente enviar um áudio, foto, documento ou figurinha, informe educadamente que você só lê textos.
+- MÍDIAS RECEBIDAS: Se o cliente enviar um áudio, você DEVE LER A TRANSCRIÇÃO do áudio e OBRIGATORIAMENTE RESPONDER CHAMANDO A FERRAMENTA 'sendVoiceNote'. NUNCA responda um áudio com texto!
+- ATENÇÃO: Se o cliente pedir para você enviar um áudio ou responder por voz, você DEVE OBRIGATORIAMENTE usar a ferramenta 'sendVoiceNote' para gerar o áudio, e não escrever a resposta no chat. NUNCA diga "Enviando o áudio...", apenas chame a ferramenta imediatamente!
 - ATENÇÃO: NUNCA mencione as chamadas de sistema, gatilhos, tags ou operações internas para o cliente. Comporte-se como um humano natural.`;
     prompt = DEFAULT_SYSTEM_PROMPT;
   }
 
   if (settings && settings.businessName && settings.businessName.trim() !== '') {
-    prompt += `\n\n--- INFORMAÇÃO IMPORTANTE ---\nVocê Ã© o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
+    prompt += `\n\n--- INFORMAÇÃO IMPORTANTE ---\nVocê é o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
   }
   
   return prompt;
@@ -395,7 +396,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
             properties: {
               textToSpeak: {
                 type: 'string',
-                description: 'O texto exato que será falado no áudio.'
+                description: 'O texto exato e humanizado que será falado no áudio. Não inclua emojis.'
               }
             },
             required: ['textToSpeak']
