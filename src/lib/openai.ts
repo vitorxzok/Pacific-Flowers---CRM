@@ -309,102 +309,107 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
       }))
     );
 
+    const tools: any[] = [
+      {
+        type: 'function',
+        function: {
+          name: 'sendAttachment',
+          description: 'ENVIA O CATÁLOGO OU ANEXO. Você DEVE e TEM A OBRIGAÇÃO de chamar esta função IMEDIATAMENTE sempre que o cliente pedir o catálogo, usar a palavra "catálogo" ou confirmar que é lojista.',
+          parameters: {
+            type: 'object',
+            properties: {
+              triggerName: {
+                type: 'string',
+                description: 'O nome exato do gatilho configurado pelo vendedor. Ex: "CATALOGO", "KIT_350"'
+              }
+            },
+            required: ['triggerName']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'updateClientName',
+          description: 'Atualiza o nome do cliente no sistema de CRM (Banco de Dados) apÃ³s ele se apresentar.',
+          parameters: {
+            type: 'object',
+            properties: {
+              name: {
+                type: 'string',
+                description: 'O nome e sobrenome do cliente'
+              }
+            },
+            required: ['name']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'transferToHuman',
+          description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, enviar pedido ou pedir sugestão.',
+          parameters: {
+            type: 'object',
+            properties: {
+              summary: {
+                type: 'string',
+                description: 'Um resumo breve do atendimento: perfil do cliente (lojista, pessoal), produtos interessados, e motivo da transferÃªncia.'
+              },
+              target_status: {
+                type: 'string',
+                description: 'O status exato para onde o cliente deve ir ao ser transferido (ex: "Proposta Enviada", "Em Qualificação").'
+              }
+            },
+            required: ['summary', 'target_status']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'changeClientStatus',
+          description: 'Altera a etapa do funil do cliente com base no andamento do atendimento (Ex: Contato Feito, Em Qualificação, Proposta Enviada, Reposição). Use quando o cliente avançar naturalmente na conversa.',
+          parameters: {
+            type: 'object',
+            properties: {
+              status: {
+                type: 'string',
+                description: 'O novo status do cliente no Kanban. Opções válidas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado", "Reposição"'
+              }
+            },
+            required: ['status']
+          }
+        }
+      }
+    ];
+
+    if (settings?.audio_replies_enabled !== false && settings?.audioRepliesEnabled !== false) {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'sendVoiceNote',
+          description: 'Gera e envia um áudio (Voice Note) para o cliente. Use esta função apenas quando quiser enviar uma mensagem de voz em vez de texto (por exemplo, quando o cliente mandar um áudio ou pedir uma mensagem de voz). O conteúdo do áudio deve ser humanizado.',
+          parameters: {
+            type: 'object',
+            properties: {
+              textToSpeak: {
+                type: 'string',
+                description: 'O texto exato que será falado no áudio.'
+              }
+            },
+            required: ['textToSpeak']
+          }
+        }
+      });
+    }
+
     // 2. Chamar a OpenAI com suporte a chamadas de funÃ§Ã£o
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: openAiMessages as any,
       temperature: 0.2,
-      tools: [
-        {
-          type: 'function',
-          function: {
-            name: 'sendAttachment',
-            description: 'ENVIA O CATÁLOGO OU ANEXO. Você DEVE e TEM A OBRIGAÇÃO de chamar esta função IMEDIATAMENTE sempre que o cliente pedir o catálogo, usar a palavra "catálogo" ou confirmar que é lojista.',
-            parameters: {
-              type: 'object',
-              properties: {
-                triggerName: {
-                  type: 'string',
-                  description: 'O nome exato do gatilho configurado pelo vendedor. Ex: "CATALOGO", "KIT_350"'
-                }
-              },
-              required: ['triggerName']
-            }
-          }
-        },
-        {
-          type: 'function',
-          function: {
-            name: 'updateClientName',
-            description: 'Atualiza o nome do cliente no sistema de CRM (Banco de Dados) apÃ³s ele se apresentar.',
-            parameters: {
-              type: 'object',
-              properties: {
-                name: {
-                  type: 'string',
-                  description: 'O nome e sobrenome do cliente'
-                }
-              },
-              required: ['name']
-            }
-          }
-        },
-        {
-          type: 'function',
-          function: {
-            name: 'transferToHuman',
-            description: 'Encerra o atendimento da IA e transfere o lead para um vendedor humano. Chamada quando o cliente for qualificado, enviar pedido ou pedir sugestão.',
-            parameters: {
-              type: 'object',
-              properties: {
-                summary: {
-                  type: 'string',
-                  description: 'Um resumo breve do atendimento: perfil do cliente (lojista, pessoal), produtos interessados, e motivo da transferÃªncia.'
-                },
-                target_status: {
-                  type: 'string',
-                  description: 'O status exato para onde o cliente deve ir ao ser transferido (ex: "Proposta Enviada", "Em Qualificação").'
-                }
-              },
-              required: ['summary', 'target_status']
-            }
-          }
-        },
-        {
-          type: 'function',
-          function: {
-            name: 'changeClientStatus',
-            description: 'Altera a etapa do funil do cliente com base no andamento do atendimento (Ex: Contato Feito, Em Qualificação, Proposta Enviada, Reposição). Use quando o cliente avançar naturalmente na conversa.',
-            parameters: {
-              type: 'object',
-              properties: {
-                status: {
-                  type: 'string',
-                  description: 'O novo status do cliente no Kanban. Opções válidas: "Contato Feito", "Em Qualificação", "Proposta Enviada", "Qualificado", "Reposição"'
-                }
-              },
-              required: ['status']
-            }
-          }
-        },
-        {
-          type: 'function',
-          function: {
-            name: 'sendVoiceNote',
-            description: 'Gera e envia um áudio (Voice Note) para o cliente. Use esta função apenas quando quiser enviar uma mensagem de voz em vez de texto (por exemplo, quando o cliente mandar um áudio ou pedir uma mensagem de voz). O conteúdo do áudio deve ser humanizado.',
-            parameters: {
-              type: 'object',
-              properties: {
-                textToSpeak: {
-                  type: 'string',
-                  description: 'O texto exato que será falado no áudio.'
-                }
-              },
-              required: ['textToSpeak']
-            }
-          }
-        }
-      ],
+      tools: tools,
       tool_choice: 'auto'
     });
 

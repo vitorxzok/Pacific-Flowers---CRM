@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [minutesFollowUp, setMinutesFollowUp] = useState(15);
+  const [audioRepliesEnabled, setAudioRepliesEnabled] = useState(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
@@ -20,6 +21,9 @@ export default function SettingsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.user_metadata?.crm_settings?.minutes_without_response) {
         setMinutesFollowUp(session.user.user_metadata.crm_settings.minutes_without_response);
+      }
+      if (session?.user?.user_metadata?.crm_settings?.audio_replies_enabled !== undefined) {
+        setAudioRepliesEnabled(session.user.user_metadata.crm_settings.audio_replies_enabled);
       }
       setMounted(true);
     };
@@ -40,7 +44,8 @@ export default function SettingsPage() {
         data: {
           crm_settings: {
             ...currentSettings,
-            minutes_without_response: Number(minutesFollowUp)
+            minutes_without_response: Number(minutesFollowUp),
+            audio_replies_enabled: audioRepliesEnabled
           }
         }
       });
@@ -220,6 +225,30 @@ export default function SettingsPage() {
                 className="w-24 px-3 py-2 bg-background border border-surface-border rounded-lg text-white focus:outline-none focus:border-primary"
               />
               <span className="text-gray-400 text-sm">min</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4">
+            <div className="mb-4 sm:mb-0 pr-4">
+              <h3 className="text-lg font-semibold text-white">Respostas em Áudio (Inbound)</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                Permitir que a IA envie áudios de forma autônoma para os clientes no bate-papo.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setAudioRepliesEnabled(!audioRepliesEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  audioRepliesEnabled ? 'bg-primary' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    audioRepliesEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </div>
 

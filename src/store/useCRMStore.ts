@@ -33,6 +33,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   setSearchQuery: (q) => set({ searchQuery: q }),
   settings: {
     autoReplyEnabled: false,
+    audioRepliesEnabled: true,
     minutesWithoutResponse: 15,
     followUpIntervalHours: 24,
     insistenciaMaxRepetitions: 3,
@@ -61,6 +62,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           auto_reply_enabled: merged.autoReplyEnabled,
+          audio_replies_enabled: merged.audioRepliesEnabled,
           minutes_without_response: merged.minutesWithoutResponse,
           followup_interval_hours: merged.followUpIntervalHours,
           insistencia_max_repetitions: merged.insistenciaMaxRepetitions,
@@ -90,6 +92,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
         const data = await response.json();
         set({ settings: {
           autoReplyEnabled: data.auto_reply_enabled ?? data.autoReplyEnabled ?? false,
+          audioRepliesEnabled: data.audio_replies_enabled ?? data.audioRepliesEnabled ?? true,
           minutesWithoutResponse: data.minutes_without_response ?? data.minutesWithoutResponse ?? 15,
           followUpIntervalHours: data.followup_interval_hours ?? data.followUpIntervalHours ?? 24,
           insistenciaMaxRepetitions: data.insistencia_max_repetitions ?? data.insistenciaMaxRepetitions ?? 3,

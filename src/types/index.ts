@@ -58,6 +58,7 @@ export interface CadenceStep {
 
 export interface Settings {
   autoReplyEnabled: boolean;
+  audioRepliesEnabled?: boolean;
   minutesWithoutResponse: number;
   followUpIntervalHours: number;
   insistenciaMaxRepetitions?: number;
