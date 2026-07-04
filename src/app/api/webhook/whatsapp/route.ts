@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     // Apenas nos importamos com upsert de mensagens (novas mensagens recebidas)
     if (body.event === 'messages-upsert' || body.event === 'messages.upsert') {
       const data = body.data;
+      const instanceName = body.instance || '';
       
       // A chave (key) contém informações de quem enviou
       const key = data?.key;
@@ -93,7 +94,6 @@ export async function POST(request: Request) {
       }
 
       // Extrair o ID do usuário (vendedor) a partir do nome da instância
-      const instanceName = body.instance || '';
       const match = instanceName.match(/^user_([a-f0-9\-]{36})(?:_(\d+))?$/i);
       let sellerId: string | null = null;
       if (match) {
@@ -412,7 +412,6 @@ export async function POST(request: Request) {
 
           const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL || '';
           const apiKey = process.env.EVOLUTION_API_KEY || process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || '';
-          const instanceName = body.instance || '';
 
           if (apiUrl && apiKey && instanceName) {
             try {
