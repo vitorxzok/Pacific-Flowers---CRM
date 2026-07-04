@@ -231,20 +231,35 @@ ${listaProdutos}
 
     if (clientInfo && clientInfo.status) {
       const myName = settings?.businessName || 'Atendente';
-      const clientName = clientInfo.name || 'Desconhecido';
+      let clientName = clientInfo.name || 'Desconhecido';
+      const lowerName = clientName.toLowerCase();
+      const lowerMyName = myName.toLowerCase();
+      
+      // Sanitização programática: se o nome tiver números, for "vendas", genérico, ou igual ao do vendedor, ocultamos da IA.
+      if (
+        /\\d/.test(clientName) || 
+        lowerName.includes('venda') || 
+        lowerName.includes('lead') || 
+        lowerName.includes('atendimento') || 
+        lowerName.includes('desconhecido') ||
+        lowerName === lowerMyName
+      ) {
+        clientName = 'NOME_DESCONHECIDO';
+      }
+
       openAiMessages.push({
         role: 'system',
         content: `[CONTEXTO INTERNO OBRIGATÓRIO]
 Status atual no CRM: "${clientInfo.status}".
 
 VOCÊ (A IA / O Vendedor) se chama: "${myName}".
-O CLIENTE COM QUEM VOCÊ ESTÁ FALANDO se chama: "${clientName}".
+${clientName === 'NOME_DESCONHECIDO' 
+  ? `Você NÃO SABE o nome do cliente. Você DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigável na sua primeira mensagem (ex: "Como posso te chamar?").` 
+  : `O CLIENTE COM QUEM VOCÊ ESTÁ FALANDO se chama: "${clientName}". Você deve chamá-lo exclusivamente por esse nome.`}
 
 REGRA 0 - EXTREMAMENTE IMPORTANTE SOBRE NOMES: 
-- Ao cumprimentar ou falar com o cliente, chame-o EXCLUSIVAMENTE de "${clientName}".
 - NUNCA chame o cliente de "${myName}"! "${myName}" é o SEU nome. Seria absurdo você chamar a outra pessoa pelo seu próprio nome.
-
-REGRA 1 - NOME: Se o NOME DO CLIENTE for 'Desconhecido', 'Lead WhatsApp', contiver números (ex: 'Vendas 6', 'Cliente 1'), for um departamento ('Vendas', 'Financeiro') ou se parecer com o nome da loja/vendedor, NUNCA chame o cliente por esse nome estranho. Em vez disso, VOCÊ DEVE OBRIGATORIAMENTE perguntar o nome do cliente de forma amigável. Se o cliente se apresentar com outro nome durante a conversa, passe a chamá-lo exclusivamente pelo novo nome que ele informou e NUNCA MAIS use o nome antigo.
+- Se o cliente se apresentar com um novo nome durante a conversa, passe a chamá-lo exclusivamente pelo novo nome que ele informou e NUNCA MAIS use o nome antigo.
 REGRA 2 - CATÁLOGO: Se o cliente disser a palavra "catálogo", pedir o catálogo, ou confirmar que é lojista, VOCÊ DEVE OBRIGATORIAMENTE E IMEDIATAMENTE chamar a ferramenta "sendAttachment" com o parâmetro triggerName igual a "CATALOGO". É ESTRITAMENTE PROIBIDO dizer "Aqui está o catálogo" e não chamar a ferramenta. Você tem que chamar a ferramenta!
 REGRA 3 - ORÇAMENTOS E QUANTIDADE (CRÍTICA): 
 - Cada produto do catálogo possui uma Quantidade Mínima OBRIGATÓRIA estipulada na tabela.

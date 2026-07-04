@@ -82,7 +82,13 @@ export async function POST(request: Request) {
       if (clientError || !clients || clients.length === 0) {
         console.warn(`Cliente não encontrado para o telefone: ${phone} (Vendedor: ${sellerId}). Criando novo lead...`);
         
-        const pushName = data?.pushName || `Lead WhatsApp (${phone})`;
+        let pushName = data?.pushName;
+        // Se a mensagem foi enviada pelo vendedor, o pushName que vem é o do próprio vendedor!
+        // Não queremos salvar o cliente com o nome do vendedor (ex: "Vendas 06").
+        if (isFromMe || !pushName) {
+           pushName = `Lead WhatsApp (${phone})`;
+        }
+        
         // Se a primeira mensagem foi enviada pelo vendedor, já podemos considerar Contato Feito
         const initialStatus = isFromMe ? 'Contato Feito' : 'Novo';
 
