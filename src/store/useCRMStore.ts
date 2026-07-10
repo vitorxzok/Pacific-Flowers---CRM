@@ -188,6 +188,16 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       })) : [],
     }));
 
+    formattedClients.sort((a, b) => {
+      // Usar o timestamp da última mensagem, se houver
+      const lastMsgA = a.messages.length > 0 ? new Date(a.messages[a.messages.length - 1].timestamp).getTime() : 0;
+      const lastMsgB = b.messages.length > 0 ? new Date(b.messages[b.messages.length - 1].timestamp).getTime() : 0;
+      
+      // Se não houver mensagens, podemos usar a data de criação do cliente (ou 0 se não soubermos)
+      // Como não salvamos createdAt no Client type, vamos priorizar os que têm mensagem
+      return lastMsgB - lastMsgA; 
+    });
+
     set({ clients: formattedClients });
   },
 
