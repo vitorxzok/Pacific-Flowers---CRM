@@ -12,8 +12,8 @@ export async function POST(request: Request) {
     const { password, settings } = await request.json();
 
     const { data: settingsClient, error: fetchErr } = await supabase
-      .from('clientes')
-      .select('notes')
+      .from('whatsapp_instances')
+      .select('phone_number')
       .eq('id', '00000000-0000-0000-0000-000000000000')
       .single();
 
@@ -25,9 +25,9 @@ export async function POST(request: Request) {
 
     let currentSettings: any = {};
     try {
-      currentSettings = typeof settingsClient.notes === 'string' 
-        ? JSON.parse(settingsClient.notes || '{}') 
-        : (settingsClient.notes || {});
+      currentSettings = typeof settingsClient.phone_number === 'string' 
+        ? JSON.parse(settingsClient.phone_number || '{}') 
+        : (settingsClient.phone_number || {});
     } catch (e) {}
 
     const currentAdminPwd = currentSettings.admin_password || 'admin';
@@ -51,8 +51,8 @@ export async function POST(request: Request) {
     };
 
     const { error: updateErr } = await supabase
-      .from('clientes')
-      .update({ notes: JSON.stringify(newSettings) })
+      .from('whatsapp_instances')
+      .update({ phone_number: JSON.stringify(newSettings) })
       .eq('id', '00000000-0000-0000-0000-000000000000');
 
     if (updateErr) {
@@ -71,21 +71,21 @@ export async function GET(request: Request) {
     const pwd = searchParams.get('pwd');
 
     const { data: settingsClient, error } = await supabase
-      .from('clientes')
-      .select('notes')
+      .from('whatsapp_instances')
+      .select('phone_number')
       .eq('id', '00000000-0000-0000-0000-000000000000')
       .single();
     
     if (error || !settingsClient) {
-      if (pwd !== 'admin') return NextResponse.json({ error: 'Nǜo autorizado' }, { status: 401 });
+      if (pwd !== 'admin') return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
       return NextResponse.json({});
     }
 
     let settings: any = {};
     try {
-      settings = typeof settingsClient.notes === 'string' 
-        ? JSON.parse(settingsClient.notes || '{}') 
-        : (settingsClient.notes || {});
+      settings = typeof settingsClient.phone_number === 'string' 
+        ? JSON.parse(settingsClient.phone_number || '{}') 
+        : (settingsClient.phone_number || {});
     } catch (e) {}
 
     const currentAdminPwd = settings.admin_password || 'admin';

@@ -9,21 +9,21 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   try {
     const { data: settingsClient, error } = await supabase
-      .from('clientes')
-      .select('notes')
+      .from('whatsapp_instances')
+      .select('phone_number')
       .eq('id', '00000000-0000-0000-0000-000000000000')
       .single();
     
     if (error || !settingsClient) {
-      console.warn("Could not fetch global settings from dummy client. Defaulting to 'admin'.", error);
+      console.warn("Could not fetch global settings from dummy instance. Defaulting to 'admin'.", error);
       return password === 'admin';
     }
 
     let currentAdminPwd = 'admin';
     try {
-      const settings = typeof settingsClient.notes === 'string' 
-        ? JSON.parse(settingsClient.notes) 
-        : settingsClient.notes;
+      const settings = typeof settingsClient.phone_number === 'string' 
+        ? JSON.parse(settingsClient.phone_number) 
+        : settingsClient.phone_number;
         
       if (settings?.admin_password) {
         currentAdminPwd = settings.admin_password;
