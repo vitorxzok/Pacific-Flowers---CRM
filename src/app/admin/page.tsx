@@ -280,14 +280,17 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, settings: settingsToSave })
       });
-      if (!res.ok) throw new Error('Falha ao salvar configurações globais');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Falha ao salvar configurações globais');
+      }
       
       // Update local store to keep UI in sync
       await setSettings(settingsToSave);
       
       toast.success('Configurações salvas para todos os usuários!', { id: toastId });
-    } catch (err) {
-      toast.error('Erro ao salvar configurações.', { id: toastId });
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar configurações.', { id: toastId, duration: 10000 });
     }
   };
 

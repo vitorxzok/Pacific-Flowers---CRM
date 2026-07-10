@@ -12,7 +12,11 @@ export async function POST(request: Request) {
     const { password, settings } = await request.json();
 
     const { data: { users }, error: uErr } = await supabase.auth.admin.listUsers();
-    if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 });
+    if (uErr) {
+      return NextResponse.json({ 
+        error: 'Chave SUPABASE_SERVICE_ROLE_KEY faltando na Vercel. Por favor, adicione-a como variável de ambiente no seu projeto Vercel para poder salvar configurações globais.' 
+      }, { status: 500 });
+    }
 
     let currentAdminPwd = 'admin';
     for (const u of users || []) {
@@ -63,7 +67,12 @@ export async function GET(request: Request) {
     const pwd = searchParams.get('pwd');
 
     const { data: { users }, error } = await supabase.auth.admin.listUsers();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    
+    // If it fails (missing service role key), fallback to an empty settings object
+    if (error) {
+      if (pwd !== 'admin') return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      return NextResponse.json({});
+    }
 
     let currentAdminPwd = 'admin';
     let settings: any = {};

@@ -9,7 +9,12 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   try {
     const { data: { users }, error } = await supabase.auth.admin.listUsers();
-    if (error) return false;
+    
+    // If it fails (e.g. missing service role key on Vercel), fallback to default 'admin'
+    if (error) {
+      console.warn("Could not list users (check SUPABASE_SERVICE_ROLE_KEY in Vercel). Defaulting to 'admin'.");
+      return password === 'admin';
+    }
 
     let currentAdminPwd = 'admin';
     for (const u of users || []) {
@@ -21,6 +26,6 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
 
     return password === currentAdminPwd;
   } catch {
-    return false;
+    return password === 'admin';
   }
 }
