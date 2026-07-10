@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { verifyAdminPassword } from '@/lib/adminAuth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -7,6 +8,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PU
 export async function POST(request: Request) {
   try {
     const { password } = await request.json();
+    if (!password || !(await verifyAdminPassword(password))) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     
     // Use service role key to bypass RLS and update all clients
     const adminClient = createAdminClient(supabaseUrl, supabaseKey);

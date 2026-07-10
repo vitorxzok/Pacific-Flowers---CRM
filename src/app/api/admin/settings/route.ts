@@ -10,10 +10,19 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 export async function POST(request: Request) {
   try {
     const { password, settings } = await request.json();
-    if (password !== 'admin') return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
-    const { data: { users }, error } = await supabase.auth.admin.listUsers();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { data: { users }, error: uErr } = await supabase.auth.admin.listUsers();
+    if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 });
+
+    let currentAdminPwd = 'admin';
+    for (const u of users || []) {
+      if (u.user_metadata?.crm_settings?.admin_password) {
+        currentAdminPwd = u.user_metadata.crm_settings.admin_password;
+        break;
+      }
+    }
+
+    if (password !== currentAdminPwd) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     for (const user of users) {
       const currentSettings = user.user_metadata?.crm_settings || {};
@@ -35,7 +44,8 @@ export async function POST(request: Request) {
             insistencia_days_interval: settings.insistenciaDaysInterval,
             use_global_insistence_strategy: settings.useGlobalInsistenceStrategy,
             insistencia_cadences: settings.insistenciaCadences,
-            reposicao_days_global: settings.reposicao_days_global
+            reposicao_days_global: settings.reposicao_days_global,
+            admin_password: settings.adminPassword || currentSettings.admin_password || 'admin'
           }
         }
       });
@@ -51,19 +61,23 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const pwd = searchParams.get('pwd');
-    if (pwd !== 'admin') return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     const { data: { users }, error } = await supabase.auth.admin.listUsers();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // Find the first user with crm_settings
-    let settings = {};
-    for (const user of users) {
+    let currentAdminPwd = 'admin';
+    let settings: any = {};
+    for (const user of users || []) {
       if (user.user_metadata?.crm_settings) {
         settings = user.user_metadata.crm_settings;
+        if (settings.admin_password) {
+          currentAdminPwd = settings.admin_password;
+        }
         break;
       }
     }
+
+    if (pwd !== currentAdminPwd) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     return NextResponse.json(settings);
   } catch (err: any) {

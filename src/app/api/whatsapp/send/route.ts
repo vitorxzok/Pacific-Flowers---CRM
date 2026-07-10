@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     // Buscar o vendedor (attendant_id) associado a este cliente
     const { data: clientData, error: clientError } = await supabase
       .from('clientes')
-      .select('attendant_id, connected_instance')
+      .select('attendant_id, connected_instance, status')
       .eq('id', clientId)
       .single();
 
@@ -87,10 +87,14 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString()
       }).eq('id', clientId);
     } else {
+      let targetStatus = clientData.status || 'Novo';
+      if (targetStatus === 'Novo') {
+        targetStatus = 'Contato Feito';
+      }
       await supabase.from('clientes').update({ 
         ai_enabled: false, 
         needs_human: false,
-        status: 'Atendimento Humano',
+        status: targetStatus,
         updated_at: new Date().toISOString()
       }).eq('id', clientId);
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { verifyAdminPassword } from '@/lib/adminAuth';
 import { generateAIResponse } from '@/lib/openai';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const { pwd, daysAgo } = await request.json();
 
-    if (pwd !== process.env.ADMIN_PASSWORD) {
+    if (!pwd || !(await verifyAdminPassword(pwd))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

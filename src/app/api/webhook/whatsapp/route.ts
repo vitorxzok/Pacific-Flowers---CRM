@@ -238,12 +238,16 @@ export async function POST(request: Request) {
             aiReactivated = true;
           } else {
             // Comportamento normal: Desativamos a IA e atualizamos o status.
+            let targetStatus = clients[0].status;
+            if (targetStatus === 'Novo') {
+              targetStatus = 'Contato Feito';
+            }
             await supabase
               .from('clientes')
               .update({ 
                 needs_human: false, 
                 ai_enabled: false, 
-                status: 'Atendimento Humano',
+                status: targetStatus,
                 updated_at: new Date().toISOString() 
               })
               .eq('id', clientId);

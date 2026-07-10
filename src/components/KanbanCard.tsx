@@ -84,7 +84,15 @@ export function KanbanCard({ client, onClick }: KanbanCardProps) {
         >
           IA ATENDENDO
         </div>
-      ) : null}
+      ) : (
+        <div 
+          onClick={(e) => { e.stopPropagation(); toggleNeedsHuman(client.id, false); }}
+          className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-500 hover:bg-blue-600 cursor-pointer transition-colors text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg z-10 whitespace-nowrap border border-blue-400"
+          title="Atendimento manual. Clique para ativar a IA novamente"
+        >
+          ATENDIMENTO HUMANO
+        </div>
+      )}
       
       {/* Unread indicator */}
       {hasUnreadMessages && (

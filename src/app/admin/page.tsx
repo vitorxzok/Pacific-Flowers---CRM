@@ -991,6 +991,23 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
             </div>
             
             <div className="space-y-6">
+              {/* Senha Mestra */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
+                <div className="mb-2 sm:mb-0 pr-4">
+                  <h3 className="text-base font-semibold text-white">Alterar Senha Mestra (Admin)</h3>
+                  <p className="text-sm text-gray-400">Esta senha será usada para acessar o painel administrativo.</p>
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  <input 
+                    type="password"
+                    placeholder="Nova senha..."
+                    value={localSettings?.adminPassword || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, adminPassword: e.target.value })}
+                    className="w-48 bg-surface border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+              </div>
+
               {/* Tempo sem resposta */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-surface-border/50">
                 <div className="mb-2 sm:mb-0 pr-4">
