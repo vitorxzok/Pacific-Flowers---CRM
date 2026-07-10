@@ -254,6 +254,13 @@ export async function POST(request: Request) {
             
             console.log(`[Webhook] Humano assumiu a conversa do cliente ${clientId}. IA desativada.`);
           }
+          
+          // Se o atendente enviou mensagem pelo celular, limpamos o status de não lida
+          await supabase
+            .from('mensagens')
+            .update({ read: true })
+            .eq('client_id', clientId)
+            .eq('read', false);
         }
       }
 
@@ -502,7 +509,36 @@ export async function POST(request: Request) {
         });
       }
 
-      return NextResponse.json({ success: true, message: 'Mensagem processada com sucesso!' });
+    } else if (body.event === 'messages.update' || body.event === 'messages-update') {
+      const data = body.data;
+      if (Array.isArray(data)) {
+        for (const msgUpdate of data) {
+          const update = msgUpdate.update;
+          if (update && (update.status === 'READ' || update.status === 3)) {
+            const remoteJid = msgUpdate.key?.remoteJid;
+            if (remoteJid && !remoteJid.includes('@g.us')) {
+              const phone = remoteJid.split('@')[0];
+              const last8Digits = phone.slice(-8);
+              const last8Formatted = `${last8Digits.slice(0,4)}-${last8Digits.slice(4)}`;
+              
+              const { data: clients } = await supabase
+                .from('clientes')
+                .select('id')
+                .or(`phone.ilike.%${last8Digits},phone.ilike.%${last8Formatted}`)
+                .limit(1);
+
+              if (clients && clients.length > 0) {
+                 await supabase
+                   .from('mensagens')
+                   .update({ read: true })
+                   .eq('client_id', clients[0].id)
+                   .eq('read', false);
+              }
+            }
+          }
+        }
+      }
+      return NextResponse.json({ success: true, message: 'Evento de atualização de mensagens processado.' });
     } else if (body.event === 'connection.update') {
       const state = body.data?.state;
       const instanceName = body.instance;

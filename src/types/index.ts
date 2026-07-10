@@ -40,6 +40,7 @@ export interface Client {
   custom_reposicao_date?: string;
   is_exported?: boolean;
   connected_instance?: string;
+  hasUnreadMessages?: boolean;
 }
 
 export interface Attachment {

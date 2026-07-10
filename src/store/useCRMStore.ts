@@ -23,6 +23,7 @@ interface CRMStore {
   updateClientReposicaoDate: (clientId: string, date: string | null) => Promise<void>;
   fetchAdminClients: (password: string) => Promise<boolean>;
   markClientsAsExported: (clientIds: string[]) => Promise<void>;
+  markMessagesAsRead: (clientId: string) => Promise<void>;
 }
 
 const supabase = createClient();
@@ -187,6 +188,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
         date: m.timestamp || new Date().toISOString(),
         description: `Mensagem: ${m.text}`
       })) : [],
+      hasUnreadMessages: c.mensagens ? c.mensagens.some((m: any) => m.sender === 'client' && m.read === false) : false,
     }));
 
     formattedClients.sort((a, b) => {
@@ -341,6 +343,31 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       });
       if (error) console.error("Error adding message:", error);
     }
+  },
+
+  markMessagesAsRead: async (clientId: string) => {
+    // Atualiza otimisticamente
+    set((state) => ({
+      clients: state.clients.map((c) =>
+        c.id === clientId
+          ? {
+              ...c,
+              hasUnreadMessages: false,
+              messages: c.messages.map((m) => ({ ...m, read: true })),
+            }
+          : c
+      ),
+    }));
+
+    // Atualiza no banco
+    const { error } = await supabase
+      .from('mensagens')
+      .update({ read: true })
+      .eq('client_id', clientId)
+      .eq('sender', 'client')
+      .eq('read', false);
+
+    if (error) console.error("Error marking messages as read:", error);
   },
 
   updateClientTags: async (clientId, tags) => {
