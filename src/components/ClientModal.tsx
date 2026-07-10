@@ -38,8 +38,12 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
     if (activeTab === 'chat') {
       scrollToBottom();
       setTimeout(() => inputRef.current?.focus(), 100);
+      
+      if (client.hasUnreadMessages) {
+        useCRMStore.getState().markMessagesAsRead(client.id);
+      }
     }
-  }, [client.messages, activeTab]);
+  }, [client.messages, activeTab, client.hasUnreadMessages, client.id]);
 
   const handleDeleteClient = async () => {
     if (confirm('Tem certeza que deseja excluir este lead e todas as suas mensagens? Esta ação não pode ser desfeita.')) {

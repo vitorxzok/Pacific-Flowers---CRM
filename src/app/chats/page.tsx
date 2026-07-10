@@ -49,7 +49,7 @@ export default function ChatsPage() {
       try {
         let query = supabase
           .from('clientes')
-          .select('*')
+          .select('*, mensagens(sender, read)')
           .order('updated_at', { ascending: false });
 
         // Apply attendant filter
@@ -61,7 +61,11 @@ export default function ChatsPage() {
 
         const { data, error } = await query;
         if (error) throw error;
-        setClients(data || []);
+        const formattedClients = data?.map((c: any) => ({
+          ...c,
+          hasUnreadMessages: c.mensagens ? c.mensagens.some((m: any) => m.sender === 'client' && m.read === false) : false
+        })) || [];
+        setClients(formattedClients);
       } catch (err) {
         console.error('Error fetching clients:', err);
       } finally {
@@ -97,6 +101,12 @@ export default function ChatsPage() {
       if (!error && data) {
         setMessages(data);
         scrollToBottom();
+        
+        const unreadIds = data.filter(m => m.sender === 'client' && m.read === false).map(m => m.id);
+        if (unreadIds.length > 0) {
+          await supabase.from('mensagens').update({ read: true }).in('id', unreadIds);
+          setClients(prev => prev.map(c => c.id === selectedClient.id ? { ...c, hasUnreadMessages: false } : c));
+        }
       }
     };
 
@@ -105,9 +115,12 @@ export default function ChatsPage() {
     // Subscribe to new messages for this client
     const subscription = supabase
       .channel(`mensagens_changes_${selectedClient.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `client_id=eq.${selectedClient.id}` }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `client_id=eq.${selectedClient.id}` }, async (payload) => {
         setMessages((prev) => [...prev, payload.new]);
         scrollToBottom();
+        if (payload.new.sender === 'client' && !payload.new.read) {
+          await supabase.from('mensagens').update({ read: true }).eq('id', payload.new.id);
+        }
       })
       .subscribe();
 
@@ -217,7 +230,13 @@ export default function ChatsPage() {
               <div 
                 key={client.id}
                 onClick={() => setSelectedClient(client)}
-                className={`flex items-center p-3 cursor-pointer hover:bg-white/5 border-b border-surface-border/30 transition-colors ${selectedClient?.id === client.id ? 'bg-white/10' : ''}`}
+                className={`flex items-center p-3 cursor-pointer transition-colors border-b border-surface-border/30 ${
+                  selectedClient?.id === client.id 
+                    ? 'bg-white/10' 
+                    : client.hasUnreadMessages 
+                      ? 'bg-red-500/20 hover:bg-red-500/30 animate-pulse' 
+                      : 'hover:bg-white/5'
+                }`}
               >
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                   <User className="w-6 h-6 text-primary" />

@@ -222,7 +222,9 @@ export default function ClientesPage() {
                             ? 'bg-emerald-500/20 shadow-[inset_0_0_15px_rgba(16,185,129,0.3)] animate-pulse' 
                             : isUpdated 
                               ? 'bg-blue-500/10 shadow-[inset_0_0_15px_rgba(59,130,246,0.2)]'
-                              : ''
+                              : client.hasUnreadMessages
+                                ? 'bg-red-500/20 shadow-[inset_0_0_15px_rgba(239,68,68,0.4)] animate-pulse'
+                                : ''
                         }`}
                       >
                         <td className="px-6 py-4">
