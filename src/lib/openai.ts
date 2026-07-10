@@ -124,7 +124,7 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
 - Altere o status do cliente chamando 'changeClientStatus' sempre que a conversa avançar.
 - MÍDIAS RECEBIDAS: Se o cliente enviar um áudio, você DEVE LER A TRANSCRIÇÃO do áudio e OBRIGATORIAMENTE RESPONDER CHAMANDO A FERRAMENTA 'sendVoiceNote'. NUNCA responda um áudio com texto!
 - ATENÇÃO: Se o cliente pedir para você enviar um áudio ou responder por voz, você DEVE OBRIGATORIAMENTE usar a ferramenta 'sendVoiceNote' para gerar o áudio, e não escrever a resposta no chat. NUNCA diga "Enviando o áudio...", apenas chame a ferramenta imediatamente!
-- REGRA CRÍTICA DE ÁUDIO: NUNCA, em hipótese alguma, digite a tag [ÁUDIO ENVIADO] no meio do seu texto! A única forma de enviar áudio é fazendo a chamada de função (tool call) 'sendVoiceNote'. Se você escrever "[ÁUDIO ENVIADO]" como texto, ocorrerá um erro crítico.
+- REGRA CRÍTICA DE ÁUDIO: NUNCA, em hipótese alguma, digite a tag [ÁUDIO ENVIADO] ou [ÁUDIO TRANSCRITO] no meio do seu texto! A única forma de enviar áudio é fazendo a chamada de função (tool call) 'sendVoiceNote'. Se você escrever essas tags como texto, ocorrerá um erro crítico no sistema.
 - ATENÇÃO: NUNCA mencione as chamadas de sistema, gatilhos, tags ou operações internas para o cliente. Comporte-se como um humano natural.`;
     prompt = DEFAULT_SYSTEM_PROMPT;
   }
@@ -307,7 +307,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
     openAiMessages = openAiMessages.concat(
       messages.map((msg: any) => ({
         role: msg.sender === 'client' ? 'user' : 'assistant',
-        content: (msg.text || '').replace(/\[ÁUDIO ENVIADO\]/g, '[Voice Note Enviada pela Ferramenta]'),
+        content: (msg.text || '').replace(/\[ÁUDIO ENVIADO\]/g, '[Voice Note Enviada pela Ferramenta]').replace(/\[ÁUDIO TRANSCRITO\]/g, '(Áudio transcrito):'),
       }))
     );
 
@@ -729,7 +729,7 @@ export async function analyzeConversationAndMoveStatus(clientId: string, supabas
     // Inverter para ordem cronológica
     const contextMessages = mensagens.reverse().map((m: any) => {
       const isSeller = m.sender === 'attendant';
-      const cleanText = (m.text || '').replace(/\[ÁUDIO ENVIADO\]/g, '[Voice Note Enviada pela Ferramenta]');
+      const cleanText = (m.text || '').replace(/\[ÁUDIO ENVIADO\]/g, '[Voice Note Enviada pela Ferramenta]').replace(/\[ÁUDIO TRANSCRITO\]/g, '(Áudio transcrito):');
       return `${isSeller ? 'VENDEDOR' : 'CLIENTE'}: ${cleanText}`;
     }).join('\n');
 
