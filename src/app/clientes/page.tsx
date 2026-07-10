@@ -120,6 +120,13 @@ export default function ClientesPage() {
     return isValid(date) ? format(date, "dd/MM/yyyy", { locale: ptBR }) : '';
   };
 
+  const formatLastMessageDate = (messages: any[]) => {
+    if (!messages || messages.length === 0) return 'Sem mensagens';
+    const maxTimestamp = Math.max(...messages.map(m => new Date(m.timestamp).getTime()));
+    const date = new Date(maxTimestamp);
+    return isValid(date) ? format(date, "dd/MM/yyyy HH:mm", { locale: ptBR }) : '';
+  };
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'Novo':
@@ -196,6 +203,7 @@ export default function ClientesPage() {
                   <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Nome</th>
                   <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Telefone</th>
                   <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status Atual</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Última Mensagem</th>
                   <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Data de Criação</th>
                 </tr>
               </thead>
@@ -238,6 +246,12 @@ export default function ClientesPage() {
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider inline-block text-center ${getStatusBadgeClass(client.status)}`}>
                             {client.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-400">
+                          <div className="flex items-center space-x-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                            <span>{formatLastMessageDate(client.messages)}</span>
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-400">
                           <div className="flex items-center space-x-1.5">
