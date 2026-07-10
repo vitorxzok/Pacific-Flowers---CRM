@@ -10,6 +10,8 @@ interface CRMStore {
   setSettings: (settings: Partial<Settings>) => void;
   fetchClients: () => Promise<void>;
   fetchSettings: () => Promise<void>;
+  fetchAdminClients: (password: string) => Promise<boolean>;
+  fetchClientMessages: (clientId: string) => Promise<void>;
   updateClientStatus: (clientId: string, newStatus: ClientStatus) => Promise<void>;
   addClientNote: (clientId: string, note: string) => Promise<void>;
   updateClientNotes: (clientId: string, notes: string) => Promise<void>;
@@ -139,7 +141,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
 
     const { data, error } = await supabase
       .from('clientes')
-      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(*)')
+      .select('*, profiles(name), cliente_tags(tags(name, color))')
       .neq('status', 'SYSTEM')
       .or(`attendant_id.eq.${userId},attendant_id.is.null`);
       
@@ -170,25 +172,9 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       is_exported: c.is_exported || false,
       connected_instance: c.connected_instance || undefined,
       connected_instance_phone: c.connected_instance ? instancesMap.get(c.connected_instance) : undefined,
-      messages: c.mensagens ? c.mensagens.sort((a: any, b: any) => {
-        const timeA = new Date(a.created_at || a.timestamp || 0).getTime();
-        const timeB = new Date(b.created_at || b.timestamp || 0).getTime();
-        return timeA - timeB;
-      }).map((m: any) => ({
-        id: m.id,
-        text: m.text,
-        sender: m.sender === 'client' ? 'client' : m.sender,
-        timestamp: m.created_at || m.timestamp || new Date().toISOString(),
-        media_url: m.media_url,
-        read: m.read !== false,
-      })) : [],
-      history: c.mensagens ? c.mensagens.map((m: any) => ({
-        id: m.id,
-        type: 'message',
-        date: m.timestamp || new Date().toISOString(),
-        description: `Mensagem: ${m.text}`
-      })) : [],
-      hasUnreadMessages: c.mensagens ? c.mensagens.some((m: any) => m.sender === 'client' && m.read === false) : false,
+      messages: [],
+      history: [],
+      hasUnreadMessages: false,
     }));
 
     formattedClients.sort((a, b) => {
@@ -241,6 +227,33 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       console.error("Erro ao buscar clientes admin:", error);
       return false;
     }
+  },
+
+  fetchClientMessages: async (clientId: string) => {
+    const { data, error } = await supabase
+      .from('mensagens')
+      .select('*')
+      .eq('cliente_id', clientId)
+      .order('timestamp', { ascending: true });
+
+    if (error) {
+      console.error("Error fetching messages for client:", error);
+      return;
+    }
+
+    const formattedMessages = data.map(m => ({
+      id: m.id,
+      text: m.text,
+      sender: m.sender === 'client' ? 'client' : m.sender,
+      timestamp: m.timestamp || new Date().toISOString(),
+      read: m.read || true
+    }));
+
+    set(state => ({
+      clients: state.clients.map(c => 
+        c.id === clientId ? { ...c, messages: formattedMessages } : c
+      )
+    }));
   },
 
   updateClientStatus: async (clientId, newStatus) => {
