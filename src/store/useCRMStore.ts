@@ -139,6 +139,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     const { data, error } = await supabase
       .from('clientes')
       .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(*)')
+      .neq('status', 'SYSTEM')
       .or(`attendant_id.eq.${userId},attendant_id.is.null`);
       
     if (error) {

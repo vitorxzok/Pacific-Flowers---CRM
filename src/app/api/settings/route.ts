@@ -5,7 +5,10 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const adminClient = createAdminClient(supabaseUrl, supabaseKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
 
 export async function GET() {
   try {
@@ -16,14 +19,23 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const adminClient = createAdminClient(supabaseUrl, supabaseKey);
-    const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(session.user.id);
+    const { data: settingsClient, error } = await adminClient
+      .from('clientes')
+      .select('notes')
+      .eq('id', '00000000-0000-0000-0000-000000000000')
+      .single();
     
-    if (userError || !userData.user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (error || !settingsClient) {
+      return NextResponse.json({});
     }
 
-    const settings = userData.user.user_metadata?.crm_settings || {};
+    let settings: any = {};
+    try {
+      settings = typeof settingsClient.notes === 'string' 
+        ? JSON.parse(settingsClient.notes || '{}') 
+        : (settingsClient.notes || {});
+    } catch (e) {}
+
     return NextResponse.json(settings);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -40,27 +52,35 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const adminClient = createAdminClient(supabaseUrl, supabaseKey);
     
-    const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(session.user.id);
-    
-    if (userError || !userData.user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    const { data: settingsClient, error: fetchErr } = await adminClient
+      .from('clientes')
+      .select('notes')
+      .eq('id', '00000000-0000-0000-0000-000000000000')
+      .single();
+
+    let currentSettings: any = {};
+    if (!fetchErr && settingsClient) {
+      try {
+        currentSettings = typeof settingsClient.notes === 'string' 
+          ? JSON.parse(settingsClient.notes || '{}') 
+          : (settingsClient.notes || {});
+      } catch (e) {}
     }
 
-    const { error } = await adminClient.auth.admin.updateUserById(session.user.id, {
-      user_metadata: {
-        ...userData.user.user_metadata,
-        crm_settings: {
-          ...userData.user.user_metadata?.crm_settings,
-          ...body,
-          use_global_insistence_strategy: body.use_global_insistence_strategy
-        }
-      }
-    });
+    const newSettings = {
+      ...currentSettings,
+      ...body,
+      use_global_insistence_strategy: body.use_global_insistence_strategy
+    };
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const { error: updateErr } = await adminClient
+      .from('clientes')
+      .update({ notes: JSON.stringify(newSettings) })
+      .eq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (updateErr) {
+      return NextResponse.json({ error: updateErr.message }, { status: 500 });
     }
     
     return NextResponse.json({ success: true });

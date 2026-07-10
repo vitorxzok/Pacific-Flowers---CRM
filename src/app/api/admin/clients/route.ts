@@ -19,7 +19,8 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from('clientes')
-      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(*)');
+      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(*)')
+      .neq('status', 'SYSTEM');
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
