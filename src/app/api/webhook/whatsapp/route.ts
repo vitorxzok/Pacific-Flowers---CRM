@@ -299,6 +299,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 });
       }
 
+      // Atualizar o updated_at do cliente para que a ordenação funcione corretamente
+      await supabase
+        .from('clientes')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', clientId);
+
       // 3. LÓGICA DE INTELIGÊNCIA ARTIFICIAL (AUTO-REPLY E ANÁLISE SILENCIOSA)
       const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled, attendant_id, needs_human').eq('id', clientId).single();
       
