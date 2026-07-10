@@ -14,8 +14,14 @@ import { Attachment, CadenceStep } from '@/types';
 import { AdminWhatsAppManager } from '@/components/AdminWhatsAppManager';
 import { AdminSupervisao } from '@/components/AdminSupervisao';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import AdminProdutos from '@/components/AdminProdutos';
+import AdminSimulator from '@/components/AdminSimulator';
+import AdminSettings from '@/components/AdminSettings';
+
+type AdminTab = 'painel' | 'produtos' | 'simulator' | 'settings';
 
 export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState<AdminTab>('painel');
   const [showSupervisao, setShowSupervisao] = useState(false);
   const [isAudioProspectOpen, setIsAudioProspectOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -637,29 +643,64 @@ export default function AdminPage() {
         </ErrorBoundary>
       )}
       <header className="px-8 py-6 border-b border-surface-border bg-surface/50 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Painel do Administrador</h1>
-          <p className="text-sm text-gray-400 mt-1">Visão global de todos os vendedores e leads</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={() => setShowSupervisao(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors font-semibold shadow-lg shadow-primary/20"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>Supervisão de Chats</span>
-          </button>
-          <button 
-            onClick={() => { setIsAuthenticated(false); setPassword(''); }}
-            className="flex items-center space-x-2 px-4 py-2 bg-surface border border-surface-border text-white rounded-lg hover:bg-surface-hover transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sair</span>
-          </button>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Painel do Administrador</h1>
+            <p className="text-sm text-gray-400 mt-1">Visão global e configurações do sistema</p>
+          </div>
+          
+          <div className="flex bg-surface-hover p-1 rounded-lg border border-surface-border overflow-x-auto w-full md:w-auto">
+            <button
+              onClick={() => setActiveTab('painel')}
+              className={`px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'painel' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            >
+              Visão Geral
+            </button>
+            <button
+              onClick={() => setActiveTab('produtos')}
+              className={`px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'produtos' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            >
+              Produtos
+            </button>
+            <button
+              onClick={() => setActiveTab('simulator')}
+              className={`px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'simulator' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            >
+              Simulador IA
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-4 py-2 rounded-md font-medium text-sm transition-colors whitespace-nowrap ${activeTab === 'settings' ? 'bg-primary text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            >
+              Configurações
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setShowSupervisao(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors font-semibold shadow-lg shadow-primary/20"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden md:inline">Supervisão de Chats</span>
+            </button>
+            <button 
+              onClick={() => { setIsAuthenticated(false); setPassword(''); }}
+              className="flex items-center space-x-2 px-4 py-2 bg-surface border border-surface-border text-white rounded-lg hover:bg-surface-hover transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sair</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="p-8 space-y-8">
+      <div className="flex-1 overflow-y-auto w-full">
+        {activeTab === 'produtos' && <AdminProdutos />}
+        {activeTab === 'simulator' && <AdminSimulator />}
+        {activeTab === 'settings' && <AdminSettings adminPwd={password} />}
+        {activeTab === 'painel' && (
+          <div className="p-8 space-y-8 w-full max-w-[1600px] mx-auto">
         
         {/* Métricas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1461,6 +1502,8 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
           </div>
         </div>
 
+      </div>
+        )}
       </div>
 
       {selectedClientId && (

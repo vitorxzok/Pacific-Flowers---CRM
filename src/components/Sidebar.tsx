@@ -52,12 +52,9 @@ export function Sidebar() {
     { name: 'Clientes', href: '/clientes', icon: Users },
     { name: 'Chats', href: '/chats', icon: MessageSquare },
     { name: 'WhatsApp', href: '/whatsapp', icon: Smartphone },
-    { name: 'Produtos', href: '/produtos', icon: ShoppingBag },
-    { name: 'Simulador IA', href: '/simulator', icon: MessageSquare },
     { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
     { name: 'Notificações', href: '/notificacoes', icon: Bell },
     { name: 'Administrador', href: '/admin', icon: Shield },
-    { name: 'Configurações', href: '/settings', icon: Settings },
   ];
 
   if (pathname === '/login') return null;
