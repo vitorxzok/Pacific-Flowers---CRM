@@ -99,7 +99,18 @@ export async function POST(request: Request) {
       if (match) {
         sellerId = match[1];
       } else {
-        console.warn(`Instância não utiliza formato válido: ${instanceName}. O attendant_id será nulo.`);
+        // Fallback: search profile by whatsapp_number (which might store the instance name or phone)
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('whatsapp_number', instanceName)
+          .limit(1);
+          
+        if (profiles && profiles.length > 0) {
+          sellerId = profiles[0].id;
+        } else {
+          console.warn(`Instância não utiliza formato válido e não foi encontrada em nenhum perfil: ${instanceName}. O attendant_id será nulo.`);
+        }
       }
 
       let clientId;
@@ -302,7 +313,11 @@ export async function POST(request: Request) {
       // Atualizar o updated_at do cliente para que a ordenação funcione corretamente
       await supabase
         .from('clientes')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ 
+          updated_at: new Date().toISOString(),
+          last_message_at: new Date().toISOString(),
+          has_unread_messages: !isFromMe 
+        })
         .eq('id', clientId);
 
       // 3. LÓGICA DE INTELIGÊNCIA ARTIFICIAL (AUTO-REPLY E ANÁLISE SILENCIOSA)

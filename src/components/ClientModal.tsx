@@ -26,13 +26,16 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
   const [newMessage, setNewMessage] = useState('');
   const [notes, setNotes] = useState(client.notes || '');
   const [tagsStr, setTagsStr] = useState((client.tags || []).join(', '));
-  const { addMessage, updateClientNotes, updateClientTags, deleteClient, fetchClientMessages } = useCRMStore();
+  const { addMessage, updateClientNotes, updateClientTags, deleteClient, fetchClientMessages, markMessagesAsRead } = useCRMStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchClientMessages(client.id);
-  }, [client.id, fetchClientMessages]);
+    if (client.hasUnreadMessages || client.has_unread_messages) {
+      markMessagesAsRead(client.id);
+    }
+  }, [client.id, fetchClientMessages, markMessagesAsRead, client.hasUnreadMessages, client.has_unread_messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

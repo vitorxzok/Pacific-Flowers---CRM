@@ -12,6 +12,7 @@ interface CRMStore {
   fetchSettings: () => Promise<void>;
   fetchAdminClients: (password: string) => Promise<boolean>;
   fetchClientMessages: (clientId: string) => Promise<void>;
+  markMessagesAsRead: (clientId: string) => Promise<void>;
   updateClientStatus: (clientId: string, newStatus: ClientStatus) => Promise<void>;
   addClientNote: (clientId: string, note: string) => Promise<void>;
   updateClientNotes: (clientId: string, notes: string) => Promise<void>;
@@ -174,16 +175,14 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       connected_instance_phone: c.connected_instance ? instancesMap.get(c.connected_instance) : undefined,
       messages: [],
       history: [],
-      hasUnreadMessages: false,
+      hasUnreadMessages: c.has_unread_messages || false,
+      has_unread_messages: c.has_unread_messages || false,
+      last_message_at: c.last_message_at || c.updated_at,
     }));
 
     formattedClients.sort((a, b) => {
-      // Usar o timestamp da última mensagem, se houver
-      const lastMsgA = a.messages.length > 0 ? Math.max(...a.messages.map(m => new Date(m.timestamp).getTime())) : 0;
-      const lastMsgB = b.messages.length > 0 ? Math.max(...b.messages.map(m => new Date(m.timestamp).getTime())) : 0;
-      
-      // Se não houver mensagens, podemos usar a data de criação do cliente (ou 0 se não soubermos)
-      // Como não salvamos createdAt no Client type, vamos priorizar os que têm mensagem
+      const lastMsgA = new Date(a.last_message_at || 0).getTime();
+      const lastMsgB = new Date(b.last_message_at || 0).getTime();
       return lastMsgB - lastMsgA; 
     });
 
@@ -191,7 +190,6 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   },
 
   markClientsAsExported: async (clientIds: string[]) => {
-    // Atualiza otimisticamente
     set((state) => ({
       clients: state.clients.map((c) =>
         clientIds.includes(c.id) ? { ...c, is_exported: true } : c
@@ -218,7 +216,10 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
 
       const enhancedClients = clients.map((c: any) => ({
         ...c,
-        connected_instance_phone: c.connected_instance ? instancesMap.get(c.connected_instance) : undefined
+        connected_instance_phone: c.connected_instance ? instancesMap.get(c.connected_instance) : undefined,
+        hasUnreadMessages: c.has_unread_messages || false,
+        has_unread_messages: c.has_unread_messages || false,
+        last_message_at: c.last_message_at || c.updated_at,
       }));
 
       set({ clients: enhancedClients });
@@ -256,8 +257,18 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     }));
   },
 
+  markMessagesAsRead: async (clientId: string) => {
+    // Atualiza localmente
+    set((state) => ({
+      clients: state.clients.map(c => 
+        c.id === clientId ? { ...c, hasUnreadMessages: false, has_unread_messages: false } : c
+      )
+    }));
+    // Atualiza no banco
+    await supabase.from('clientes').update({ has_unread_messages: false }).eq('id', clientId);
+  },
+
   updateClientStatus: async (clientId, newStatus) => {
-    // Optimistic UI update
     set((state) => ({
       clients: state.clients.map((c) =>
         c.id === clientId ? { ...c, status: newStatus } : c
@@ -307,7 +318,6 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   },
 
   addMessage: async (clientId, message) => {
-    // 1. Otimisticamente adicionar na tela
     const tempId = crypto.randomUUID();
     const newMessage = {
       id: tempId,
@@ -322,7 +332,6 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
       ),
     }));
 
-    // Se a mensagem for do atendente, enviamos para a API
     if (message.sender === 'attendant') {
       const client = get().clients.find(c => c.id === clientId);
       if (!client) return;
@@ -341,13 +350,11 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
         const data = await response.json();
         if (!response.ok) {
           console.error("Erro ao enviar mensagem via Evolution API:", data.error);
-          // Opcional: reverter estado otimista ou marcar mensagem com erro
         }
       } catch (err) {
         console.error("Erro na requisição para enviar mensagem:", err);
       }
     } else {
-      // Se por algum motivo for do cliente (ex: mock/teste), mantemos o insert via client side
       const { error } = await supabase.from('mensagens').insert({
         client_id: clientId,
         text: message.text,
@@ -359,26 +366,27 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   },
 
   markMessagesAsRead: async (clientId: string) => {
-    // Atualiza otimisticamente
     set((state) => ({
       clients: state.clients.map((c) =>
         c.id === clientId
           ? {
               ...c,
-              hasUnreadMessages: false,
               messages: c.messages.map((m) => ({ ...m, read: true })),
+              hasUnreadMessages: false,
+              has_unread_messages: false
             }
           : c
       ),
     }));
 
-    // Atualiza no banco
     const { error } = await supabase
       .from('mensagens')
       .update({ read: true })
       .eq('client_id', clientId)
       .eq('sender', 'client')
       .eq('read', false);
+      
+    await supabase.from('clientes').update({ has_unread_messages: false }).eq('id', clientId);
 
     if (error) console.error("Error marking messages as read:", error);
   },

@@ -41,6 +41,8 @@ export interface Client {
   is_exported?: boolean;
   connected_instance?: string;
   hasUnreadMessages?: boolean;
+  has_unread_messages?: boolean;
+  last_message_at?: string;
 }
 
 export interface Attachment {

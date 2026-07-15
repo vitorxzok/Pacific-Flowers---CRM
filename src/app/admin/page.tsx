@@ -5,6 +5,14 @@ import { useCRMStore } from '@/store/useCRMStore';
 import { Lock, Users, MessageCircle, DollarSign, LogOut, BrainCircuit, Activity, Upload, Download, Paperclip, Trash2, Plus, UploadCloud, Mic } from 'lucide-react';
 import { ClientModal } from '@/components/ClientModal';
 import { AudioProspectModal } from '@/components/AudioProspectModal';
+import { Settings } from '@/types';
+import { format, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+function safeFormatDate(dateStr: string | undefined | null) {
+  if (!dateStr) return 'N/A';
+  const date = new Date(dateStr);
+  return isValid(date) ? format(date, 'dd/MM/yyyy HH:mm', { locale: ptBR }) : 'N/A';
+}
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import Papa from 'papaparse';
@@ -1452,12 +1460,13 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                   <th className="px-6 py-4 font-medium">Telefone</th>
                   <th className="px-6 py-4 font-medium">Vendedor (ID/Nome)</th>
                   <th className="px-6 py-4 font-medium">Status do Funil</th>
+                  <th className="px-6 py-4 font-medium">Últ. Mensagem</th>
                   <th className="px-6 py-4 font-medium">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-border">
                 {filteredClients.map(client => (
-                  <tr key={client.id} className={`transition-colors ${client.is_exported ? 'bg-surface/30 hover:bg-surface/50' : 'hover:bg-surface-hover/50'}`}>
+                  <tr key={client.id} className={`transition-colors ${client.hasUnreadMessages ? 'bg-red-500/20 animate-pulse' : client.is_exported ? 'bg-surface/30 hover:bg-surface/50' : 'hover:bg-surface-hover/50'}`}>
                     <td className="px-6 py-4">
                       <div className="font-medium text-white flex items-center gap-2">
                         {client.name}
@@ -1479,6 +1488,9 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                       <span className="px-3 py-1 bg-primary/20 text-primary-light border border-primary/30 rounded-full text-xs font-medium">
                         {client.status}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-gray-400">
+                      {safeFormatDate(client.last_message_at)}
                     </td>
                     <td className="px-6 py-4">
                       <button 

@@ -120,10 +120,9 @@ export default function ClientesPage() {
     return isValid(date) ? format(date, "dd/MM/yyyy", { locale: ptBR }) : '';
   };
 
-  const formatLastMessageDate = (messages: any[]) => {
-    if (!messages || messages.length === 0) return 'Sem mensagens';
-    const maxTimestamp = Math.max(...messages.map(m => new Date(m.timestamp).getTime()));
-    const date = new Date(maxTimestamp);
+  const formatLastMessageDate = (dateStr: string | undefined | null) => {
+    if (!dateStr) return 'Sem mensagens';
+    const date = new Date(dateStr);
     return isValid(date) ? format(date, "dd/MM/yyyy HH:mm", { locale: ptBR }) : '';
   };
 
@@ -252,7 +251,7 @@ export default function ClientesPage() {
                         <td className="px-6 py-4 text-sm text-gray-400">
                           <div className="flex items-center space-x-1.5">
                             <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                            <span>{formatLastMessageDate(client.messages)}</span>
+                            <span>{formatLastMessageDate(client.last_message_at)}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-400">
