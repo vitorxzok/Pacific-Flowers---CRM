@@ -15,12 +15,15 @@ const supabase = createClient(envVars.NEXT_PUBLIC_SUPABASE_URL, envVars.SUPABASE
 async function run() {
   const { data, error } = await supabase
       .from('clientes')
-      .select('id, name, mensagens(id, text, timestamp)')
+      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(id, text, sender, timestamp, media_url, read)')
+      .neq('status', 'SYSTEM')
       .order('timestamp', { foreignTable: 'mensagens', ascending: false })
-      .limit(1, { foreignTable: 'mensagens' })
-      .limit(3);
+      .limit(1, { foreignTable: 'mensagens' });
       
-  console.log(JSON.stringify(data, null, 2));
-  if (error) console.error(error);
+  if (error) {
+    console.error("ERROR:", error);
+  } else {
+    console.log("SUCCESS, found", data.length, "clients.");
+  }
 }
 run();

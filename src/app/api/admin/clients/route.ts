@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from('clientes')
-      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(id, text, sender, timestamp, media_url, read)')
+      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(id, text, sender, timestamp, read)')
       .neq('status', 'SYSTEM')
       .order('timestamp', { foreignTable: 'mensagens', ascending: false })
       .limit(1, { foreignTable: 'mensagens' });
@@ -53,7 +53,6 @@ export async function GET(request: Request) {
         sender: m.sender === 'client' ? 'client' : m.sender,
         timestamp: m.timestamp || new Date().toISOString(),
         read: m.read !== false,
-        media_url: m.media_url,
       })) : [],
       history: c.mensagens ? c.mensagens.map((m: any) => ({
         id: m.id,
