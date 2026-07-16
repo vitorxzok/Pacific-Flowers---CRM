@@ -234,7 +234,7 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
     const { data, error } = await supabase
       .from('mensagens')
       .select('*')
-      .eq('cliente_id', clientId)
+      .eq('client_id', clientId)
       .order('timestamp', { ascending: true });
 
     if (error) {

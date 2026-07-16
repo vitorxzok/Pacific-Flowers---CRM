@@ -27,6 +27,8 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
   const [notes, setNotes] = useState(client.notes || '');
   const [tagsStr, setTagsStr] = useState((client.tags || []).join(', '));
   const { addMessage, updateClientNotes, updateClientTags, deleteClient, fetchClientMessages, markMessagesAsRead } = useCRMStore();
+  const storeClient = useCRMStore(state => state.clients.find(c => c.id === client.id));
+  const messagesToRender = storeClient?.messages || client.messages || [];
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -181,7 +183,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
           {activeTab === 'chat' && (
             <div className="absolute inset-0 flex flex-col" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg")', backgroundSize: 'cover', backgroundBlendMode: 'overlay', backgroundColor: 'rgba(11, 20, 26, 0.9)' }}>
               <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                {client.messages.map((msg) => {
+                {messagesToRender.map((msg: any) => {
                   const isSystem = msg.sender === 'system';
                   const isAttendant = msg.sender === 'attendant';
                   
