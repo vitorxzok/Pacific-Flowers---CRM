@@ -129,6 +129,10 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
     prompt = DEFAULT_SYSTEM_PROMPT;
   }
 
+  // Inject current date and short responses instruction
+  const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  prompt += `\n\nINFORMAÇÕES DO SISTEMA:\n- Data e Hora Atual: ${now}\n- REGRA ABSOLUTA: Seja EXTREMAMENTE concisa, humanizada e evite frases ou textos longos. Responda de forma curta e natural, como um humano faria no WhatsApp. NUNCA envie respostas robóticas ou listas gigantescas.`;
+
   if (settings && settings.businessName && settings.businessName.trim() !== '') {
     prompt += `\n\n--- INFORMAÇÃO IMPORTANTE ---\nVocê é o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
   }

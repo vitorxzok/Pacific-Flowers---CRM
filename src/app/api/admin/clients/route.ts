@@ -58,6 +58,9 @@ export async function GET(request: Request) {
         date: m.timestamp || new Date().toISOString(),
         description: `Mensagem: ${m.text}`
       })) : [],
+      created_at: c.created_at,
+      updated_at: c.updated_at,
+      last_message_at: c.last_message_at,
     }));
 
     return NextResponse.json({ clients: formattedClients });

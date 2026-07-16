@@ -125,12 +125,8 @@ export async function POST(request: Request) {
         .or(`phone.ilike.%${last8Digits},phone.ilike.%${last8Formatted}`)
         .limit(1);
 
-      if (sellerId) {
-        clientQuery = clientQuery.eq('attendant_id', sellerId);
-      } else {
-        clientQuery = clientQuery.is('attendant_id', null);
-      }
-
+      // Removemos o filtro de attendant_id na busca para evitar erros de restrição UNIQUE no telefone.
+      // Um cliente existe apenas uma vez no banco, e será reatribuído se mudar de vendedor.
       const { data: clients, error: clientError } = await clientQuery;
 
       if (clientError || !clients || clients.length === 0) {
@@ -198,8 +194,11 @@ export async function POST(request: Request) {
             connected_instance: instanceName 
           };
           
-          // Se o lead antigo não tiver vendedor associado, atribui ao atual (apenas se for válido)
-          if (!clients[0].attendant_id && sellerId) {
+          // Reatribuir o cliente ao vendedor atual, se for diferente
+          if (sellerId && clients[0].attendant_id !== sellerId) {
+            updateData.attendant_id = sellerId;
+            console.log(`[Webhook] Cliente ${clientId} reatribuído para o vendedor ${sellerId}`);
+          } else if (!clients[0].attendant_id && sellerId) {
             updateData.attendant_id = sellerId;
           }
 
@@ -230,6 +229,11 @@ export async function POST(request: Request) {
             console.error('Erro ao atualizar cliente:', updateError);
           }
         } else {
+          // Se for do vendedor, atualizar a instância e o vendedor se necessário
+          if (sellerId && clients[0].attendant_id !== sellerId) {
+             await supabase.from('clientes').update({ attendant_id: sellerId, connected_instance: instanceName, updated_at: new Date().toISOString() }).eq('id', clientId);
+          }
+
           // Se for do vendedor (e não for eco da IA), significa que o humano assumiu o controle!
           // VERIFICAR CÓDIGO SECRETO ".." OU "/ia"
           const textTrimmed = text.trim();
@@ -375,8 +379,8 @@ export async function POST(request: Request) {
         // Aplicar fallbacks de prompt caso o atendente atual não tenha
         if (!crmSettings.systemPrompt && fallbackSystemPrompt) crmSettings.systemPrompt = fallbackSystemPrompt;
         if (!crmSettings.businessName && fallbackBusinessName) crmSettings.businessName = fallbackBusinessName;
-        // Aplicar fallback para autoReplyEnabled se o cliente for genérico
-        if (!clientData?.attendant_id && fallbackAutoReplyEnabled) autoReplyEnabled = true;
+        // Aplicar fallback para autoReplyEnabled se não foi configurado explicitamente
+        if (crmSettings.auto_reply_enabled !== false && fallbackAutoReplyEnabled) autoReplyEnabled = true;
       }
 
       const isAIEnabled = clientData?.ai_enabled !== false && clientData?.needs_human !== true;

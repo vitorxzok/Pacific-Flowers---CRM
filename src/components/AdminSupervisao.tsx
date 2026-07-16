@@ -54,10 +54,27 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
         return matchesSearch && matchesAttendant && matchesStatus;
       })
       .sort((a, b) => {
-        // Ordenar por última mensagem
-        const lastA = a.messages && a.messages.length > 0 ? new Date(a.messages[a.messages.length - 1].timestamp).getTime() : 0;
-        const lastB = b.messages && b.messages.length > 0 ? new Date(b.messages[b.messages.length - 1].timestamp).getTime() : 0;
-        return lastB - lastA;
+        // Ordenar por última mensagem ou data de criação
+        let timeA = 0;
+        let timeB = 0;
+
+        if (a.messages && a.messages.length > 0) {
+          timeA = new Date(a.messages[a.messages.length - 1].timestamp).getTime();
+        } else if ((a as any).last_message_at) {
+          timeA = new Date((a as any).last_message_at).getTime();
+        } else if ((a as any).created_at) {
+          timeA = new Date((a as any).created_at).getTime();
+        }
+
+        if (b.messages && b.messages.length > 0) {
+          timeB = new Date(b.messages[b.messages.length - 1].timestamp).getTime();
+        } else if ((b as any).last_message_at) {
+          timeB = new Date((b as any).last_message_at).getTime();
+        } else if ((b as any).created_at) {
+          timeB = new Date((b as any).created_at).getTime();
+        }
+
+        return timeB - timeA;
       });
   }, [clients, searchTerm, attendantFilter, statusFilter]);
 
