@@ -127,11 +127,14 @@ export async function POST(request: Request) {
       let clientQuery = supabase
         .from('clientes')
         .select('id, phone, status, ai_enabled, attendant_id, needs_human')
-        .or(`phone.ilike.%${last8Digits},phone.ilike.%${last8Formatted}`)
-        .limit(1);
+        .or(`phone.ilike.%${last8Digits},phone.ilike.%${last8Formatted}`);
 
-      // Removemos o filtro de attendant_id na busca para evitar erros de restrição UNIQUE no telefone.
-      // Um cliente existe apenas uma vez no banco, e será reatribuído se mudar de vendedor.
+      if (sellerId) {
+        clientQuery = clientQuery.eq('attendant_id', sellerId);
+      }
+      
+      clientQuery = clientQuery.order('updated_at', { ascending: false }).limit(1);
+
       const { data: clients, error: clientError } = await clientQuery;
 
       if (clientError || !clients || clients.length === 0) {
