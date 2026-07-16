@@ -19,8 +19,10 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from('clientes')
-      .select('*, profiles(name), cliente_tags(tags(name, color))')
-      .neq('status', 'SYSTEM');
+      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(id, text, sender, timestamp, media_url, read)')
+      .neq('status', 'SYSTEM')
+      .order('timestamp', { foreignTable: 'mensagens', ascending: false })
+      .limit(1, { foreignTable: 'mensagens' });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -45,12 +47,13 @@ export async function GET(request: Request) {
       insistencia_count: c.insistencia_count || 0,
       needs_human: c.needs_human,
       is_exported: c.is_exported || false,
-      messages: c.mensagens ? c.mensagens.map((m: any) => ({
+      messages: c.mensagens && c.mensagens.length > 0 ? c.mensagens.map((m: any) => ({
         id: m.id,
         text: m.text,
         sender: m.sender === 'client' ? 'client' : m.sender,
         timestamp: m.timestamp || new Date().toISOString(),
-        read: m.read || true,
+        read: m.read !== false,
+        media_url: m.media_url,
       })) : [],
       history: c.mensagens ? c.mensagens.map((m: any) => ({
         id: m.id,
