@@ -183,11 +183,11 @@ export function AdminWhatsAppManager({ targetUserId, adminPwd, userName, recover
               <div className="flex items-center gap-2 bg-surface/50 px-2 py-1.5 rounded-md border border-surface-border mt-2">
                 <span className="text-[10px] text-gray-400 uppercase font-semibold">Recuperar Antigos</span>
                 <button
-                  onClick={() => onToggleRecovery && onToggleRecovery(instance.instanceName, recoveryInstances.includes(instance.instanceName))}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${recoveryInstances.includes(instance.instanceName) ? 'bg-blue-500' : 'bg-surface-border'}`}
+                  onClick={() => onToggleRecovery && onToggleRecovery(instance!.instanceName, recoveryInstances.includes(instance!.instanceName))}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${recoveryInstances.includes(instance!.instanceName) ? 'bg-blue-500' : 'bg-surface-border'}`}
                   title={`Ativar/Desativar recuperação automática apenas para este número`}
                 >
-                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${recoveryInstances.includes(instance.instanceName) ? 'translate-x-5' : 'translate-x-1'}`} />
+                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${recoveryInstances.includes(instance!.instanceName) ? 'translate-x-5' : 'translate-x-1'}`} />
                 </button>
               </div>
             </div>

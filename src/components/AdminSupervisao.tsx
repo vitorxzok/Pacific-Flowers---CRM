@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useCRMStore } from '@/store/useCRMStore';
 import { Client } from '@/types';
 import { Send, FileText, Search, User, Phone, CheckCircle2, AlertCircle, RefreshCw, X, Bot, MessageCircle } from 'lucide-react';
+import { ClientModal } from '@/components/ClientModal';
 import { clsx } from 'clsx';
 import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -112,44 +113,91 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex bg-background w-full h-full animate-in fade-in duration-200">
-      
-      {/* Coluna Esquerda: Lista de Leads */}
-      <div className="w-[400px] border-r border-surface-border bg-surface flex flex-col h-full flex-shrink-0">
-        
-        {/* Header Esquerdo */}
-        <div className="p-4 bg-surface-hover border-b border-surface-border flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-white">Supervisão de Chats</h2>
-              <span className="text-xs text-gray-400">Total: {filteredClients.length} leads</span>
+      <div className="h-full w-full overflow-y-auto p-4 md:p-8 lg:p-12 relative flex flex-col custom-scrollbar">
+        <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col space-y-8">
+          
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#00a884] to-emerald-700 flex items-center justify-center text-white shadow-lg">
+                <User className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white tracking-tight">Supervisão de Chats</h1>
+                <p className="text-gray-400 mt-1 text-sm">Supervisão de conversas de toda a equipe.</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowReactivateModal(true)}
-                className="flex items-center gap-1 px-3 py-1.5 bg-[#005c4b] text-white text-xs font-medium rounded-lg hover:bg-[#00705a] transition-colors"
-                title="Reativar leads que não responderam"
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#005c4b] text-white text-sm font-medium rounded-xl hover:bg-[#00705a] transition-all shadow-md"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <RefreshCw className="w-4 h-4" />
                 <span>Reativar Vácuo</span>
               </button>
               <button 
                 onClick={onClose}
-                className="p-1.5 hover:bg-surface-border rounded-full text-gray-400 hover:text-white transition-colors border border-surface-border"
+                className="p-2.5 hover:bg-surface-border rounded-xl text-gray-400 hover:text-white transition-colors border border-surface-border bg-surface"
                 title="Sair da Supervisão"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
-          
+
+          {/* Filtros e Busca */}
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+            <div className="relative flex-1 w-full">
+              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nome, telefone, status ou atendente..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-3 w-full bg-surface border border-surface-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00a884]/50 focus:border-[#00a884] transition-all shadow-md"
+              />
+            </div>
+            <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-3 w-full md:w-auto">
+              <select
+                value={attendantFilter}
+                onChange={(e) => setAttendantFilter(e.target.value)}
+                className="w-full md:w-auto bg-surface border border-surface-border text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#00a884] shadow-md min-w-[200px]"
+              >
+                <option value="all">Todos os Vendedores</option>
+                <option value="">Sem Vendedor</option>
+                {uniqueAttendants.map(att => (
+                  <option key={att} value={att}>{att}</option>
+                ))}
+              </select>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full md:w-auto bg-surface border border-surface-border text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#00a884] shadow-md min-w-[200px]"
+              >
+                <option value="all">Todos os Status</option>
+                <option value="Novo">Novo</option>
+                <option value="Contato Feito">Contato Feito</option>
+                <option value="Em Qualificação">Em Qualificação</option>
+                <option value="Proposta Enviada">Proposta Enviada</option>
+                <option value="Finalizado">Finalizado</option>
+              </select>
+              <div className="px-4 py-3 bg-surface border border-surface-border rounded-xl flex items-center justify-center space-x-2 text-sm text-gray-400 font-medium whitespace-nowrap shadow-md w-full md:w-auto">
+                <User className="w-4 h-4 text-gray-400" />
+                <span>Total: {filteredClients.length}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Reativar Vácuo */}
           {showReactivateModal && (
-            <div className="bg-surface border border-surface-border p-3 rounded-lg flex flex-col gap-2 mt-2">
-              <p className="text-xs text-white/80">Reativar leads ignorados dos últimos:</p>
-              <div className="flex items-center gap-2">
+            <div className="bg-surface border border-surface-border p-5 rounded-xl shadow-lg">
+              <h3 className="font-semibold text-white mb-2 text-lg">Reativar Vácuos</h3>
+              <p className="text-sm text-gray-400 mb-4">Reativar leads que não respondem (sem vendedor atribuído) nos últimos X dias.</p>
+              <div className="flex items-center gap-3">
                 <select 
                   value={reactivateDays}
                   onChange={(e) => setReactivateDays(e.target.value)}
-                  className="bg-background text-white text-xs rounded border border-surface-border p-1"
+                  className="bg-background text-white text-sm rounded-lg border border-surface-border p-2 focus:outline-none focus:border-[#00a884]"
                 >
                   <option value="2">2 dias</option>
                   <option value="5">5 dias</option>
@@ -159,225 +207,117 @@ export function AdminSupervisao({ onClose }: AdminSupervisaoProps) {
                 <button 
                   onClick={handleReactivateLeads}
                   disabled={isReactivating}
-                  className="px-3 py-1 bg-primary text-white text-xs font-medium rounded hover:bg-primary/90 disabled:opacity-50"
+                  className="px-4 py-2 bg-[#00a884] text-white text-sm font-medium rounded-lg hover:bg-[#00a884]/90 disabled:opacity-50 transition-colors"
                 >
                   {isReactivating ? 'Processando...' : 'Iniciar'}
                 </button>
                 <button 
                   onClick={() => setShowReactivateModal(false)}
-                  className="px-3 py-1 bg-surface-border text-white text-xs font-medium rounded hover:bg-surface-border/80"
+                  className="px-4 py-2 bg-surface-border text-white text-sm font-medium rounded-lg hover:bg-surface-border/80 transition-colors"
                 >
                   Cancelar
                 </button>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Filtros */}
-        <div className="p-4 border-b border-surface-border space-y-3 bg-surface/50">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar lead ou número..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-background border border-surface-border text-white text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-primary"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <select
-              value={attendantFilter}
-              onChange={(e) => setAttendantFilter(e.target.value)}
-              className="flex-1 bg-background border border-surface-border text-white text-xs rounded-lg px-2 py-2 focus:outline-none focus:border-primary"
-            >
-              <option value="all">Todos os Vendedores</option>
-              <option value="">Sem Vendedor</option>
-              {uniqueAttendants.map(att => (
-                <option key={att} value={att}>{att}</option>
-              ))}
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="flex-1 bg-background border border-surface-border text-white text-xs rounded-lg px-2 py-2 focus:outline-none focus:border-primary"
-            >
-              <option value="all">Todos os Status</option>
-              <option value="Novo">Novo</option>
-              <option value="Contato Feito">Contato Feito</option>
-              <option value="Em Qualificação">Em Qualificação</option>
-              <option value="Proposta Enviada">Proposta Enviada</option>
-              <option value="Finalizado">Finalizado</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Lista */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {filteredClients.map(client => {
-            const lastMessage = client.messages?.[client.messages.length - 1];
-            return (
-              <div 
-                key={client.id}
-                onClick={() => setSelectedClientId(client.id)}
-                className={clsx(
-                  "p-4 border-b border-surface-border cursor-pointer hover:bg-surface-hover transition-colors",
-                  selectedClientId === client.id ? "bg-surface-hover border-l-4 border-l-primary" : "border-l-4 border-l-transparent"
-                )}
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-semibold text-white truncate max-w-[200px]">{client?.name || 'Desconhecido'}</h3>
-                  {lastMessage && (
-                    <span className="text-[10px] text-gray-500 whitespace-nowrap">
-                      {safeFormatDate(lastMessage.timestamp, "HH:mm")}
-                    </span>
+          {/* Tabela de Dados */}
+          <div className="glass-panel overflow-hidden shadow-2xl flex-1 flex flex-col justify-between bg-surface/30 border border-surface-border rounded-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-surface-border bg-surface-hover/30">
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Nome</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Telefone</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status Atual</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Vendedor</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Última Mensagem</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Data de Criação</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-border">
+                  {filteredClients.length > 0 ? (
+                    filteredClients.map((client) => {
+                      const lastMessage = client.messages?.[client.messages.length - 1];
+                      return (
+                        <tr
+                          key={client.id}
+                          onClick={() => setSelectedClientId(client.id)}
+                          className="hover:bg-surface-hover/50 cursor-pointer transition-all duration-300"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-full bg-[#00a884]/10 border border-[#00a884]/20 flex items-center justify-center text-[#00a884] font-bold text-sm">
+                                {client.name ? client.name.charAt(0).toUpperCase() : '?'}
+                              </div>
+                              <div>
+                                <span className="font-semibold text-white block text-sm">{client.name || 'Desconhecido'}</span>
+                                <span className="text-xs text-gray-400">{client.email || 'Sem e-mail'}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap">
+                            <div className="flex items-center space-x-1.5">
+                              <Phone className="w-3.5 h-3.5 text-gray-500" />
+                              <span>{client.phone}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={clsx("px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider inline-block text-center whitespace-nowrap", 
+                              client.status === 'Novo' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' :
+                              client.status === 'Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/20' :
+                              client.status === 'Contato Feito' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/20' :
+                              client.status === 'Em Qualificação' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20' :
+                              client.status === 'Proposta Enviada' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/20' :
+                              'bg-gray-500/20 text-gray-400 border border-gray-500/20'
+                            )}>
+                              {client.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-1.5 text-sm text-gray-300">
+                              <User className="w-3.5 h-3.5 text-gray-500" />
+                              <span className="font-medium text-gray-200 whitespace-nowrap">{client.attendant || 'Nenhum'}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-300">
+                            {lastMessage ? (
+                              <div className="flex flex-col">
+                                <span className="truncate max-w-[250px] text-gray-200" title={lastMessage.text || (lastMessage.media_url ? '📷 Arquivo de Mídia' : '')}>
+                                  {lastMessage.text || (lastMessage.media_url ? '📷 Arquivo de Mídia' : '')}
+                                </span>
+                                <span className="text-[10px] text-gray-500 mt-0.5">
+                                  {safeFormatDate(lastMessage.timestamp, 'dd/MM/yyyy HH:mm')}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-500 text-xs italic">Nenhuma mensagem</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
+                            {safeFormatDate(client.purchaseDate || (client as any).created_at, 'dd/MM/yyyy HH:mm')}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                        Nenhum cliente encontrado com os filtros atuais.
+                      </td>
+                    </tr>
                   )}
-                </div>
-                <div className="flex items-center text-xs text-gray-400 mb-2">
-                  <User className="w-3 h-3 mr-1" />
-                  <span className="truncate">{client.attendant || 'Nenhum'}</span>
-                  <span className="mx-2">•</span>
-                  <span className={clsx("px-1.5 py-0.5 rounded text-[10px] uppercase font-bold", 
-                    client.status === 'Novo' ? 'bg-blue-500/20 text-blue-400' :
-                    client.status === 'Finalizado' ? 'bg-green-500/20 text-green-400' :
-                    'bg-yellow-500/20 text-yellow-400'
-                  )}>
-                    {client.status}
-                  </span>
-                </div>
-                {lastMessage && (
-                  <p className="text-xs text-gray-400 truncate flex items-center">
-                    {lastMessage.sender === 'system' ? <AlertCircle className="w-3 h-3 mr-1" /> :
-                     lastMessage.sender === 'attendant' ? <CheckCircle2 className="w-3 h-3 mr-1 text-primary" /> : null}
-                    {lastMessage.text || (lastMessage.media_url ? '📷 Arquivo de Mídia' : '')}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-          {filteredClients.length === 0 && (
-            <div className="p-8 text-center text-gray-500 text-sm">
-              Nenhum lead encontrado com estes filtros.
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Coluna Direita: Chat Area */}
-      <div className="flex-1 flex flex-col bg-[#0b141a] relative">
-        {selectedClient ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 bg-[#202c33] border-b border-white/10 flex items-center justify-between z-10">
-              <div className="flex items-center space-x-4">
-                {selectedClient?.avatarUrl ? (
-                  <img src={selectedClient.avatarUrl} alt={selectedClient?.name || ''} className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-surface-hover flex items-center justify-center text-gray-400 font-bold">
-                    {(selectedClient?.name || '?').charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <h2 className="text-white font-semibold">{selectedClient?.name || 'Desconhecido'}</h2>
-                  <div className="flex items-center space-x-3 text-xs text-gray-400 mt-1">
-                    <span className="flex items-center"><Phone className="w-3 h-3 mr-1" /> {selectedClient?.phone || ''}</span>
-                    <span className="flex items-center"><User className="w-3 h-3 mr-1" /> Vendedor: <span className="font-semibold text-white ml-1">{selectedClient?.attendant || 'Sem Atendente'}</span></span>
-                    {selectedClient?.needs_human && (
-                      <span className="flex items-center text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded"><AlertCircle className="w-3 h-3 mr-1" /> Aguardando Humano</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Chat Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar relative">
-              <div className="absolute inset-0" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg")', backgroundSize: 'cover', backgroundBlendMode: 'overlay', backgroundColor: 'rgba(11, 20, 26, 0.9)', zIndex: 0 }}></div>
-              
-              <div className="relative z-10 space-y-4 pb-4">
-                {selectedClient.messages?.map((msg) => {
-                  const isSystem = msg.sender === 'system';
-                  const isAttendant = msg.sender === 'attendant';
-                  
-                  if (isSystem) {
-                    return (
-                      <div key={msg.id} className="flex justify-center my-4">
-                        <div className="bg-[#1e2a30] text-gray-300 text-xs px-4 py-2 rounded-lg border border-white/10 shadow-sm text-center max-w-[80%] whitespace-pre-wrap">
-                          {msg.text}
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={msg.id} className={clsx("flex", isAttendant ? "justify-end" : "justify-start")}>
-                      <div className={clsx(
-                        "max-w-[70%] rounded-xl px-4 py-2 relative shadow-sm flex flex-col",
-                        isAttendant ? "bg-[#005c4b] text-white rounded-tr-none" : "bg-[#202c33] text-white rounded-tl-none"
-                      )}>
-                        <span className={clsx(
-                          "text-[11px] font-bold mb-1",
-                          isAttendant ? "text-[#4ade80]" : "text-[#60a5fa]"
-                        )}>
-                          {isAttendant ? (selectedClient.attendant || 'Admin/Vendedor') : (selectedClient.name || 'Cliente')}
-                        </span>
-                        {msg.media_url ? (
-                          <div className="flex flex-col gap-2">
-                            <a href={msg.media_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">
-                              <FileText className="w-5 h-5 text-blue-300" />
-                              <span className="text-sm text-blue-300 underline font-medium truncate">Ver Anexo</span>
-                            </a>
-                            {msg.text && <p className="text-sm">{msg.text}</p>}
-                          </div>
-                        ) : (
-                          <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                        )}
-                        <span className="text-[10px] text-white/60 self-end mt-1 flex items-center gap-1">
-                          {safeFormatDate(msg.timestamp, "HH:mm")}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
-
-            {/* Chat Input */}
-            <div className="p-4 bg-[#202c33] border-t border-white/10 flex items-center space-x-3 z-10">
-              <input
-                ref={inputRef}
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(e)}
-                placeholder={`Enviar mensagem como ${selectedClient.attendant || 'Vendedor'}...`}
-                className="flex-1 bg-[#2a3942] text-white rounded-lg px-4 py-3 focus:outline-none placeholder-gray-400"
-              />
-              <button 
-                onClick={handleSendMessage} 
-                onMouseDown={(e) => e.preventDefault()} 
-                className="p-3 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] transition-colors"
-                title="Enviar como Vendedor"
-              >
-                <Send className="w-5 h-5 ml-0.5" />
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 z-10 relative">
-             <div className="absolute inset-0" style={{ backgroundImage: 'url("https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg")', backgroundSize: 'cover', backgroundBlendMode: 'overlay', backgroundColor: 'rgba(11, 20, 26, 0.95)', zIndex: -1 }}></div>
-            <div className="w-24 h-24 rounded-full bg-[#202c33] flex items-center justify-center mb-6 shadow-xl">
-              <MessageCircle className="w-12 h-12 text-[#00a884]" />
-            </div>
-            <h2 className="text-3xl font-light text-white mb-4">Supervisão de Chats</h2>
-            <p className="text-gray-400 max-w-md text-lg">
-              Selecione um lead na lista à esquerda para visualizar e intervir na conversa em tempo real.
-            </p>
           </div>
+        </div>
+
+        {selectedClient && (
+          <ClientModal
+            client={selectedClient}
+            onClose={() => setSelectedClientId(null)}
+          />
         )}
       </div>
     </div>

@@ -26,14 +26,17 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
   const [newMessage, setNewMessage] = useState('');
   const [notes, setNotes] = useState(client.notes || '');
   const [tagsStr, setTagsStr] = useState((client.tags || []).join(', '));
+  const [localMessages, setLocalMessages] = useState<any[] | null>(null);
   const { addMessage, updateClientNotes, updateClientTags, deleteClient, fetchClientMessages, markMessagesAsRead } = useCRMStore();
   const storeClient = useCRMStore(state => state.clients.find(c => c.id === client.id));
-  const messagesToRender = storeClient?.messages || client.messages || [];
+  const messagesToRender = storeClient?.messages || localMessages || client.messages || [];
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchClientMessages(client.id);
+    fetchClientMessages(client.id).then((msgs: any) => {
+      if (msgs) setLocalMessages(msgs);
+    });
     if (client.hasUnreadMessages || client.has_unread_messages) {
       markMessagesAsRead(client.id);
     }
@@ -64,7 +67,9 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-    addMessage(client.id, { text: newMessage, sender: 'attendant' });
+    const optimisticMsg = { text: newMessage, sender: 'attendant' as 'client' | 'attendant', timestamp: new Date().toISOString(), read: true };
+    addMessage(client.id, optimisticMsg);
+    setLocalMessages(prev => prev ? [...prev, { id: Date.now().toString(), ...optimisticMsg }] : null);
     setNewMessage('');
     if (inputRef.current) {
       inputRef.current.focus();
@@ -94,7 +99,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
               <h2 className="text-2xl font-bold text-white">{client.name}</h2>
               <div className="flex items-center space-x-4 mt-1 text-sm text-gray-400">
                 <span className="flex items-center"><Phone className="w-4 h-4 mr-1" /> {client.phone}</span>
-                <span className="flex items-center"><User className="w-4 h-4 mr-1" /> {client.attendant}</span>
+                <span className="flex items-center"><User className="w-4 h-4 mr-1" /> Vendedor: {client.attendant || 'Nenhum'}</span>
               </div>
             </div>
           </div>

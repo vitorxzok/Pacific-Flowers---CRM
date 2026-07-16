@@ -11,7 +11,7 @@ interface CRMStore {
   fetchClients: () => Promise<void>;
   fetchSettings: () => Promise<void>;
   fetchAdminClients: (password: string) => Promise<boolean>;
-  fetchClientMessages: (clientId: string) => Promise<void>;
+  fetchClientMessages: (clientId: string) => Promise<any[] | undefined>;
   markMessagesAsRead: (clientId: string) => Promise<void>;
   updateClientStatus: (clientId: string, newStatus: ClientStatus) => Promise<void>;
   addClientNote: (clientId: string, note: string) => Promise<void>;
@@ -24,9 +24,7 @@ interface CRMStore {
   updateClientAIEnabled: (clientId: string, enabled: boolean) => Promise<void>;
   toggleNeedsHuman: (clientId: string, needsHuman: boolean) => Promise<void>;
   updateClientReposicaoDate: (clientId: string, date: string | null) => Promise<void>;
-  fetchAdminClients: (password: string) => Promise<boolean>;
   markClientsAsExported: (clientIds: string[]) => Promise<void>;
-  markMessagesAsRead: (clientId: string) => Promise<void>;
 }
 
 const supabase = createClient();
@@ -231,42 +229,50 @@ export const useCRMStore = create<CRMStore>((set, get) => ({
   },
 
   fetchClientMessages: async (clientId: string) => {
-    const { data, error } = await supabase
-      .from('mensagens')
-      .select('*')
-      .eq('client_id', clientId)
-      .order('timestamp', { ascending: true });
+    let formattedMessages: any[] = [];
+    try {
+      const pwd = typeof window !== 'undefined' ? localStorage.getItem('crm_admin_pwd') : null;
+      
+      if (pwd) {
+        const response = await fetch(`/api/admin/messages?clientId=${clientId}&pwd=${pwd}`);
+        if (!response.ok) throw new Error('Falha ao buscar mensagens do admin');
+        const data = await response.json();
+        formattedMessages = data.messages || [];
+      } else {
+        const { data, error } = await supabase
+          .from('mensagens')
+          .select('*')
+          .eq('client_id', clientId)
+          .order('timestamp', { ascending: true });
 
-    if (error) {
-      console.error("Error fetching messages for client:", error);
+        if (error) {
+          console.error("Error fetching messages for client:", error);
+          return;
+        }
+
+        formattedMessages = (data || []).map(m => ({
+          id: m.id,
+          text: m.text,
+          sender: m.sender === 'client' ? 'client' : m.sender,
+          timestamp: m.timestamp || new Date().toISOString(),
+          read: m.read || true
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching messages:", err);
       return;
     }
-
-    const formattedMessages = data.map(m => ({
-      id: m.id,
-      text: m.text,
-      sender: m.sender === 'client' ? 'client' : m.sender,
-      timestamp: m.timestamp || new Date().toISOString(),
-      read: m.read || true
-    }));
 
     set(state => ({
       clients: state.clients.map(c => 
         c.id === clientId ? { ...c, messages: formattedMessages } : c
       )
     }));
+    
+    return formattedMessages;
   },
 
-  markMessagesAsRead: async (clientId: string) => {
-    // Atualiza localmente
-    set((state) => ({
-      clients: state.clients.map(c => 
-        c.id === clientId ? { ...c, hasUnreadMessages: false, has_unread_messages: false } : c
-      )
-    }));
-    // Atualiza no banco
-    await supabase.from('clientes').update({ has_unread_messages: false }).eq('id', clientId);
-  },
+
 
   updateClientStatus: async (clientId, newStatus) => {
     set((state) => ({

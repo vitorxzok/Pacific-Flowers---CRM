@@ -163,8 +163,8 @@ export default function ChatsPage() {
                       {client.phone}
                     </p>
                     {isAdmin && (
-                       <span className="text-[10px] bg-surface-border px-2 py-0.5 rounded text-gray-300 ml-2 truncate max-w-[80px]">
-                         {client.attendant_id ? 'Vendedor' : 'Robô'}
+                       <span className="text-[10px] bg-surface-border px-2 py-0.5 rounded text-gray-300 ml-2 truncate max-w-[120px]">
+                         {client.attendant_id ? `Vendedor: ${attendants.find(a => a.id === client.attendant_id)?.name || 'Desconhecido'}` : 'Robô'}
                        </span>
                     )}
                   </div>
