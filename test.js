@@ -15,7 +15,7 @@ const supabase = createClient(envVars.NEXT_PUBLIC_SUPABASE_URL, envVars.SUPABASE
 async function run() {
   const { data, error } = await supabase
       .from('clientes')
-      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(id, text, sender, timestamp, media_url, read)')
+      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(id, text, sender, timestamp, read)')
       .neq('status', 'SYSTEM')
       .order('timestamp', { foreignTable: 'mensagens', ascending: false })
       .limit(1, { foreignTable: 'mensagens' });

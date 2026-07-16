@@ -19,10 +19,8 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from('clientes')
-      .select('*, profiles(name), cliente_tags(tags(name, color)), mensagens(id, text, sender, timestamp, read)')
-      .neq('status', 'SYSTEM')
-      .order('timestamp', { foreignTable: 'mensagens', ascending: false })
-      .limit(1, { foreignTable: 'mensagens' });
+      .select('*, profiles(name), cliente_tags(tags(name, color))')
+      .neq('status', 'SYSTEM');
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -47,19 +45,14 @@ export async function GET(request: Request) {
       insistencia_count: c.insistencia_count || 0,
       needs_human: c.needs_human,
       is_exported: c.is_exported || false,
-      messages: c.mensagens && c.mensagens.length > 0 ? c.mensagens.map((m: any) => ({
-        id: m.id,
-        text: m.text,
-        sender: m.sender === 'client' ? 'client' : m.sender,
-        timestamp: m.timestamp || new Date().toISOString(),
-        read: m.read !== false,
-      })) : [],
-      history: c.mensagens ? c.mensagens.map((m: any) => ({
-        id: m.id,
-        type: 'message',
-        date: m.timestamp || new Date().toISOString(),
-        description: `Mensagem: ${m.text}`
-      })) : [],
+      messages: c.last_message_at ? [{
+        id: 'dummy',
+        text: 'Última interação',
+        sender: 'client',
+        timestamp: c.last_message_at,
+        read: true,
+      }] : [],
+      history: [],
       created_at: c.created_at,
       updated_at: c.updated_at,
       last_message_at: c.last_message_at,
