@@ -45,11 +45,11 @@ export async function GET(request: Request) {
       insistencia_count: c.insistencia_count || 0,
       needs_human: c.needs_human,
       is_exported: c.is_exported || false,
-      messages: c.last_message_at ? [{
+      messages: c.updated_at ? [{
         id: 'dummy',
         text: 'Última interação',
         sender: 'client',
-        timestamp: c.last_message_at,
+        timestamp: c.updated_at,
         read: true,
       }] : [],
       history: [],
