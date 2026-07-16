@@ -13,7 +13,9 @@ export async function POST(request: Request) {
     let aiReactivated = false;
     const body = await request.json();
     console.log('Webhook WhatsApp recebido:', JSON.stringify(body, null, 2));
-
+    
+    // Log do payload para debugar por que não está capturando
+    await supabase.from('webhook_logs').insert({ payload: body });
 
     // Apenas nos importamos com upsert de mensagens (novas mensagens recebidas)
     if (body.event === 'messages-upsert' || body.event === 'messages.upsert') {
@@ -35,6 +37,9 @@ export async function POST(request: Request) {
       let text = 
         messageObj?.conversation || 
         messageObj?.extendedTextMessage?.text || 
+        messageObj?.templateButtonReplyMessage?.selectedDisplayText ||
+        messageObj?.listResponseMessage?.title ||
+        messageObj?.buttonsResponseMessage?.selectedDisplayText ||
         '';
 
       if (!text) {
