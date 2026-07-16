@@ -324,7 +324,6 @@ export async function POST(request: Request) {
         .from('clientes')
         .update({ 
           updated_at: new Date().toISOString(),
-          last_message_at: new Date().toISOString(),
           has_unread_messages: !isFromMe 
         })
         .eq('id', clientId);
