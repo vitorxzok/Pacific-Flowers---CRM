@@ -7,6 +7,8 @@ import { useCRMStore } from '@/store/useCRMStore';
 import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { clsx } from 'clsx';
+import { toast } from 'sonner';
+import { AudioRecorder } from '@/components/AudioRecorder';
 
 function safeFormatDate(dateStr: string | undefined, formatStr: string, options?: any) {
   if (!dateStr) return '';
@@ -73,6 +75,32 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
     setNewMessage('');
     if (inputRef.current) {
       inputRef.current.focus();
+    }
+  };
+
+  const handleSendAudio = async (audioBlob: Blob) => {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'audio.webm');
+    formData.append('clientId', client.id);
+    formData.append('phone', client.phone);
+
+    try {
+      const response = await fetch('/api/whatsapp/send-audio', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao enviar áudio');
+      }
+
+      const optimisticMsg = { text: '[Áudio enviado]', sender: 'attendant' as 'client' | 'attendant', timestamp: new Date().toISOString(), read: true };
+      setLocalMessages(prev => prev ? [...prev, { id: Date.now().toString(), ...optimisticMsg }] : null);
+      
+      toast.success('Áudio enviado com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -228,7 +256,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                 })}
                 <div ref={messagesEndRef} />
               </div>
-              <div className="p-4 bg-[#202c33] border-t border-white/10 flex items-center space-x-3">
+              <div className="p-4 bg-[#202c33] border-t border-white/10 flex items-center space-x-2">
                 <input
                   ref={inputRef}
                   type="text"
@@ -238,10 +266,13 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
                   placeholder="Mensagem..."
                   className="flex-1 bg-[#2a3942] text-white rounded-lg px-4 py-3 focus:outline-none placeholder-gray-400"
                 />
+                
+                <AudioRecorder onSendAudio={handleSendAudio} />
+
                 <button 
                   onClick={handleSendMessage} 
                   onMouseDown={(e) => e.preventDefault()} 
-                  className="p-3 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] transition-colors"
+                  className="p-3 bg-[#00a884] text-white rounded-full hover:bg-[#008f6f] transition-colors flex items-center justify-center"
                 >
                   <Send className="w-5 h-5 ml-0.5" />
                 </button>

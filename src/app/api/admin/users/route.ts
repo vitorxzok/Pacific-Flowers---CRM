@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     const supabaseServer = await createServerClient();
     const { data: { session } } = await supabaseServer.auth.getSession();
     
-    const { userId, enabled, recovery_enabled, toggle_recovery_instance } = await request.json();
+    const { userId, enabled, recovery_enabled, toggle_recovery_instance, password, name } = await request.json();
     
     if (!userId) {
        return NextResponse.json({ error: 'UserId required' }, { status: 400 });
@@ -82,17 +82,27 @@ export async function POST(request: Request) {
       }
     }
     
-    const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, {
-      user_metadata: {
-        ...currentMeta,
-        crm_settings: {
-          ...currentSettings,
-          ...(enabled !== undefined && { auto_reply_enabled: enabled }),
-          ...(recovery_enabled !== undefined && { recovery_enabled: recovery_enabled }),
-          ...(toggle_recovery_instance && { recovery_instances: newRecoveryInstances })
-        }
+    const updatedMetadata = {
+      ...currentMeta,
+      ...(name && { name: name }),
+      crm_settings: {
+        ...currentSettings,
+        ...(enabled !== undefined && { auto_reply_enabled: enabled }),
+        ...(recovery_enabled !== undefined && { recovery_enabled: recovery_enabled }),
+        ...(toggle_recovery_instance && { recovery_instances: newRecoveryInstances }),
+        ...(name && { businessName: name })
       }
-    });
+    };
+
+    const updatePayload: any = {
+      user_metadata: updatedMetadata
+    };
+
+    if (password && password.trim() !== '') {
+      updatePayload.password = password;
+    }
+
+    const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, updatePayload);
 
     if (updateError) throw updateError;
     

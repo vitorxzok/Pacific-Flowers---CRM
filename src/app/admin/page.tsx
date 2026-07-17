@@ -65,6 +65,35 @@ export default function AdminPage() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [selectedAdminUserId, setSelectedAdminUserId] = useState<string | null>(null);
   const [selectedAdminUserName, setSelectedAdminUserName] = useState<string>('');
+  
+  const [editUserNames, setEditUserNames] = useState<Record<string, string>>({});
+  const [editUserPasswords, setEditUserPasswords] = useState<Record<string, string>>({});
+  const [isUpdatingUser, setIsUpdatingUser] = useState<Record<string, boolean>>({});
+
+  const handleUpdateUser = async (userId: string) => {
+    const name = editUserNames[userId];
+    const password = editUserPasswords[userId];
+    if (!name && !password) return;
+
+    setIsUpdatingUser(prev => ({ ...prev, [userId]: true }));
+    const toastId = toast.loading('Atualizando operador...');
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, name, password })
+      });
+      if (!res.ok) throw new Error('Falha ao atualizar operador');
+      toast.success('Operador atualizado com sucesso!', { id: toastId });
+      setEditUserPasswords(prev => ({ ...prev, [userId]: '' })); // Clear password field after success
+      fetchAdminUsers(); // Refresh to show new name if applicable
+    } catch (err) {
+      toast.error('Erro ao atualizar operador', { id: toastId });
+    } finally {
+      setIsUpdatingUser(prev => ({ ...prev, [userId]: false }));
+    }
+  };
 
   const fetchAdminUsers = async () => {
     setIsLoadingUsers(true);
@@ -971,7 +1000,29 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                   {adminUsers.map(user => (
                     <div key={user.id} className="flex flex-col sm:flex-row sm:items-start justify-between p-4 bg-background/50 border border-surface-border rounded-lg gap-4">
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-white">{user.name}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <input
+                            type="text"
+                            placeholder="Nome do Operador"
+                            className="bg-surface/50 border border-surface-border rounded-md px-2 py-1 text-sm text-white w-48 focus:outline-none focus:border-primary/50"
+                            value={editUserNames[user.id] !== undefined ? editUserNames[user.id] : user.name}
+                            onChange={(e) => setEditUserNames(prev => ({ ...prev, [user.id]: e.target.value }))}
+                          />
+                          <input
+                            type="password"
+                            placeholder="Nova Senha"
+                            className="bg-surface/50 border border-surface-border rounded-md px-2 py-1 text-sm text-white w-32 focus:outline-none focus:border-primary/50"
+                            value={editUserPasswords[user.id] || ''}
+                            onChange={(e) => setEditUserPasswords(prev => ({ ...prev, [user.id]: e.target.value }))}
+                          />
+                          <button
+                            onClick={() => handleUpdateUser(user.id)}
+                            disabled={isUpdatingUser[user.id] || (!editUserNames[user.id] && !editUserPasswords[user.id])}
+                            className="px-2 py-1 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded-md text-xs font-medium transition-colors disabled:opacity-50"
+                          >
+                            {isUpdatingUser[user.id] ? 'Salvando...' : 'Salvar'}
+                          </button>
+                        </div>
                         <p className="text-xs text-gray-400 mb-2">{user.email}</p>
                         {user.instances && user.instances.length > 0 ? (
                           <div className="flex flex-col gap-2 mt-2">
