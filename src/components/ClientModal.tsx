@@ -76,15 +76,20 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
 
   const handleSendAudio = async (audioBlob: Blob) => {
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'audio.webm');
+    formData.append('audio', audioBlob, 'audio.mp4');
     formData.append('clientId', client.id);
     formData.append('phone', client.phone);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
 
     try {
       const response = await fetch('/api/whatsapp/send-audio', {
         method: 'POST',
         body: formData,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorData = await response.json();

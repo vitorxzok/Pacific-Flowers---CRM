@@ -47,7 +47,7 @@ export function AudioRecorder({ onSendAudio }: AudioRecorderProps) {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp4' });
         setAudioBlob(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };

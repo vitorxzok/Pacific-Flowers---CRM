@@ -252,6 +252,27 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          <div className="bg-surface-hover/30 border border-surface-border rounded-lg p-5 mt-4">
+            <h3 className="text-md font-semibold text-white mb-3 flex items-center gap-2">
+              <SettingsIcon className="w-4 h-4 text-primary" /> Regras de Cadência (Automáticas)
+            </h3>
+            <p className="text-sm text-gray-400 mb-4">
+              A IA tentará contato até 10 vezes com leads não convertidos, enviando abordagens variadas (não repetitivas) nestes intervalos:
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+              <div className="bg-surface/50 p-2 rounded border border-surface-border"><span className="text-primary font-bold">1ª</span> 15 minutos</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border"><span className="text-primary font-bold">2ª</span> 1 hora</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border" title="Pergunta sobre Kit Curva A"><span className="text-primary font-bold">3ª</span> 4 horas ✨</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border" title="Apresenta Formas de Pagamento"><span className="text-primary font-bold">4ª</span> 24 horas 💳</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border" title="Explica Política Comercial"><span className="text-primary font-bold">5ª</span> 2 dias 📦</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border"><span className="text-primary font-bold">6ª</span> 3 dias</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border"><span className="text-primary font-bold">7ª</span> 5 dias</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border"><span className="text-primary font-bold">8ª</span> 7 dias</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border"><span className="text-primary font-bold">9ª</span> 10 dias</div>
+              <div className="bg-surface/50 p-2 rounded border border-surface-border"><span className="text-primary font-bold">10ª</span> 15 dias</div>
+            </div>
+          </div>
+
           <div className="flex justify-end pt-4 border-t border-surface-border">
             <button 
               onClick={handleSaveSettings}

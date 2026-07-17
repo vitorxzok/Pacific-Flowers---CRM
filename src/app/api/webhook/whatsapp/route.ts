@@ -190,6 +190,22 @@ export async function POST(request: Request) {
             isAiEcho = true;
             console.log(`[Webhook] Eco de mensagem da IA detectado. Ignorando duplicação.`);
             return NextResponse.json({ success: true, message: 'Echo da IA ignorado.' });
+          } else if (text.startsWith('[ARQUIVO RECEBIDO:') || text.startsWith('[Mídia]') || text === '[Mídia]') {
+            // Fallback para eco de mídia: Evolution API retorna textos padronizados que podem não bater exatamente
+            const { data: recentMedia } = await supabase
+              .from('mensagens')
+              .select('id')
+              .eq('client_id', clientId)
+              .eq('sender', 'attendant')
+              .not('media_url', 'is', null)
+              .gte('timestamp', recentWindow)
+              .limit(1);
+            
+            if (recentMedia && recentMedia.length > 0) {
+              isAiEcho = true;
+              console.log(`[Webhook] Eco de anexo da IA detectado. Ignorando duplicação.`);
+              return NextResponse.json({ success: true, message: 'Echo de anexo da IA ignorado.' });
+            }
           }
         }
 
@@ -322,17 +338,26 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 });
       }
 
+      // 3. FETCH CLIENT DATA FIRST to determine AI state
+      const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled, attendant_id, needs_human').eq('id', clientId).single();
+
       // Atualizar o updated_at do cliente para que a ordenação funcione corretamente
+      const updatePayload: any = { updated_at: new Date().toISOString() };
+      if (!isFromMe) {
+        updatePayload.has_unread_messages = true;
+      } else {
+        // Se a mensagem foi enviada por nós (AI ou Humano)
+        // Só marcamos como lida se a IA NÃO estiver ativa ou se já precisar de humano.
+        // Se a IA estiver ativa, significa que ela respondeu, então a mensagem deve continuar piscando para o humano ler.
+        if (!clientData?.ai_enabled || clientData?.needs_human) {
+          updatePayload.has_unread_messages = false;
+        }
+      }
+
       await supabase
         .from('clientes')
-        .update({ 
-          updated_at: new Date().toISOString(),
-          has_unread_messages: !isFromMe 
-        })
+        .update(updatePayload)
         .eq('id', clientId);
-
-      // 3. LÓGICA DE INTELIGÊNCIA ARTIFICIAL (AUTO-REPLY E ANÁLISE SILENCIOSA)
-      const { data: clientData } = await supabase.from('clientes').select('status, ai_enabled, attendant_id, needs_human').eq('id', clientId).single();
       
       let autoReplyEnabled = false;
       let crmSettings: any = null;
