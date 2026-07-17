@@ -86,8 +86,12 @@ export default function AdminPage() {
       });
       if (!res.ok) throw new Error('Falha ao atualizar operador');
       toast.success('Operador atualizado com sucesso!', { id: toastId });
-      setEditUserPasswords(prev => ({ ...prev, [userId]: '' })); // Clear password field after success
-      fetchAdminUsers(); // Refresh to show new name if applicable
+      setEditUserPasswords(prev => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      }); // Remove local override after success
+      fetchAdminUsers(); // Refresh to show new name and password if applicable
     } catch (err) {
       toast.error('Erro ao atualizar operador', { id: toastId });
     } finally {
@@ -1009,10 +1013,10 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                             onChange={(e) => setEditUserNames(prev => ({ ...prev, [user.id]: e.target.value }))}
                           />
                           <input
-                            type="password"
+                            type="text"
                             placeholder="Nova Senha"
                             className="bg-surface/50 border border-surface-border rounded-md px-2 py-1 text-sm text-white w-32 focus:outline-none focus:border-primary/50"
-                            value={editUserPasswords[user.id] || ''}
+                            value={editUserPasswords[user.id] !== undefined ? editUserPasswords[user.id] : (user.visible_password || '')}
                             onChange={(e) => setEditUserPasswords(prev => ({ ...prev, [user.id]: e.target.value }))}
                           />
                           <button

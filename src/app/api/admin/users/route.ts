@@ -35,6 +35,7 @@ export async function GET(request: Request) {
         auto_reply_enabled: crmSettings.auto_reply_enabled || false,
         recovery_enabled: crmSettings.recovery_enabled || false,
         recovery_instances: crmSettings.recovery_instances || [],
+        visible_password: u.user_metadata?.visible_password || '',
         instances: userInstances.map(i => ({
           name: i.instance_name,
           phone: i.phone_number,
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
     const updatedMetadata = {
       ...currentMeta,
       ...(name && { name: name }),
+      ...(password && password.trim() !== '' && { visible_password: password }),
       crm_settings: {
         ...currentSettings,
         ...(enabled !== undefined && { auto_reply_enabled: enabled }),
