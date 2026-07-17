@@ -140,7 +140,7 @@ export function AudioRecorder({ onSendAudio }: AudioRecorderProps) {
   return (
     <button
       onClick={startRecording}
-      className="p-3 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors flex items-center justify-center"
+      className="p-3 bg-[#2a3942] text-white hover:bg-[#3b4a54] rounded-full transition-colors flex items-center justify-center shadow-sm border border-white/5 mx-1"
       title="Gravar Mensagem de Voz"
     >
       <Mic className="w-5 h-5" />

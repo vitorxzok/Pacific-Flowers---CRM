@@ -89,6 +89,7 @@ export async function POST(request: Request) {
     await supabase.from('clientes').update({ 
       ai_enabled: false, 
       needs_human: false,
+      has_unread_messages: false,
       status: targetStatus,
       updated_at: new Date().toISOString()
     }).eq('id', clientId);

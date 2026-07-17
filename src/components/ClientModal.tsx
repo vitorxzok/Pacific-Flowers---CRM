@@ -39,9 +39,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
     fetchClientMessages(client.id).then((msgs: any) => {
       if (msgs) setLocalMessages(msgs);
     });
-    if (client.hasUnreadMessages || client.has_unread_messages) {
-      markMessagesAsRead(client.id);
-    }
+    // markMessagesAsRead foi removido daqui para que continue piscando até responder.
   }, [client.id, fetchClientMessages, markMessagesAsRead, client.hasUnreadMessages, client.has_unread_messages]);
 
   const scrollToBottom = () => {
@@ -53,9 +51,7 @@ export function ClientModal({ client, onClose }: ClientModalProps) {
       scrollToBottom();
       setTimeout(() => inputRef.current?.focus(), 100);
       
-      if (client.hasUnreadMessages) {
-        useCRMStore.getState().markMessagesAsRead(client.id);
-      }
+      // markMessagesAsRead foi removido daqui para manter a sinalização de nova mensagem.
     }
   }, [client.messages, activeTab, client.hasUnreadMessages, client.id]);
 

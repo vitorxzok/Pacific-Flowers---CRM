@@ -54,7 +54,7 @@ export function KanbanCard({ client, onClick }: KanbanCardProps) {
   
   let cardBorderClass = "";
   if (client.hasUnreadMessages) {
-    cardBorderClass = "border border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)] animate-pulse";
+    cardBorderClass = "border-2 border-red-500 animate-fast-pulse";
   } else if (client.needs_human) {
     cardBorderClass = "border border-green-500 shadow-[0_0_12px_rgba(34,197,94,0.4)] animate-pulse";
   } else if (isAIActive) {

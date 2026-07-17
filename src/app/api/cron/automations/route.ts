@@ -360,12 +360,13 @@ export async function GET(request: Request) {
                 
                 const cadences = clientSettings.insistencia_cadences || [];
                 const useGlobalStrategy = clientSettings.use_global_insistence_strategy || false;
+                const defaultCadenceMinutes = [15, 60, 240, 1440, 2880, 4320, 7200, 10080, 14400, 21600]; // 10 cadências aprovadas
+                const maxRepetitions = 10;
                 
                 if (cadences.length > 0 && !useGlobalStrategy) {
                   // Custom cadences logic
                   if (currentInsistenciaCount < cadences.length) {
                     const currentCadence = cadences[currentInsistenciaCount];
-                    // waitHours is now treated as MINUTES according to new requirements
                     if (diffMinutes >= (currentCadence.waitHours || 60)) {
                       shouldInsist = true;
                       if (currentCadence.text && currentCadence.text.trim()) {
@@ -373,41 +374,26 @@ export async function GET(request: Request) {
                       }
                     }
                   } else {
-                    // Exhausted custom cadences, fallback to days
-                    if (diffDays >= daysInterval) {
-                      shouldInsist = true;
-                    }
+                    if (diffDays >= daysInterval) shouldInsist = true;
                   }
                 } else {
-                  // Original global logic (now with fallback to cadences)
+                  // Nova Lógica de 10 Cadências com temas (Kit Curva, Pagamento, Política Comercial)
                   if (currentInsistenciaCount < maxRepetitions) {
-                    if (diffMinutes >= followUpIntervalHours) {
-                      shouldInsist = true;
-                    }
-                  } else {
-                    // Após atingir o limite global, entra nas cadências personalizadas (se existirem)
-                    if (cadences.length > 0) {
-                      const cadenceIndex = currentInsistenciaCount - maxRepetitions;
-                      if (cadenceIndex < cadences.length) {
-                        const currentCadence = cadences[cadenceIndex];
-                        if (diffMinutes >= (currentCadence.waitHours || 60)) {
-                          shouldInsist = true;
-                          if (currentCadence.text && currentCadence.text.trim()) {
-                            aiContextOverride = `INSISTENCIA_CUSTOM|${currentCadence.text.trim()}`;
-                          }
-                        }
-                      } else {
-                        // Se esgotar as cadências personalizadas também, cai nos dias
-                        if (diffDays >= daysInterval) {
-                          shouldInsist = true;
-                        }
-                      }
-                    } else {
-                      // Após atingir o limite em minutos e sem cadências, passa a insistir por dias
-                      if (diffDays >= daysInterval) {
+                     const requiredWaitMinutes = defaultCadenceMinutes[currentInsistenciaCount] || 240;
+                     if (diffMinutes >= requiredWaitMinutes) {
                         shouldInsist = true;
-                      }
-                    }
+                        
+                        // Define o contexto especial a partir da 3ª cadência (index 2)
+                        if (currentInsistenciaCount === 2) {
+                           aiContextOverride = 'INSISTENCIA_CUSTOM|Pergunte de forma amigável se o cliente gostaria de conhecer nosso Kit Curva A (nossos produtos que mais vendem no mercado).';
+                        } else if (currentInsistenciaCount === 3) {
+                           aiContextOverride = 'INSISTENCIA_CUSTOM|Mencione rapidamente nossas facilidades e pergunte se ele quer saber as nossas formas de pagamento.';
+                        } else if (currentInsistenciaCount === 4) {
+                           aiContextOverride = 'INSISTENCIA_CUSTOM|Comente brevemente sobre nossa política comercial e pergunte se ele tem dúvidas sobre pedido mínimo ou frete.';
+                        } else if (currentInsistenciaCount > 4) {
+                           aiContextOverride = 'INSISTENCIA_CUSTOM|Aja como um consultor querendo entender o momento do lojista. Pergunte se algo o impediu de fechar pedido ou se ele prefere que entre em contato na próxima semana.';
+                        }
+                     }
                   }
                 }
 
