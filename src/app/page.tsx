@@ -78,47 +78,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* Quick Settings Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mt-2 pt-4 border-t border-surface-border/50">
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-300">Operador (IA):</label>
-            <input 
-              type="text" 
-              placeholder="Ex: Carlos"
-              value={localName}
-              onChange={(e) => setLocalName(e.target.value)}
-              onBlur={() => {
-                if (localName !== settings.businessName) {
-                  setSettings({ businessName: localName });
-                  toast.success('Nome do operador salvo automaticamente!');
-                }
-              }}
-              className="w-40 bg-surface border border-surface-border rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-300">Atendimento Automático:</label>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
-                checked={settings.autoReplyEnabled}
-                onChange={(e) => {
-                  setSettings({ autoReplyEnabled: e.target.checked });
-                  toast.success(e.target.checked ? 'Automação Ativada!' : 'Automação Desativada!');
-                }}
-              />
-              <div className="w-11 h-6 bg-surface-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
-            {settings.autoReplyEnabled && (
-              <span className="text-xs font-medium text-primary flex items-center gap-1">
-                <Bot className="w-4 h-4" /> Ativa
-              </span>
-            )}
-          </div>
-        </div>
       </header>
 
       {/* Kanban Board */}
