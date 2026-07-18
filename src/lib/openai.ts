@@ -161,8 +161,10 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     // Se não houver mensagens (estranho, pois o webhook acabou de inserir), não faz nada
     if (!recentMessages || recentMessages.length === 0) return null;
 
-    // Inverter para ficar na ordem cronológica correta (mais antigas primeiro)
-    const messages = recentMessages.reverse();
+    // Inverter para ficar na ordem cronológica correta e filtrar a mensagem de lock
+    const messages = recentMessages
+      .filter((m: any) => m.text !== '[AI_PROCESSING_LOCK]')
+      .reverse();
 
     // Pegar a última mensagem do assistente para forçar a não repetição
     const lastAssistantMessage = messages.slice().reverse().find((m: any) => m.sender === 'attendant')?.text || '';

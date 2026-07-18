@@ -443,9 +443,50 @@ export async function POST(request: Request) {
           }
         }
 
+        // --- LOCK MECHANISM TO PREVENT CONCURRENT AI CALLS ---
+        let isLocked = true;
+        let lockAttempts = 0;
+        while (isLocked && lockAttempts < 5) {
+          const lockWindow = new Date(Date.now() - 30000).toISOString();
+          const { data: processingLocks } = await supabase
+            .from('mensagens')
+            .select('id')
+            .eq('client_id', clientId)
+            .eq('text', '[AI_PROCESSING_LOCK]')
+            .eq('sender', 'system')
+            .gte('timestamp', lockWindow);
+
+          if (processingLocks && processingLocks.length > 0) {
+            console.log(`[Webhook] Outra thread processando cliente ${clientId}. Aguardando 2s (tentativa ${lockAttempts + 1})...`);
+            await new Promise(r => setTimeout(r, 2000));
+            lockAttempts++;
+          } else {
+            isLocked = false;
+          }
+        }
+
+        if (isLocked) {
+           console.log(`[Webhook] Lock persistente para o cliente ${clientId}. Abortando.`);
+           return NextResponse.json({ success: true, message: 'Processo da IA abortado devido a lock persistente.' });
+        }
+
+        // Adquire o lock
+        const { data: insertedLock } = await supabase.from('mensagens').insert({
+          client_id: clientId,
+          text: '[AI_PROCESSING_LOCK]',
+          sender: 'system',
+          read: true
+        }).select('id').single();
+
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
         const aiResponse = await generateAIResponse(clientId, supabase, undefined, crmSettings);
+        
+        // Libera o lock
+        if (insertedLock) {
+          await supabase.from('mensagens').delete().eq('id', insertedLock.id);
+        }
+
         const aiReply = aiResponse?.text;
         const mediaToSend = aiResponse?.mediaToSend || [];
         const audioTranscript = (aiResponse as any)?.audioTranscript || '';
