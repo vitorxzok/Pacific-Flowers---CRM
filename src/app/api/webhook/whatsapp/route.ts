@@ -313,8 +313,7 @@ export async function POST(request: Request) {
           client_id: clientId,
           text: text,
           sender: isFromMe ? 'attendant' : 'client',
-          read: isFromMe,
-          media_url: key?.id ? `webhook_id:${key.id}` : null
+          read: isFromMe
         })
         .select('id, timestamp')
         .single();
@@ -324,22 +323,41 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 });
       }
 
-      // 2.5 Race-condition safe deduplication check using Message ID
+      // 2.5 Race-condition safe deduplication check using Message ID in webhook_logs
       if (!isFromMe && insertedMsg && key?.id) {
         await new Promise(r => setTimeout(r, 400));
         
-        const dedupeWindow = new Date(Date.now() - 120000).toISOString(); // Look back 2 minutos for retries
+        // 1. Race condition tie-breaker (mesmo milissegundo)
+        const raceWindow = new Date(Date.now() - 5000).toISOString();
         const { data: duplicateMsgs } = await supabase
           .from('mensagens')
           .select('id')
           .eq('client_id', clientId)
-          .eq('media_url', `webhook_id:${key.id}`)
-          .gte('timestamp', dedupeWindow)
+          .eq('text', text)
+          .eq('sender', 'client')
+          .gte('timestamp', raceWindow)
           .order('timestamp', { ascending: true })
           .order('id', { ascending: true });
 
         if (duplicateMsgs && duplicateMsgs.length > 0 && duplicateMsgs[0].id !== insertedMsg.id) {
-          console.log(`[Webhook] Duplicação de webhook detectada (Message ID: ${key.id}) para o cliente ${clientId}. Removendo duplicata e abortando.`);
+          console.log(`[Webhook] Duplicação detectada (Race Condition) para o cliente ${clientId}. Removendo duplicata.`);
+          await supabase.from('mensagens').delete().eq('id', insertedMsg.id);
+          return NextResponse.json({ success: true, message: 'Webhook duplicado abortado.' });
+        }
+
+        // 2. Evolution API Retry check (mesagem reenviada após segundos/minutos por timeout)
+        const dedupeWindow = new Date(Date.now() - 120000).toISOString(); // 2 minutos
+        const { data: duplicateLogs } = await supabase
+          .from('webhook_logs')
+          .select('id, created_at')
+          .gte('created_at', dedupeWindow)
+          .contains('payload', { data: { key: { id: key.id } } });
+
+        const twoSecondsAgo = new Date(Date.now() - 2000).getTime();
+        const isRetry = duplicateLogs?.some(log => new Date(log.created_at).getTime() < twoSecondsAgo);
+
+        if (isRetry) {
+          console.log(`[Webhook] Duplicação detectada (Retry do Message ID: ${key.id}). Removendo mensagem e abortando.`);
           await supabase.from('mensagens').delete().eq('id', insertedMsg.id);
           return NextResponse.json({ success: true, message: 'Webhook duplicado abortado.' });
         }
