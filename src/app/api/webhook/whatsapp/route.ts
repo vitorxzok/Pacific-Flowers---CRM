@@ -14,8 +14,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('Webhook WhatsApp recebido:', JSON.stringify(body, null, 2));
     
-    // Log do payload para debugar por que não está capturando
-    await supabase.from('webhook_logs').insert({ payload: body });
+    // Log do payload para debugar e para deduplicação global
+    const { data: logEntry } = await supabase.from('webhook_logs').insert({ payload: body }).select('id').single();
+    const myLogId = logEntry?.id;
 
     // Apenas nos importamos com upsert de mensagens (novas mensagens recebidas)
     if (body.event === 'messages-upsert' || body.event === 'messages.upsert') {
@@ -323,41 +324,28 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 });
       }
 
-      // 2.5 Race-condition safe deduplication check using Message ID in webhook_logs
-      if (!isFromMe && insertedMsg && key?.id) {
+      // 2.5 Ultimate Global Deduplication Check (Race-condition safe, cross-instance, cross-retry)
+      if (!isFromMe && insertedMsg && key?.id && myLogId) {
+        // Esperamos um pouco para garantir que webhooks concorrentes tenham tempo de inserir seus logs
         await new Promise(r => setTimeout(r, 400));
         
-        // 1. Race condition tie-breaker (mesmo milissegundo)
-        const raceWindow = new Date(Date.now() - 5000).toISOString();
-        const { data: duplicateMsgs } = await supabase
-          .from('mensagens')
-          .select('id')
-          .eq('client_id', clientId)
-          .eq('text', text)
-          .eq('sender', 'client')
-          .gte('timestamp', raceWindow)
-          .order('timestamp', { ascending: true })
-          .order('id', { ascending: true });
-
-        if (duplicateMsgs && duplicateMsgs.length > 0 && duplicateMsgs[0].id !== insertedMsg.id) {
-          console.log(`[Webhook] Duplicação detectada (Race Condition) para o cliente ${clientId}. Removendo duplicata.`);
-          await supabase.from('mensagens').delete().eq('id', insertedMsg.id);
-          return NextResponse.json({ success: true, message: 'Webhook duplicado abortado.' });
-        }
-
-        // 2. Evolution API Retry check (mesagem reenviada após segundos/minutos por timeout)
         const dedupeWindow = new Date(Date.now() - 120000).toISOString(); // 2 minutos
+        
         const { data: duplicateLogs } = await supabase
           .from('webhook_logs')
           .select('id, created_at')
           .gte('created_at', dedupeWindow)
-          .contains('payload', { data: { key: { id: key.id } } });
+          .contains('payload', { data: { key: { id: key.id } } })
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true });
 
-        const twoSecondsAgo = new Date(Date.now() - 2000).getTime();
-        const isRetry = duplicateLogs?.some(log => new Date(log.created_at).getTime() < twoSecondsAgo);
-
-        if (isRetry) {
-          console.log(`[Webhook] Duplicação detectada (Retry do Message ID: ${key.id}). Removendo mensagem e abortando.`);
+        // Se houver mais de um log para esta mensagem, apenas o PRIMEIRO de todos tem permissão para continuar.
+        // Isso resolve:
+        // 1. Retries da Evolution API (o log original será o primeiro)
+        // 2. Instâncias duplicadas (ambas chegam juntas, mas concordam em qual é a primeira pelo created_at/id)
+        // 3. Race conditions no exato mesmo milissegundo (o order('id') desempata)
+        if (duplicateLogs && duplicateLogs.length > 0 && duplicateLogs[0].id !== myLogId) {
+          console.log(`[Webhook] Duplicação global detectada (Message ID: ${key.id}). Abortando.`);
           await supabase.from('mensagens').delete().eq('id', insertedMsg.id);
           return NextResponse.json({ success: true, message: 'Webhook duplicado abortado.' });
         }
