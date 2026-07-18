@@ -176,22 +176,33 @@ export async function POST(request: Request) {
         // Se for de atendente (isFromMe), verifica se é eco da IA ou se é o vendedor humano
         let isAiEcho = false;
         if (isFromMe) {
-          // Tenta achar uma mensagem idêntica enviada há menos de 60 segundos
+          // Tenta achar uma mensagem enviada pela IA há menos de 60 segundos
           const recentWindow = new Date(Date.now() - 60000).toISOString();
-          const { data: recentAiMsg } = await supabase
+          const { data: recentAiMsgs } = await supabase
             .from('mensagens')
-            .select('id')
+            .select('id, text')
             .eq('client_id', clientId)
-            .eq('text', text)
             .eq('sender', 'attendant')
-            .gte('timestamp', recentWindow)
-            .limit(1);
+            .gte('timestamp', recentWindow);
 
-          if (recentAiMsg && recentAiMsg.length > 0) {
-            isAiEcho = true;
-            console.log(`[Webhook] Eco de mensagem da IA detectado. Ignorando duplicação.`);
-            return NextResponse.json({ success: true, message: 'Echo da IA ignorado.' });
-          } else if (text.startsWith('[ARQUIVO RECEBIDO:') || text.startsWith('[Mídia]') || text === '[Mídia]') {
+          if (recentAiMsgs && recentAiMsgs.length > 0) {
+            // Função para limpar a string (remove espaços e pontuações) para comparação robusta
+            const cleanStr = (s: string) => (s || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            const cleanText = cleanStr(text);
+            
+            const isEcho = recentAiMsgs.some(msg => {
+              const cleanMsgText = cleanStr(msg.text);
+              return cleanMsgText.includes(cleanText) || cleanText.includes(cleanMsgText);
+            });
+
+            if (isEcho) {
+              isAiEcho = true;
+              console.log(`[Webhook] Eco de mensagem da IA detectado (mesmo com SEPARAR). Ignorando duplicação.`);
+              return NextResponse.json({ success: true, message: 'Echo da IA ignorado.' });
+            }
+          }
+          
+          if (!isAiEcho && (text.startsWith('[ARQUIVO RECEBIDO:') || text.startsWith('[Mídia]') || text === '[Mídia]')) {
             // Fallback para eco de mídia: Evolution API retorna textos padronizados que podem não bater exatamente
             const { data: recentMedia } = await supabase
               .from('mensagens')
