@@ -443,25 +443,72 @@ export async function POST(request: Request) {
           }
         }
 
-        // --- LOCK MECHANISM TO PREVENT CONCURRENT AI CALLS ---
+        // --- LOCK MECHANISM TO PREVENT CONCURRENT AI CALLS (RACE-CONDITION SAFE) ---
         let isLocked = true;
         let lockAttempts = 0;
+        let myLockId: string | null = null;
+        
         while (isLocked && lockAttempts < 5) {
           const lockWindow = new Date(Date.now() - 30000).toISOString();
-          const { data: processingLocks } = await supabase
+          
+          // Verifica se já existe um lock
+          const { data: existingLocks } = await supabase
             .from('mensagens')
-            .select('id')
+            .select('id, text')
             .eq('client_id', clientId)
-            .eq('text', '[AI_PROCESSING_LOCK]')
+            .like('text', '[AI_PROCESSING_LOCK%')
             .eq('sender', 'system')
-            .gte('timestamp', lockWindow);
+            .gte('timestamp', lockWindow)
+            .order('timestamp', { ascending: true })
+            .order('id', { ascending: true });
 
-          if (processingLocks && processingLocks.length > 0) {
+          if (existingLocks && existingLocks.length > 0) {
             console.log(`[Webhook] Outra thread processando cliente ${clientId}. Aguardando 2s (tentativa ${lockAttempts + 1})...`);
             await new Promise(r => setTimeout(r, 2000));
             lockAttempts++;
+            continue;
+          }
+
+          // Tenta adquirir o lock
+          const myToken = Math.random().toString(36).substring(7);
+          const myLockText = `[AI_PROCESSING_LOCK_${myToken}]`;
+          
+          const { data: insertedLock } = await supabase.from('mensagens').insert({
+            client_id: clientId,
+            text: myLockText,
+            sender: 'system',
+            read: true
+          }).select('id').single();
+
+          if (insertedLock) {
+             // Aguarda um curto período para permitir que condições de corrida se manifestem no banco
+             await new Promise(r => setTimeout(r, 400));
+             
+             // Verifica de novo todos os locks ativos
+             const { data: verifyLocks } = await supabase
+              .from('mensagens')
+              .select('id, text')
+              .eq('client_id', clientId)
+              .like('text', '[AI_PROCESSING_LOCK%')
+              .eq('sender', 'system')
+              .gte('timestamp', lockWindow)
+              .order('timestamp', { ascending: true })
+              .order('id', { ascending: true });
+              
+             if (verifyLocks && verifyLocks.length > 0 && verifyLocks[0].text === myLockText) {
+                // Nós somos o primeiro! Pegamos o lock.
+                myLockId = insertedLock.id;
+                isLocked = false;
+             } else {
+                // Outra thread inseriu antes ou no mesmo milissegundo.
+                await supabase.from('mensagens').delete().eq('id', insertedLock.id);
+                console.log(`[Webhook] Condição de corrida evitada para cliente ${clientId}. Aguardando 2s...`);
+                await new Promise(r => setTimeout(r, 2000));
+                lockAttempts++;
+             }
           } else {
-            isLocked = false;
+             await new Promise(r => setTimeout(r, 2000));
+             lockAttempts++;
           }
         }
 
@@ -470,21 +517,13 @@ export async function POST(request: Request) {
            return NextResponse.json({ success: true, message: 'Processo da IA abortado devido a lock persistente.' });
         }
 
-        // Adquire o lock
-        const { data: insertedLock } = await supabase.from('mensagens').insert({
-          client_id: clientId,
-          text: '[AI_PROCESSING_LOCK]',
-          sender: 'system',
-          read: true
-        }).select('id').single();
-
         // --- FLUXO 1: RESPOSTA AUTOMÁTICA DA IA ---
         console.log(`[AI] Gerando resposta para o cliente ${clientId}...`);
         const aiResponse = await generateAIResponse(clientId, supabase, undefined, crmSettings);
         
         // Libera o lock
-        if (insertedLock) {
-          await supabase.from('mensagens').delete().eq('id', insertedLock.id);
+        if (myLockId) {
+          await supabase.from('mensagens').delete().eq('id', myLockId);
         }
 
         const aiReply = aiResponse?.text;

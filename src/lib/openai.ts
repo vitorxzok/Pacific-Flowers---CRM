@@ -163,7 +163,7 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
 
     // Inverter para ficar na ordem cronológica correta e filtrar a mensagem de lock
     const messages = recentMessages
-      .filter((m: any) => m.text !== '[AI_PROCESSING_LOCK]')
+      .filter((m: any) => !m.text.startsWith('[AI_PROCESSING_LOCK'))
       .reverse();
 
     // Pegar a última mensagem do assistente para forçar a não repetição
