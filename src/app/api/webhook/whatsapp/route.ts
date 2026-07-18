@@ -457,7 +457,7 @@ export async function POST(request: Request) {
             .select('id, text')
             .eq('client_id', clientId)
             .like('text', '[AI_PROCESSING_LOCK%')
-            .eq('sender', 'system')
+            .eq('sender', 'attendant')
             .gte('timestamp', lockWindow)
             .order('timestamp', { ascending: true })
             .order('id', { ascending: true });
@@ -476,7 +476,7 @@ export async function POST(request: Request) {
           const { data: insertedLock } = await supabase.from('mensagens').insert({
             client_id: clientId,
             text: myLockText,
-            sender: 'system',
+            sender: 'attendant',
             read: true
           }).select('id').single();
 
@@ -490,7 +490,7 @@ export async function POST(request: Request) {
               .select('id, text')
               .eq('client_id', clientId)
               .like('text', '[AI_PROCESSING_LOCK%')
-              .eq('sender', 'system')
+              .eq('sender', 'attendant')
               .gte('timestamp', lockWindow)
               .order('timestamp', { ascending: true })
               .order('id', { ascending: true });
