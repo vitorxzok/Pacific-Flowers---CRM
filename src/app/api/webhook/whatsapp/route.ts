@@ -313,7 +313,8 @@ export async function POST(request: Request) {
           client_id: clientId,
           text: text,
           sender: isFromMe ? 'attendant' : 'client',
-          read: isFromMe
+          read: isFromMe,
+          media_url: key?.id ? `webhook_id:${key.id}` : null
         })
         .select('id, timestamp')
         .single();
@@ -323,23 +324,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 });
       }
 
-      // 2.5 Race-condition safe deduplication check
-      if (!isFromMe && insertedMsg) {
+      // 2.5 Race-condition safe deduplication check using Message ID
+      if (!isFromMe && insertedMsg && key?.id) {
         await new Promise(r => setTimeout(r, 400));
         
-        const dedupeWindow = new Date(Date.now() - 5000).toISOString();
+        const dedupeWindow = new Date(Date.now() - 120000).toISOString(); // Look back 2 minutos for retries
         const { data: duplicateMsgs } = await supabase
           .from('mensagens')
           .select('id')
           .eq('client_id', clientId)
-          .eq('text', text)
-          .eq('sender', 'client')
+          .eq('media_url', `webhook_id:${key.id}`)
           .gte('timestamp', dedupeWindow)
           .order('timestamp', { ascending: true })
           .order('id', { ascending: true });
 
         if (duplicateMsgs && duplicateMsgs.length > 0 && duplicateMsgs[0].id !== insertedMsg.id) {
-          console.log(`[Webhook] Duplicação de webhook detectada (Race Condition) para o cliente ${clientId}. Removendo duplicata e abortando.`);
+          console.log(`[Webhook] Duplicação de webhook detectada (Message ID: ${key.id}) para o cliente ${clientId}. Removendo duplicata e abortando.`);
           await supabase.from('mensagens').delete().eq('id', insertedMsg.id);
           return NextResponse.json({ success: true, message: 'Webhook duplicado abortado.' });
         }
