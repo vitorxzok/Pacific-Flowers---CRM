@@ -304,22 +304,7 @@ export async function POST(request: Request) {
       }
 
       // 1.5. Deduplicar mensagens recebidas (evitar webhooks duplicados em curto intervalo)
-      if (!isFromMe) {
-        const recentClientWindow = new Date(Date.now() - 15000).toISOString();
-        const { data: recentClientMsg } = await supabase
-          .from('mensagens')
-          .select('id')
-          .eq('client_id', clientId)
-          .eq('text', text)
-          .eq('sender', 'client')
-          .gte('timestamp', recentClientWindow)
-          .limit(1);
-
-        if (recentClientMsg && recentClientMsg.length > 0) {
-          console.log(`[Webhook] Mensagem idêntica do cliente ${clientId} detectada (duplicação de webhook). Ignorando.`);
-          return NextResponse.json({ success: true, message: 'Mensagem duplicada ignorada.' });
-        }
-      }
+      // Agora faremos isso DEPOIS da inserção para evitar race conditions.
 
       // 2. Inserir a mensagem na tabela `mensagens`
       const { data: insertedMsg, error: insertError } = await supabase
@@ -336,6 +321,28 @@ export async function POST(request: Request) {
       if (insertError) {
         console.error('Erro ao salvar mensagem no banco:', insertError);
         return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 });
+      }
+
+      // 2.5 Race-condition safe deduplication check
+      if (!isFromMe && insertedMsg) {
+        await new Promise(r => setTimeout(r, 400));
+        
+        const dedupeWindow = new Date(Date.now() - 5000).toISOString();
+        const { data: duplicateMsgs } = await supabase
+          .from('mensagens')
+          .select('id')
+          .eq('client_id', clientId)
+          .eq('text', text)
+          .eq('sender', 'client')
+          .gte('timestamp', dedupeWindow)
+          .order('timestamp', { ascending: true })
+          .order('id', { ascending: true });
+
+        if (duplicateMsgs && duplicateMsgs.length > 0 && duplicateMsgs[0].id !== insertedMsg.id) {
+          console.log(`[Webhook] Duplicação de webhook detectada (Race Condition) para o cliente ${clientId}. Removendo duplicata e abortando.`);
+          await supabase.from('mensagens').delete().eq('id', insertedMsg.id);
+          return NextResponse.json({ success: true, message: 'Webhook duplicado abortado.' });
+        }
       }
 
       // 3. FETCH CLIENT DATA FIRST to determine AI state
