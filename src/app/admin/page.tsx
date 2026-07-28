@@ -70,6 +70,56 @@ export default function AdminPage() {
   const [editUserPasswords, setEditUserPasswords] = useState<Record<string, string>>({});
   const [isUpdatingUser, setIsUpdatingUser] = useState<Record<string, boolean>>({});
 
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [isDeletingUser, setIsDeletingUser] = useState<Record<string, boolean>>({});
+
+  const handleCreateUser = async () => {
+    if (!newUserName || !newUserPassword) return;
+    setIsCreatingUser(true);
+    const toastId = toast.loading('Criando vendedor...');
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', name: newUserName, password: newUserPassword })
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Falha ao criar vendedor');
+      }
+      toast.success('Vendedor criado com sucesso!', { id: toastId });
+      setNewUserName('');
+      setNewUserPassword('');
+      fetchAdminUsers();
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao criar vendedor', { id: toastId });
+    } finally {
+      setIsCreatingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Tem certeza que deseja excluir o vendedor ${userName}? Isso não pode ser desfeito.`)) return;
+    setIsDeletingUser(prev => ({ ...prev, [userId]: true }));
+    const toastId = toast.loading('Excluindo vendedor...');
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', userId })
+      });
+      if (!res.ok) throw new Error('Falha ao excluir vendedor');
+      toast.success('Vendedor excluído com sucesso!', { id: toastId });
+      fetchAdminUsers();
+    } catch (err) {
+      toast.error('Erro ao excluir vendedor', { id: toastId });
+    } finally {
+      setIsDeletingUser(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
   const handleUpdateUser = async (userId: string) => {
     const name = editUserNames[userId];
     const password = editUserPasswords[userId];
@@ -996,7 +1046,35 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
             </div>
 
             <div className="border-t border-surface-border/50 pt-6 mt-2">
-              <h3 className="text-md font-semibold text-white mb-4">Controle Individual por Vendedor</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+                <h3 className="text-md font-semibold text-white">Controle Individual por Vendedor</h3>
+                
+                {/* Adicionar Novo Vendedor */}
+                <div className="flex items-center gap-2 bg-surface/30 p-2 rounded-lg border border-surface-border/50">
+                  <input
+                    type="text"
+                    placeholder="Nome do Vendedor"
+                    className="bg-surface border border-surface-border rounded-md px-2 py-1.5 text-sm text-white w-40 focus:outline-none focus:border-primary/50"
+                    value={newUserName}
+                    onChange={(e) => setNewUserName(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Senha de Acesso"
+                    className="bg-surface border border-surface-border rounded-md px-2 py-1.5 text-sm text-white w-32 focus:outline-none focus:border-primary/50"
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                  />
+                  <button
+                    onClick={handleCreateUser}
+                    disabled={isCreatingUser || !newUserName || !newUserPassword}
+                    className="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded-md text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {isCreatingUser ? 'Criando...' : 'Adicionar'}
+                  </button>
+                </div>
+              </div>
+
               {isLoadingUsers ? (
                 <div className="text-gray-400 text-sm">Carregando vendedores...</div>
               ) : (
@@ -1078,6 +1156,14 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                           className="px-3 py-1.5 bg-surface hover:bg-surface-border border border-surface-border rounded-lg text-xs font-medium text-white transition-colors h-fit"
                         >
                           Gerenciar WhatsApp
+                        </button>
+                        
+                        <button
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          disabled={isDeletingUser[user.id]}
+                          className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg text-xs font-medium text-red-400 transition-colors h-fit disabled:opacity-50"
+                        >
+                          {isDeletingUser[user.id] ? 'Excluindo...' : 'Excluir'}
                         </button>
                       </div>
                     </div>

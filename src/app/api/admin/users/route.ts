@@ -57,13 +57,50 @@ export async function POST(request: Request) {
     const supabaseServer = await createServerClient();
     const { data: { session } } = await supabaseServer.auth.getSession();
     
-    const { userId, enabled, recovery_enabled, toggle_recovery_instance, password, name } = await request.json();
+    const { action, userId, enabled, recovery_enabled, toggle_recovery_instance, password, name, email } = await request.json();
     
+    const adminClient = createAdminClient(supabaseUrl, supabaseKey);
+
+    if (action === 'create') {
+      if (!name || !password) {
+        return NextResponse.json({ error: 'Name and password required' }, { status: 400 });
+      }
+      
+      const userEmail = email || `${name.toLowerCase().replace(/\s+/g, '')}@crmpacific.local`;
+      
+      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+        email: userEmail,
+        password: password,
+        email_confirm: true,
+        user_metadata: {
+          name: name,
+          visible_password: password,
+          crm_settings: {
+            auto_reply_enabled: false,
+            recovery_enabled: false,
+            businessName: name
+          }
+        }
+      });
+      
+      if (createError) throw createError;
+      return NextResponse.json({ success: true, user: newUser.user });
+    }
+
+    if (action === 'delete') {
+      if (!userId) {
+        return NextResponse.json({ error: 'UserId required' }, { status: 400 });
+      }
+      
+      const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId);
+      if (deleteError) throw deleteError;
+      return NextResponse.json({ success: true });
+    }
+
+    // Default update behavior
     if (!userId) {
        return NextResponse.json({ error: 'UserId required' }, { status: 400 });
     }
-    
-    const adminClient = createAdminClient(supabaseUrl, supabaseKey);
     
     const { data: userData, error: fetchError } = await adminClient.auth.admin.getUserById(userId);
     if (fetchError || !userData?.user) {
