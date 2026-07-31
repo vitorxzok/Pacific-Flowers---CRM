@@ -1,6 +1,7 @@
 // Force recompile
 import { NextResponse } from 'next/server';
 import { createClient } from '../../../../lib/supabase/server';
+import { verifyAdminPassword } from '@/lib/adminAuth';
 
 export async function GET(request: Request) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
 
     let userId = '';
 
-    if (pwd === 'admin' && targetUserId) {
+    if (pwd && (await verifyAdminPassword(pwd)) && targetUserId) {
       userId = targetUserId;
     } else {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();

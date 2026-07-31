@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '../../../../lib/supabase/server';
+import { verifyAdminPassword } from '@/lib/adminAuth';
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
 
     let userId = '';
 
-    if (body.pwd === 'admin' && body.targetUserId) {
+    if (body.pwd && (await verifyAdminPassword(body.pwd)) && body.targetUserId) {
       userId = body.targetUserId;
     } else {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
