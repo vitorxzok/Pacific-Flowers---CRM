@@ -219,7 +219,7 @@ export async function GET(request: Request) {
             continue; // Fora do horário comercial, não manda follow-up rápido
           }
 
-          const minutesWithoutResponse = clientSettings.minutes_without_response || 15;
+          const minutesWithoutResponse = clientSettings.minutes_without_response || 3;
 
           const { data: lastMessage } = await supabase
             .from('mensagens')
@@ -248,7 +248,8 @@ export async function GET(request: Request) {
                 continue;
               }
 
-              const aiResponse = await generateAIResponse(client.id, supabase, "FOLLOW_UP_INATIVIDADE");
+              const aiContextOverride = 'INSISTENCIA_CUSTOM|Diga EXATAMENTE e APENAS o primeiro nome do cliente com um ponto de interrogação. Exemplo: "Claudio?". NÃO diga mais nada. Não dê bom dia, nem olá.';
+              const aiResponse = await generateAIResponse(client.id, supabase, aiContextOverride, clientSettings);
               const aiResponseText = aiResponse?.text;
 
               if (aiResponseText) {
@@ -367,25 +368,25 @@ export async function GET(request: Request) {
                 
                 const cadences = clientSettings.insistencia_cadences || [];
                 const useGlobalStrategy = clientSettings.use_global_insistence_strategy !== false;
-                const defaultCadenceMinutes = [15, 60, 240, 1440, 2880, 4320, 7200, 10080, 14400, 21600]; // 10 cadências aprovadas
-                const maxRepetitions = 10;
+                
+                // Nova Lógica de Cadências (Solicitada pelo usuário):
+                // count 0 = 4 horas (240 min)
+                // count 1 = 1 dia (1440 min)
+                const defaultCadenceMinutes = [240, 1440]; 
+                const maxRepetitions = 2;
                 
                 if (useGlobalStrategy) {
-                  // Nova Lógica de 10 Cadências com temas (Kit Curva, Pagamento, Política Comercial)
                   if (currentInsistenciaCount < maxRepetitions) {
                      const requiredWaitMinutes = defaultCadenceMinutes[currentInsistenciaCount] || 240;
                      if (diffMinutes >= requiredWaitMinutes) {
                         shouldInsist = true;
                         
-                        // Define o contexto especial a partir da 3ª cadência (index 2)
-                        if (currentInsistenciaCount === 2) {
-                           aiContextOverride = 'INSISTENCIA_CUSTOM|Pergunte de forma amigável se o cliente gostaria de conhecer nosso Kit Curva A (nossos produtos que mais vendem no mercado).';
-                        } else if (currentInsistenciaCount === 3) {
-                           aiContextOverride = 'INSISTENCIA_CUSTOM|Mencione rapidamente nossas facilidades e pergunte se ele quer saber as nossas formas de pagamento.';
-                        } else if (currentInsistenciaCount === 4) {
-                           aiContextOverride = 'INSISTENCIA_CUSTOM|Comente brevemente sobre nossa política comercial e pergunte se ele tem dúvidas sobre pedido mínimo ou frete.';
-                        } else if (currentInsistenciaCount > 4) {
-                           aiContextOverride = 'INSISTENCIA_CUSTOM|Aja como um consultor querendo entender o momento do lojista. Pergunte se algo o impediu de fechar pedido ou se ele prefere que entre em contato na próxima semana.';
+                        if (currentInsistenciaCount === 0) {
+                           // 4 horas
+                           aiContextOverride = 'INSISTENCIA_CUSTOM|Diga EXATAMENTE a seguinte frase e mais nada: "NAO TEM MAIS INTERESSE [NOME DO CLIENTE]?" Substitua [NOME DO CLIENTE] pelo primeiro nome do cliente.';
+                        } else if (currentInsistenciaCount === 1) {
+                           // 24 horas
+                           aiContextOverride = 'INSISTENCIA_CUSTOM|Diga EXATAMENTE a seguinte frase e mais nada: "[NOME DO CLIENTE], ESTOU FINALIZANDO O SEU CONTATO COM A FABRICA PACIFIC FLOWERS EM FUNÇAO DA SUA FALTA DE INTERESSE" Substitua [NOME DO CLIENTE] pelo primeiro nome do cliente.';
                         }
                      }
                   }
