@@ -110,6 +110,8 @@ export async function GET(request: Request) {
         const cleanedClientPhone = client.phone ? client.phone.replace(/\D/g, '') : '';
         if (cleanedClientPhone && activeInternalPhones.includes(cleanedClientPhone)) continue; // Ignora números internos
         try {
+          const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
+          if (clientSettings.auto_reply_enabled === false) continue;
           // Muda o status para 'Em Qualificação' primeiro para evitar disparos duplicados se der timeout
           await supabase
             .from('clientes')
@@ -178,6 +180,7 @@ export async function GET(request: Request) {
         if (cleanedClientPhone && activeInternalPhones.includes(cleanedClientPhone)) continue; // Ignora números internos
         try {
           const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
+          if (clientSettings.auto_reply_enabled === false) continue;
           
           const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
           const instanceName = (client.connected_instance && openInstancesMap[client.connected_instance]) 
@@ -318,6 +321,7 @@ export async function GET(request: Request) {
             if (cleanedClientPhone && activeInternalPhones.includes(cleanedClientPhone)) continue; // Ignora números internos
             try {
               const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
+              if (clientSettings.auto_reply_enabled === false) continue;
               
               const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
               const instanceName = (client.connected_instance && openInstancesMap[client.connected_instance]) 
@@ -359,24 +363,11 @@ export async function GET(request: Request) {
                 let aiContextOverride = 'INSISTENCIA_HORAS';
                 
                 const cadences = clientSettings.insistencia_cadences || [];
-                const useGlobalStrategy = clientSettings.use_global_insistence_strategy || false;
+                const useGlobalStrategy = clientSettings.use_global_insistence_strategy !== false;
                 const defaultCadenceMinutes = [15, 60, 240, 1440, 2880, 4320, 7200, 10080, 14400, 21600]; // 10 cadências aprovadas
                 const maxRepetitions = 10;
                 
-                if (cadences.length > 0 && !useGlobalStrategy) {
-                  // Custom cadences logic
-                  if (currentInsistenciaCount < cadences.length) {
-                    const currentCadence = cadences[currentInsistenciaCount];
-                    if (diffMinutes >= (currentCadence.waitHours || 60)) {
-                      shouldInsist = true;
-                      if (currentCadence.text && currentCadence.text.trim()) {
-                        aiContextOverride = `INSISTENCIA_CUSTOM|${currentCadence.text.trim()}`;
-                      }
-                    }
-                  } else {
-                    if (diffDays >= daysInterval) shouldInsist = true;
-                  }
-                } else {
+                if (useGlobalStrategy) {
                   // Nova Lógica de 10 Cadências com temas (Kit Curva, Pagamento, Política Comercial)
                   if (currentInsistenciaCount < maxRepetitions) {
                      const requiredWaitMinutes = defaultCadenceMinutes[currentInsistenciaCount] || 240;
@@ -395,6 +386,21 @@ export async function GET(request: Request) {
                         }
                      }
                   }
+                } else if (cadences.length > 0) {
+                  // Custom cadences logic
+                  if (currentInsistenciaCount < cadences.length) {
+                    const currentCadence = cadences[currentInsistenciaCount];
+                    if (diffMinutes >= (currentCadence.waitHours || 60)) {
+                      shouldInsist = true;
+                      if (currentCadence.text && currentCadence.text.trim()) {
+                        aiContextOverride = `INSISTENCIA_CUSTOM|${currentCadence.text.trim()}`;
+                      }
+                    }
+                  } else {
+                    if (diffDays >= daysInterval) shouldInsist = true;
+                  }
+                } else {
+                  shouldInsist = false;
                 }
 
                 if (shouldInsist) {
@@ -468,6 +474,7 @@ export async function GET(request: Request) {
           if (cleanedClientPhone && activeInternalPhones.includes(cleanedClientPhone)) continue; // Ignora números internos
           try {
             const clientSettings = settingsByAttendant[client.attendant_id] || { reposicao_days_global: 30 };
+            if (clientSettings.auto_reply_enabled === false) continue;
             const reposicaoDays = clientSettings.reposicao_days_global || 30;
             
             let shouldRepor = false;
