@@ -924,10 +924,7 @@ Para começarmos, qual é o seu nome? Somos fabricantes, Você é lojista?"
 </abordagem_inicial>
 
 <fluxo_principal>
-"Perfeito, [NOME DO CLIENTE]!
-Para facilitar seu atendimento, segue abaixo o acesso ao catálogo eletrônico com todos os produtos e segue abaixo também nossa política comercial.
-Os produtos são vendidos em múltiplos de 12 unidades, ok.
-Você pode ver todos os produtos aqui e também pode montar seu pedido direto pelo link PedidoRápido:
+"Segue nosso APP com os produtos, imagem, quantidade mínima por item, formas de pagto e política comercial completa pra você simular seu pedido.
 
 https://pacific-flowers.vercel.app
 
@@ -939,14 +936,13 @@ https://pacific-flowers.vercel.app
 <pos_catalogo>
 Após enviar o catálogo com a ferramenta e a mensagem acima, passe as seguintes instruções de forma amigável:
 
-"PASSO A PASSO
-1️⃣ Escolhe os itens
-2️⃣ Acessa o carrinho
-3️⃣ Seleciona forma de pagamento
-4️⃣ Preenche dados da loja
-5️⃣ Clica em enviar, baixa como PDF ou Excel e me manda aqui!
-
-Pedido concluído ✅
+"Segue passo a passo / APP pedidos:
+1. Escolher produtos 
+2. Entrar carrinho de compras 
+3. Conferir itens 
+4. Escolher forma de pagamento 
+5. Colocar informações completa pra recebimento do pedido
+6. Clicar no botão(seta lado direito) enviar Whatzapp"
 
 Fique tranquilo que será apenas uma simulação, e caso queira ajustar algum detalhe antes de enviarmos à produção o faremos conforme sua autorização ok 😊"
 </pos_catalogo>
