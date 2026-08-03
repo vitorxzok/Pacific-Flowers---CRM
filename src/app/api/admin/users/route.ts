@@ -35,6 +35,7 @@ export async function GET(request: Request) {
         name: u.user_metadata?.name || 'Vendedor Sem Nome',
         email: u.email,
         auto_reply_enabled: crmSettings.auto_reply_enabled || false,
+        cadence_enabled: crmSettings.cadence_enabled !== false, // default true
         recovery_enabled: crmSettings.recovery_enabled || false,
         recovery_instances: crmSettings.recovery_instances || [],
         visible_password: u.user_metadata?.visible_password || '',
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
     const supabaseServer = await createServerClient();
     const { data: { session } } = await supabaseServer.auth.getSession();
     
-    const { action, userId, enabled, recovery_enabled, toggle_recovery_instance, password, name, email } = await request.json();
+    const { action, userId, enabled, cadence_enabled, recovery_enabled, toggle_recovery_instance, password, name, email } = await request.json();
     
     const adminClient = createAdminClient(supabaseUrl, supabaseKey);
 
@@ -77,6 +78,7 @@ export async function POST(request: Request) {
           visible_password: password,
           crm_settings: {
             auto_reply_enabled: false,
+            cadence_enabled: true,
             recovery_enabled: false,
             businessName: name
           }
@@ -129,6 +131,7 @@ export async function POST(request: Request) {
       crm_settings: {
         ...currentSettings,
         ...(enabled !== undefined && { auto_reply_enabled: enabled }),
+        ...(cadence_enabled !== undefined && { cadence_enabled: cadence_enabled }),
         ...(recovery_enabled !== undefined && { recovery_enabled: recovery_enabled }),
         ...(toggle_recovery_instance && { recovery_instances: newRecoveryInstances }),
         ...(name && { businessName: name })

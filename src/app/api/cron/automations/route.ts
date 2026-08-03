@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     const settingsByAttendant: Record<string, any> = {};
     let fallbackSettings: any = {
       auto_reply_enabled: false,
+      cadence_enabled: true,
       minutes_without_response: 15,
       followup_interval_hours: 24,
       insistencia_max_repetitions: 3,
@@ -38,6 +39,7 @@ export async function GET(request: Request) {
         settingsByAttendant[u.id] = uSettings;
         // Pega qualquer configuração válida como fallback para clientes sem atendente
         if (uSettings.auto_reply_enabled === true) fallbackSettings.auto_reply_enabled = true;
+        if (uSettings.cadence_enabled !== false) fallbackSettings.cadence_enabled = uSettings.cadence_enabled;
         if (uSettings.minutes_without_response) fallbackSettings.minutes_without_response = uSettings.minutes_without_response;
         if (uSettings.followup_interval_hours) fallbackSettings.followup_interval_hours = uSettings.followup_interval_hours;
         if (uSettings.insistencia_max_repetitions) fallbackSettings.insistencia_max_repetitions = uSettings.insistencia_max_repetitions;
@@ -322,6 +324,7 @@ export async function GET(request: Request) {
             try {
               const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
               if (clientSettings.auto_reply_enabled === false) continue;
+              if (clientSettings.cadence_enabled === false) continue;
               
               const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
               const instanceName = (client.connected_instance && openInstancesMap[client.connected_instance]) 

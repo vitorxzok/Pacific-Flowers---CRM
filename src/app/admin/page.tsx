@@ -170,19 +170,40 @@ export default function AdminPage() {
     
     // Update locally instantly for better UX
     setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, auto_reply_enabled: newEnabled } : u));
+        try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update', userId, enabled: newEnabled })
+      });
+      if (!res.ok) throw new Error('Falha ao atualizar');
+      toast.success(newEnabled ? 'IA ativada' : 'IA desativada', { id: toastId });
+    } catch (e: any) {
+      toast.error(e.message, { id: toastId });
+      // Revert on error
+      setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, auto_reply_enabled: currentEnabled } : u));
+    }
+  };
+
+  const handleToggleUserCadence = async (userId: string, currentEnabled: boolean) => {
+    const newEnabled = !currentEnabled;
+    const toastId = toast.loading(newEnabled ? 'Ativando Cadências...' : 'Desativando Cadências...');
+    
+    // Update locally instantly for better UX
+    setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, cadence_enabled: newEnabled } : u));
     
     try {
       const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, enabled: newEnabled })
+        body: JSON.stringify({ action: 'update', userId, cadence_enabled: newEnabled })
       });
       if (!res.ok) throw new Error('Falha ao atualizar');
-      toast.success(`IA ${newEnabled ? 'ativada' : 'desativada'} com sucesso!`, { id: toastId });
-    } catch (err) {
+      toast.success(newEnabled ? 'Cadências ativadas' : 'Cadências desativadas', { id: toastId });
+    } catch (e: any) {
+      toast.error(e.message, { id: toastId });
       // Revert on error
-      setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, auto_reply_enabled: currentEnabled } : u));
-      toast.error('Erro ao atualizar IA do vendedor.', { id: toastId });
+      setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, cadence_enabled: currentEnabled } : u));
     }
   };
 
@@ -1144,6 +1165,19 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
                           >
                             <span
                               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${user.auto_reply_enabled ? 'translate-x-6' : 'translate-x-1'}`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-1 bg-surface/30 p-2 rounded-lg border border-surface-border/50">
+                          <span className="text-[10px] text-gray-400 uppercase font-semibold text-center leading-tight">Cadências<br/>Automáticas</span>
+                          <button
+                            onClick={() => handleToggleUserCadence(user.id, user.cadence_enabled ?? true)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${(user.cadence_enabled ?? true) ? 'bg-blue-500' : 'bg-surface-border'}`}
+                            title="Ativar/Desativar disparos automáticos de cadência/insistência para este usuário"
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(user.cadence_enabled ?? true) ? 'translate-x-6' : 'translate-x-1'}`}
                             />
                           </button>
                         </div>
