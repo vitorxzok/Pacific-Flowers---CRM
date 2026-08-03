@@ -183,6 +183,7 @@ export async function GET(request: Request) {
         try {
           const clientSettings = settingsByAttendant[client.attendant_id] || fallbackSettings;
           if (clientSettings.auto_reply_enabled === false) continue;
+          if (clientSettings.cadence_enabled === false) continue;
           
           const baseInstance = client.attendant_id ? `user_${client.attendant_id}` : 'user_default';
           const instanceName = (client.connected_instance && openInstancesMap[client.connected_instance]) 
@@ -255,27 +256,38 @@ export async function GET(request: Request) {
               if (aiResponseText) {
                 processedInativos++;
 
-                const cleanText = aiResponseText.replace(/\[SEPARAR\]/g, '').trim();
-                const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
-                if (msgError) {
-                  console.error(`Erro ao salvar mensagem de inatividade para cliente ${client.id}:`, msgError);
-                  // Rollback lock
-                  await supabase.from('clientes').update({ followup_sent: false }).eq('id', client.id);
-                  continue; // Pula o envio se o DB falhar
-                }
-
-                const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
-                const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+                const aiReplyParts = aiResponseText.split('[SEPARAR]').map(p => p.trim()).filter(p => p.length > 0);
                 
-                if (apiUrl && apiKey && client.phone) {
-                  const cleanedPhone = client.phone.replace(/\D/g, '');
-                  await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                    body: JSON.stringify({ number: cleanedPhone, text: cleanText }),
-                  });
+                if (aiReplyParts.length > 0) {
+                  for (let i = 0; i < aiReplyParts.length; i++) {
+                    const part = aiReplyParts[i];
+                    const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: part, sender: 'attendant', read: true });
+                    
+                    if (msgError) {
+                      console.error(`Erro ao salvar mensagem de inatividade para cliente ${client.id}:`, msgError);
+                      if (i === 0) await supabase.from('clientes').update({ followup_sent: false }).eq('id', client.id);
+                      continue;
+                    }
+
+                    const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+                    const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+                    
+                    if (apiUrl && apiKey && client.phone) {
+                      const cleanedPhone = client.phone.replace(/\D/g, '');
+                      await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                        body: JSON.stringify({ number: cleanedPhone, text: part }),
+                      });
+                      if (i < aiReplyParts.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                      }
+                    }
+                  }
+                  results.followUpsEnviados++;
+                } else {
+                  await supabase.from('clientes').update({ followup_sent: false }).eq('id', client.id);
                 }
-                results.followUpsEnviados++;
               } else {
                 // Rollback lock se a IA falhou em gerar texto
                 await supabase.from('clientes').update({ followup_sent: false }).eq('id', client.id);
@@ -426,28 +438,37 @@ export async function GET(request: Request) {
                   const generatedText = aiResponse?.text;
 
                   if (generatedText) {
-                    const cleanText = generatedText.replace(/\[SEPARAR\]/g, '').trim();
+                    const aiReplyParts = generatedText.split('[SEPARAR]').map(p => p.trim()).filter(p => p.length > 0);
 
-                    const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: cleanText, sender: 'attendant', read: true });
-                    if (msgError) {
-                      console.error(`Erro ao salvar mensagem de insistencia para cliente ${client.id}:`, msgError);
-                      // Rollback lock
+                    if (aiReplyParts.length > 0) {
+                      for (let i = 0; i < aiReplyParts.length; i++) {
+                        const part = aiReplyParts[i];
+                        const { error: msgError } = await supabase.from('mensagens').insert({ client_id: client.id, text: part, sender: 'attendant', read: true });
+                        if (msgError) {
+                          console.error(`Erro ao salvar mensagem de insistencia para cliente ${client.id}:`, msgError);
+                          if (i === 0) await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount, updated_at: new Date().toISOString() }).eq('id', client.id);
+                          continue;
+                        }
+
+                        const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+                        const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
+                        
+                        if (apiUrl && apiKey && client.phone) {
+                          const cleanedPhone = client.phone.replace(/\D/g, '');
+                          await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+                            body: JSON.stringify({ number: cleanedPhone, text: part }),
+                          });
+                          if (i < aiReplyParts.length - 1) {
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+                          }
+                        }
+                      }
+                      results.followUpsEnviados++;
+                    } else {
                       await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount, updated_at: new Date().toISOString() }).eq('id', client.id);
-                      continue; // Pula se o DB falhar
                     }
-
-                    const apiUrl = process.env.NEXT_PUBLIC_EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
-                    const apiKey = process.env.NEXT_PUBLIC_EVOLUTION_GLOBAL_API_KEY || process.env.EVOLUTION_API_KEY;
-                    
-                    if (apiUrl && apiKey && client.phone) {
-                      const cleanedPhone = client.phone.replace(/\D/g, '');
-                      await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
-                        body: JSON.stringify({ number: cleanedPhone, text: cleanText }),
-                      });
-                    }
-                    results.followUpsEnviados++;
                   } else {
                     // Rollback lock se IA falhou
                     await supabase.from('clientes').update({ insistencia_count: currentInsistenciaCount, updated_at: new Date().toISOString() }).eq('id', client.id);
