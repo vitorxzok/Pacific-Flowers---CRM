@@ -138,6 +138,9 @@ MUITO IMPORTANTE - REGRAS DE SISTEMA E FERRAMENTAS:
 
   if (settings && settings.businessName && settings.businessName.trim() !== '') {
     prompt += `\n\n--- INFORMAÇÃO IMPORTANTE ---\nVocê é o operador chamado: ${settings.businessName}. Apresente-se com este nome e assuma a identidade deste operador humano durante todo o atendimento.`;
+    prompt = prompt.replace(/\[SEU NOME AQUI\]/g, settings.businessName);
+  } else {
+    prompt = prompt.replace(/\[SEU NOME AQUI\]/g, "o atendente");
   }
   
   return prompt;
@@ -170,8 +173,14 @@ export async function generateAIResponse(clientId: string, supabase: any, contex
     const lastAssistantMessage = messages.slice().reverse().find((m: any) => m.sender === 'attendant')?.text || '';
 
     // Converter para o formato da OpenAI
+    let systemPromptText = getSystemPrompt(settings);
+    if (clientInfo) {
+      let cName = (clientInfo.name && clientInfo.name.trim() !== '') ? clientInfo.name : 'Cliente';
+      systemPromptText = systemPromptText.replace(/\[NOME DO CLIENTE\]/g, cName);
+    }
+
     let openAiMessages = [
-      { role: 'system', content: getSystemPrompt(settings) }
+      { role: 'system', content: systemPromptText }
     ];
 
     // 1.5. Injetar a lista de produtos ativos no contexto
