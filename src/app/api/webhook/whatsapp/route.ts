@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 import { createClient } from '@supabase/supabase-js';
 import { transcribeAudio } from '@/lib/openai-audio';
 
@@ -641,8 +642,8 @@ export async function POST(request: Request) {
               // Se houver mais partes do texto, envia depois do anexo
               if (aiReplyParts.length > 1) {
                 for (let i = 1; i < aiReplyParts.length; i++) {
-                  console.log(`[AI] Aguardando 3 segundos para enviar parte ${i+1} do texto para ${phone}...`);
-                  await new Promise(resolve => setTimeout(resolve, 3000));
+                  console.log(`[AI] Aguardando 1.5 segundos para enviar parte ${i+1} do texto para ${phone}...`);
+                  await new Promise(resolve => setTimeout(resolve, 1500));
                   
                   await fetch(`${apiUrl}/message/sendText/${instanceName}`, {
                     method: 'POST',
