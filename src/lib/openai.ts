@@ -454,7 +454,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
     });
 
     let responseMessage = response.choices[0].message;
-    let finalContent = '';
+    let finalContent = responseMessage.content || ''; // Salva o texto da primeira rodada (ex: link do app)
     let audioTranscript = '';
     let catalogSentThisTurn = false;
 
@@ -707,10 +707,13 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
     if (audioTranscript) {
        responseMessage.content = '';
        finalContent = '';
+    } else if (responseMessage.content && finalContent !== responseMessage.content) {
+       // Se houver texto novo na segunda rodada, adiciona ao finalContent
+       finalContent = finalContent + (finalContent ? ' [SEPARAR] ' : '') + responseMessage.content;
     }
 
     // Retorna o texto gerado pela IA (pode ser a despedida ou uma resposta normal)
-    if (responseMessage.content || finalContent || audioTranscript) {
+    if (finalContent || audioTranscript) {
       if (catalogSentThisTurn) {
         // Avançar o lead para Qualificação quando receber o catálogo, conforme solicitado pelo cliente (Tarefa 9)
         await supabase.from('clientes').update({ status: 'Em Qualificação' }).eq('id', clientId);
@@ -720,7 +723,7 @@ PASSO 3: Após o cliente enviar o CNPJ e o endereço, você deve encaminhar para
           description: 'A IA Clara enviou o catálogo e avançou o status para Em Qualificação.',
         });
       }
-      return { text: (responseMessage.content || '') + finalContent, mediaToSend, audioTranscript };
+      return { text: finalContent, mediaToSend, audioTranscript };
     }
 
   } catch (error: any) {
